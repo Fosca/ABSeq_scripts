@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="211fbd7b-dfb2-409d-b4bd-d5ac723468de" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/ABseq_func/stats_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/stats_funcs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/11-Regress_out_surprise.py" beforeDir="false" afterPath="$PROJECT_DIR$/11-Regress_out_surprise.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,19 +17,7 @@
         <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
           <provider selected="true" editor-type-id="text-editor">
             <state>
-              <caret selection-end-line="21" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/99-linear_regressions_tests.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="127" selection-start-line="127" selection-end-line="127" selection-end-column="13" />
+              <caret selection-end-line="22" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -37,31 +26,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/ABseq_func/stats_funcs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="125">
-              <caret line="10" selection-start-line="10" selection-end-line="10" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/opt/anaconda3/lib/python3.7/site-packages/mne/stats/cluster_level.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-642">
-              <caret line="1146" column="33" selection-start-line="1146" selection-start-column="22" selection-end-line="1146" selection-end-column="33" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="383">
-              <caret line="158" column="35" selection-start-line="158" selection-start-column="35" selection-end-line="158" selection-end-column="35" />
+            <state relative-caret-position="340">
+              <caret line="88" column="4" selection-start-line="88" selection-start-column="4" selection-end-line="88" selection-end-column="4" />
               <folding>
                 <element signature="e#0#27#0" expanded="true" />
               </folding>
@@ -97,11 +65,11 @@
         <option value="$PROJECT_DIR$/initialization_paths/initialization_paths.py" />
         <option value="$PROJECT_DIR$/ABseq_func/epoching_funcs.py" />
         <option value="$PROJECT_DIR$/ABseq_func/linear_reg_funcs.py" />
-        <option value="$PROJECT_DIR$/11-Regress_out_surprise.py" />
         <option value="$PROJECT_DIR$/ABseq_func/__init__.py" />
-        <option value="$PROJECT_DIR$/ABseq_func/TP_funcs.py" />
         <option value="$PROJECT_DIR$/99-linear_regressions_tests.py" />
         <option value="$PROJECT_DIR$/ABseq_func/stats_funcs.py" />
+        <option value="$PROJECT_DIR$/11-Regress_out_surprise.py" />
+        <option value="$PROJECT_DIR$/ABseq_func/TP_funcs.py" />
       </list>
     </option>
   </component>
@@ -207,7 +175,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32903227" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50277776" side_tool="true" weight="0.3292683" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="8" sideWeight="0.49722221" visible="true" weight="0.32939634" />
+      <window_info anchor="bottom" id="Python Console" order="8" sideWeight="0.49722221" weight="0.32939634" />
       <window_info anchor="bottom" id="Terminal" order="9" weight="0.32909605" />
       <window_info anchor="bottom" id="Version Control" order="10" weight="0.3299539" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
@@ -215,6 +183,135 @@
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" weight="0.3297568" />
     </layout>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/ABseq_func/TP_funcs.py</url>
+          <line>234</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateCodeFragment">
+      <expression>
+        <expression-string>inds_o = []
+np.where(omegas_computed == omegas_of_interest[0])[0][0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>inds_o = []
+
+k=1
+inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k=1
+inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>inds_o = []
+for k in range(len(omegas_of_interest)):
+    print(k)
+    inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k = 1 
+omegas_of_interest[1]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k = 1 
+omegas_of_interest[k]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>k = 1 
+np.where(omegas_computed == omegas_of_interest[k])[0][0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>surprise_dict.keys()</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>surprise_dict.shape</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>surprise_dict</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>(np.where(omegas_computed == omegas_of_interest[k])[0][0])
+for k in range(len(omegas_of_interest)):         print(k)
+inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])
+for k in range(len(omegas_of_interest)):         print(k)
+inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>inds_o = []
+for k in range(len(omegas_of_interest)):         print(k)
+inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>omegas_computed = np.asarray(list(surprise_dict.keys()))</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>omegas_computed.itemset()</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>omegas_computed.data</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>np.where(omegas_computed == 2)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>np.where(omegas_computed == 1)</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>omegas_of_interest[0]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/../analysis_old/config.py">
@@ -330,26 +427,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="21" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="383">
-          <caret line="158" column="35" selection-start-line="158" selection-start-column="35" selection-end-line="158" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#27#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/99-linear_regressions_tests.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
@@ -369,10 +446,30 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ABseq_func/stats_funcs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="125">
-          <caret line="10" selection-start-line="10" selection-end-line="10" />
+        <state relative-caret-position="131">
+          <caret line="36" column="37" lean-forward="true" selection-start-line="36" selection-start-column="37" selection-end-line="36" selection-end-column="37" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="22" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="88" column="4" selection-start-line="88" selection-start-column="4" selection-end-line="88" selection-end-column="4" />
+          <folding>
+            <element signature="e#0#27#0" expanded="true" />
           </folding>
         </state>
       </provider>

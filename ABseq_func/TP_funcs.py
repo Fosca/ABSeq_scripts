@@ -85,8 +85,8 @@ def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,
 
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=clean)
     epochs.pick_types(meg=True, eeg=True)
-    epochs.crop(tmin=0,tmax=0.3)
-    # epochs.filter(None,30)
+    # epochs.crop(tmin=0,tmax=0.3)
+    epochs.filter(None,30)
 
     if decim is not None:
         epochs.decimate(decim)
@@ -100,11 +100,12 @@ def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,
     epochs_for_reg = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_1"].values))[0]]
     epochs_for_reg_normalized = normalize_data(epochs_for_reg)
 
+    all_names = []
     for omega in omega_list:
         print("==== running the regression for omega %i ======="%omega)
         surprise_name = "surprise_%i" % omega
+        all_names.append(surprise_name)
         r2_surprise[omega] = linear_regression_from_sklearn(epochs_for_reg_normalized, surprise_name)
-
     # ===== save all the regression results =========
 
     out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
@@ -154,13 +155,14 @@ def linear_regression_from_sklearn(epochs_for_reg_normalized,surprise_name):
 
         results['regcoeff_intercept'].append(reg.intercept_)
         results['regcoef_%s'%surprise_name].append(reg.coef_)
-        # results['r2_score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
-        y_pred = reg.predict(x[:,np.newaxis])
-        results['r2_score'].append(r2_score(y_pred, y[:,:,time]))
+        results['r2_score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
+        # y_pred = reg.predict(x[:,np.newaxis])
+        # results['r2_score'].append(r2_score(y_pred, y[:,:,time]))
     # y_pred = reg.predict(x[:,np.newaxis])
     # y_pred_main = np.matmul(reg.intercept_[:,np.newaxis],np.ones(x[:,np.newaxis].T.shape)) + np.matmul(reg.coef_,x[:,np.newaxis].T)
     for key in results.keys():
         results[key] = np.asarray(results[key])
+
 
     results['times'] = epochs_for_reg_normalized.times
 
@@ -169,26 +171,22 @@ def linear_regression_from_sklearn(epochs_for_reg_normalized,surprise_name):
 
 # ======================================================================================================================
 
-def plot_r2_surprise(subjects_list,clean=False,tmin=None,tmax = None, vmin = 0,vmax=0.0002):
-
-    times_of_interest = [-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]
-    omegas_of_interest = [1,10,20,30,40,50,100,200,299]
+def plot_r2_surprise(subjects_list,tmin=None,tmax = None, vmin = None,vmax=None,fname = 'r2_surprise.npy',omegas_of_interest = [1,10,20,30,40,50,100,200,299],times_of_interest = [-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]):
 
     mat_2_plot = []
 
     for subject in subjects_list:
         out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
-        fname = 'r2_surprise.npy'
-        if clean:
-            fname = 'clean_r2_surprise.npy'
         surprise_dict = np.load(op.join(out_path,fname),allow_pickle=True).item()
         times = surprise_dict['times']
+        for omega in omegas_of_interest:
+            surprise_omega = surprise_dict[omega]
+            surprise_df = pd.DataFrame.from_dict(surprise_omega['r2_score'])
+            mat_2_plot.append(np.asarray(surprise_df))
         del surprise_dict['times']
-        surprise_df = pd.DataFrame.from_dict(surprise_dict)
-        mat_2_plot.append(np.asarray(surprise_df))
 
     mat_2_plot = np.asarray(mat_2_plot)
-    for_plot = np.asarray(np.mean(mat_2_plot, axis=0)).T
+    for_plot = np.asarray(np.mean(mat_2_plot, axis=-1))
 
     if tmax is not None:
         inds_tmin = np.where(times==tmin)[0][0]
@@ -198,9 +196,12 @@ def plot_r2_surprise(subjects_list,clean=False,tmin=None,tmax = None, vmin = 0,v
         times_of_interest = list(np.asarray(times_of_interest)[np.where(interval_true_false)[0]])
 
     omegas_computed = np.asarray(list(surprise_dict.keys()))
-
     inds_t = [np.where(times == times_of_interest[k])[0][0] for k in range(len(times_of_interest))]
-    inds_o = [np.where(omegas_computed == omegas_of_interest[k])[0][0] for k in range(len(omegas_of_interest))]
+
+    inds_o = []
+    for k in range(len(omegas_of_interest)):
+        print(k)
+        inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])
 
     plt.figure(figsize=(10,20))
     plt.imshow(for_plot,vmin=vmin,vmax = vmax)
@@ -210,6 +211,42 @@ def plot_r2_surprise(subjects_list,clean=False,tmin=None,tmax = None, vmin = 0,v
     plt.colorbar()
 
     return mat_2_plot
+
+
+def multi_ridge_regression_allIO(epochs_for_reg_normalized,surprise_names):
+    """
+    This function does a very simple linear regression. We store the predicted y_preds, the regression coefficients
+    and the r2_score per sensor and per time
+    :param epochs_for_reg: the epochs data on which we run the regression
+    :param names: the regression variables
+    :return:
+    """
+    from sklearn.linear_model import Ridge
+
+    y = epochs_for_reg_normalized.get_data()
+    x = np.asarray(epochs_for_reg_normalized.metadata[surprise_names])
+
+    results = {'regcoef_%s'%surprise_name:[] for surprise_name in surprise_names}
+    results['regcoeff_intercept'] = []
+    results['r2_score'] = []
+
+
+    for time in range(y.shape[2]):
+        reg = Ridge().fit(x[:,np.newaxis], y[:,:,time])
+
+        results['regcoeff_intercept'].append(reg.intercept_)
+        for k in range(len(surprise_names)):
+            results['regcoef_%s'%surprise_names[k]].append(reg.coef_[:,k])
+        results['r2_score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
+
+    for key in results.keys():
+        results[key] = np.asarray(results[key])
+
+    results['times'] = epochs_for_reg_normalized.times
+
+    return results
+
+
 
 
 
