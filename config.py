@@ -9,7 +9,7 @@ Configuration parameters for the study.
 import os
 from collections import defaultdict
 import numpy as np
-
+from sys import platform
 
 # ``plot``  : boolean
 #   If True, the scripts will generate plots.
@@ -33,7 +33,11 @@ plot = False
 if os.name == 'nt':
     root_path = 'Z:' + os.path.sep
 elif os.name == 'posix':
-    root_path = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/'
+    if platform == "linux" or platform == "linux2":
+        root_path = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/'
+    elif platform == "darwin":
+        root_path = '/Users/fosca/Documents/Fosca/Post_doc/Projects/ABSeq/'
+
 study_path = os.path.join(root_path, 'data') + os.path.sep
 result_path = os.path.join(root_path, 'results') + os.path.sep
 cluster_path = os.path.join(root_path, 'scripts','analysis','cluster') + os.path.sep
