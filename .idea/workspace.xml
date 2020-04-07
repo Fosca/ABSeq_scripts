@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="211fbd7b-dfb2-409d-b4bd-d5ac723468de" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/ABseq_func/stats_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/11-Regress_out_surprise.py" beforeDir="false" afterPath="$PROJECT_DIR$/11-Regress_out_surprise.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/99-linear_regressions_tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/99-linear_regressions_tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/epoching_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/epoching_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/glm_funcs.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/linear_reg_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/linear_reg_funcs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ABseq_func/stats_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/stats_funcs.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -47,8 +39,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ABseq_func/stats_funcs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="345">
-              <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+            <state relative-caret-position="125">
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -377,8 +369,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/ABseq_func/stats_funcs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="25" column="24" selection-start-line="25" selection-start-column="24" selection-end-line="25" selection-end-column="24" />
+        <state relative-caret-position="125">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>

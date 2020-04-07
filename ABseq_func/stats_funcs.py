@@ -1,31 +1,37 @@
 from __future__ import division
-import os.path as op
 from matplotlib import pyplot as plt
-import config
-from ABseq_func import *
 import mne
 import numpy as np
-from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
+from mne.stats import permutation_cluster_1samp_test
 from mne.viz import plot_topomap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from importlib import reload
+
+# ======================================================================================================================
+# Coucou Samuel, utilises ca si tu veux raccourcir tes scripts de plot des clusters. Maintenant tu n'as qu'a faire:
+
+# ch_type = 'eeg'
+# p_threshold = 0.05
+# cluster_stats, _ = run_cluster_permutation_test_1samp(data,ch_type = ch_type)
+# plot_clusters(cluster_stats,p_threshold,data,ch_type,T_obs_max = 5.,fname='analysis_name',figname_initial='the_basic_name_for_figure')
+
+
+# ======================================================================================================================
 
 
 def run_cluster_permutation_test_1samp(data,ch_type = 'eeg',nperm = 2**12,step_down_p=0.01,n_jobs=6, tail=0):
 
 
-    connectivity = mne.channels.find_ch_connectivity(data.info, ch_type=ch_type)[0]
     data = np.transpose(np.squeeze(data), (0, 2, 1))  # transpose for clustering
-
+    connectivity = mne.channels.find_ch_connectivity(data.info, ch_type=ch_type)[0]
     cluster_stats = permutation_cluster_1samp_test(data, threshold=None, n_jobs=n_jobs, verbose=True, tail=tail,
                                                    n_permutations=nperm,
                                                    connectivity=connectivity, out_type='indices', check_disjoint=True,
                                                    step_down_p=step_down_p)
 
-    return cluster_stats
+    return cluster_stats, ch_type
 
 
-def extract_info_cluster(cluster_stats,p_threshold,data):
+def extract_info_cluster(cluster_stats,p_threshold,data, ch_type):
 
     """
     This function takes the output of
@@ -35,7 +41,7 @@ def extract_info_cluster(cluster_stats,p_threshold,data):
     :return: dictionnary containing all the information
 
     """
-    cluster_info = {'times':data.times * 1e3,'p_threshold':p_threshold}
+    cluster_info = {'times':data.times * 1e3,'p_threshold':p_threshold,'ch_type':ch_type}
 
     T_obs, clusters, p_values, _ = cluster_stats
     good_cluster_inds = np.where(p_values < p_threshold)[0]
@@ -64,7 +70,7 @@ def extract_info_cluster(cluster_stats,p_threshold,data):
     return cluster_info
 
 
-def plot_clusters(cluster_stats,p_threshold,data,T_obs_max = 5.,fname='',figname_initial=''):
+def plot_clusters(cluster_stats,p_threshold,data,ch_type,T_obs_max = 5.,fname='',figname_initial=''):
 
     """
     This function plots the clusters
@@ -82,7 +88,7 @@ def plot_clusters(cluster_stats,p_threshold,data,T_obs_max = 5.,fname='',figname
     linestyles = '-', '--'
     T_obs_min = -T_obs_max
 
-    cluster_info = extract_info_cluster(cluster_stats,p_threshold,data)
+    cluster_info = extract_info_cluster(cluster_stats,p_threshold,data,ch_type)
 
 
     for i_clu in range(cluster_info['ncluster']):
