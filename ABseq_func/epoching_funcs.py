@@ -117,7 +117,7 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
         else:
             epochs_items = load_epochs_items(subject, cleaned=True)
             epochs_items_cleaned = update_metadata_rejected(subject, epochs_items)
-            metadata_path = op.sep(meg_subject_dir, 'metadata_item_clean.pkl')
+            metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
             metadata = epochs_items_cleaned.metadata
     else:
         metadata_path = os.path.join(meg_subject_dir,'metadata_item.pkl')

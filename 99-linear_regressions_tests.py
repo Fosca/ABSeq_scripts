@@ -153,10 +153,17 @@ for ch_type in ch_types:
         elif ch_type == 'grad':
             data = np.array([data_condition.pick_types(meg=ch_type, eeg=False)[c].get_data() for c in range(len(data_condition))])
         data = np.transpose(np.squeeze(data), (0, 2, 1))  # transpose for clustering
+
+
         cluster_stats = permutation_cluster_1samp_test(data, threshold=None, n_jobs=6, verbose=True, tail=0, n_permutations=nperm,
                                                    connectivity=connectivity, out_type='indices', check_disjoint=True, step_down_p=p1)
+
+
         T_obs, clusters, p_values, _ = cluster_stats
         good_cluster_inds = np.where(p_values < p2)[0]
+
+
+
         print("Good clusters: %s" % good_cluster_inds)
 
         # PLOT CLUSTERS
