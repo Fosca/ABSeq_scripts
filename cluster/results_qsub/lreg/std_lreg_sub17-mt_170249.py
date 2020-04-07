@@ -1,0 +1,5 @@
+Processing subject: sub17-mt_170249
+Input:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub17-mt_170249/sub17-mt_170249_clean_epo.fif
+We merge the dynamical model of surprise with the metadata
+We remove the first sequence item for which the surprise is not well computed
+We remove the first sequence item for which the surprise is not well computed
