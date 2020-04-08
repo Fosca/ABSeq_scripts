@@ -36,7 +36,7 @@ elif os.name == 'posix':
     if platform == "linux" or platform == "linux2":
         root_path = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/'
     elif platform == "darwin":
-        root_path = '/Users/fosca/Documents/Fosca/Post_doc/Projects/ABSeq/'
+        root_path = '/Volumes/COUCOU_CFC/ABSeq/'
 
 study_path = os.path.join(root_path, 'data') + os.path.sep
 result_path = os.path.join(root_path, 'results') + os.path.sep

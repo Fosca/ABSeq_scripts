@@ -4,6 +4,9 @@
     <list default="true" id="211fbd7b-dfb2-409d-b4bd-d5ac723468de" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/11-Regress_out_surprise.py" beforeDir="false" afterPath="$PROJECT_DIR$/11-Regress_out_surprise.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run_cluster.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_cluster.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,8 +19,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret selection-end-line="22" />
+            <state relative-caret-position="101">
+              <caret line="30" column="24" selection-start-line="30" selection-end-line="31" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -28,10 +31,46 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="88" column="4" selection-start-line="88" selection-start-column="4" selection-end-line="88" selection-end-column="4" />
+            <state relative-caret-position="287">
+              <caret line="338" column="26" lean-forward="true" selection-start-line="338" selection-start-column="26" selection-end-line="338" selection-end-column="26" />
               <folding>
                 <element signature="e#0#27#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/run_cluster.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="270">
+              <caret line="18" selection-start-line="18" selection-end-line="18" />
+              <folding>
+                <element signature="e#0#27#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ABseq_func/cluster_funcs.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="386">
+              <caret line="134" column="13" selection-start-line="134" selection-start-column="13" selection-end-line="134" selection-end-column="13" />
+              <folding>
+                <element signature="e#0#31#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/config.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-177">
+              <caret line="30" column="53" lean-forward="true" selection-start-line="30" selection-start-column="53" selection-end-line="30" selection-end-column="53" />
+              <folding>
+                <element signature="e#86#95#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -53,6 +92,9 @@
       <find>connectivity</find>
       <find>nperm</find>
       <find>cluster_info</find>
+      <find>save</find>
+      <find>meg</find>
+      <find>eeg</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -61,14 +103,16 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/initialization_paths/initialization_paths.py" />
         <option value="$PROJECT_DIR$/ABseq_func/epoching_funcs.py" />
         <option value="$PROJECT_DIR$/ABseq_func/linear_reg_funcs.py" />
         <option value="$PROJECT_DIR$/ABseq_func/__init__.py" />
         <option value="$PROJECT_DIR$/99-linear_regressions_tests.py" />
         <option value="$PROJECT_DIR$/ABseq_func/stats_funcs.py" />
+        <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/11-Regress_out_surprise.py" />
+        <option value="$PROJECT_DIR$/run_cluster.py" />
+        <option value="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" />
         <option value="$PROJECT_DIR$/ABseq_func/TP_funcs.py" />
       </list>
     </option>
@@ -164,7 +208,7 @@
     <frame x="0" y="23" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4952153" visible="true" weight="0.2924595" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4952153" visible="true" weight="0.29685265" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.24964234" />
       <window_info id="Favorites" order="2" sideWeight="0.5047847" side_tool="true" weight="0.21207266" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -175,25 +219,15 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32903227" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50277776" side_tool="true" weight="0.3292683" />
-      <window_info anchor="bottom" id="Python Console" order="8" sideWeight="0.49722221" weight="0.32939634" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="8" sideWeight="0.49722221" visible="true" weight="0.32939634" />
       <window_info anchor="bottom" id="Terminal" order="9" weight="0.32909605" />
       <window_info anchor="bottom" id="Version Control" order="10" weight="0.3299539" />
+      <window_info anchor="right" x="0" y="0" width="310" height="677" id="Documentation" side_tool="true" weight="0.3297568" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" weight="0.3297568" />
     </layout>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/ABseq_func/TP_funcs.py</url>
-          <line>234</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
@@ -324,16 +358,6 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="220">
-          <caret line="39" selection-start-line="39" selection-end-line="39" />
-          <folding>
-            <element signature="e#86#95#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/initialization/initialization.py" />
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_bundle/pydev_import_hook.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -454,20 +478,50 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-177">
+          <caret line="30" column="53" lean-forward="true" selection-start-line="30" selection-start-column="53" selection-end-line="30" selection-end-column="53" />
+          <folding>
+            <element signature="e#86#95#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="22" />
+        <state relative-caret-position="101">
+          <caret line="30" column="24" selection-start-line="30" selection-end-line="31" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/ABseq_func/cluster_funcs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="386">
+          <caret line="134" column="13" selection-start-line="134" selection-start-column="13" selection-end-line="134" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_cluster.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="270">
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
+          <folding>
+            <element signature="e#0#27#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="88" column="4" selection-start-line="88" selection-start-column="4" selection-end-line="88" selection-end-column="4" />
+        <state relative-caret-position="287">
+          <caret line="338" column="26" lean-forward="true" selection-start-line="338" selection-start-column="26" selection-end-line="338" selection-end-column="26" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
           </folding>
