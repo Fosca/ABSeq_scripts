@@ -290,7 +290,10 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
                 else:
                     evoked_dict[file_names[k][:-7]] = [mne.read_evokeds(full_names[k])]
     else:
-        path_evo = op.join(config.meg_dir, subject, 'evoked')
+        if cleaned:
+            path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
+        else:
+            path_evo = op.join(config.meg_dir, subject, 'evoked')
         if root_path is not None:
             path_evo = op.join(root_path, subject)
         evoked_names = glob.glob(path_evo + op.sep + filter_name + '*')
@@ -383,15 +386,20 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, label=None, filter=True):
     # fig.savefig(fig_name_save, bbox_inches='tight', dpi=300)
     # plt.close('all')
 
-def plot_evoked_with_sem_1cond(data, cond, ch_inds, color=None, filter=True, axis=None):
+
+def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=True, axis=None):
 
     times = data[0][0].times * 1000
 
     group_data_seq = []
     for nn in range(len(data)):
-        print(nn)
-        sub_data = data[nn][0]
-        sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
+        sub_data = data[nn][0].copy()
+        if ch_type == 'eeg':
+            sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
+        elif ch_type == 'mag':
+            sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
+        elif ch_type == 'grad':
+            sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
         group_data_seq.append(sub_data[ch_inds].mean(axis=0))
 
     mean = np.mean(group_data_seq, axis=0)
