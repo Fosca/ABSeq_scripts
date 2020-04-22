@@ -1,6 +1,6 @@
 clearvars;clc
 
-%% Compute position-depentdant metadata for each sequence
+%% Compute position-dependent metadata for each sequence
 % Ex: [[AA][BB]][AAA]
 % Identity: 0 0 1 1 0 0 0
 % Repeat0/Alter1: NaN 0 1 0 1 0 0
@@ -22,6 +22,7 @@ data.Sequence = {
 'AABBABABAABBABAB';
 'AAAABBBBAABBABAB';
 'ABAAABBBBABBAAAB';};
+% LoT_chunk_comp
 data.SequenceBrackets = {
 '[AAAAAAAAAAAAAAAA]';
 '[ABABABABABABABAB]';
@@ -29,7 +30,7 @@ data.SequenceBrackets = {
 '[[AAAA][BBBB][AAAA][BBBB]]';
 '[[[[AA][BB]][ABAB]][[[AA][BB]][ABAB]]]';
 '[[[AAAA][BBBB]][[AA][BB]][ABAB]]';
-'[[A][B][[AAA][B]][[BBB][A]][BBA][AAB]]';};
+'[[A][B][[AAA][BBBB][A][B][B][AAA][B]]';};
 
 for nseq=1:numel(data.Sequence)
     
@@ -194,6 +195,7 @@ for iS = 1 :numel(subjects_list)
             ChunkSize(nfile, :) = repmat(data.ChunkSize.(run_sequence), 1, nrep);
         end
     end
+    Alt = RepeatAlter(:); Alt(isnan(Alt)) = 0
     
     % Save
     save('Identity.mat', 'Identity')
