@@ -9,6 +9,7 @@ from scipy.signal import savgol_filter
 from scipy.stats import sem
 from ABseq_func import *
 from mne.parallel import parallel_func
+from importlib import reload
 
 # # make less parallel runs to limit memory usage
 # N_JOBS = max(config.N_JOBS // 4, 1)
@@ -20,24 +21,33 @@ N_JOBS = config.N_JOBS
 # ----------------------------------------------------------- #
 
 parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked, n_jobs=N_JOBS)
-parallel(run_func(subject) for subject in config.subjects_list)
+parallel(run_func(subject, cleaned=True) for subject in config.subjects_list)
+parallel(run_func(subject, cleaned=False) for subject in config.subjects_list)
+
+# ----------------------------------------------------------- #
+# -------- GENERATE EVOKED GROUP FIGURES (GFP...) ----------- #
+# ----------------------------------------------------------- #
+script_group_avg_and_plot_gfp()
+script_generate_heatmap_gfp_figures()
 
 
-def script_group_avg():
+def script_group_avg_and_plot_gfp():
 
     # ----------------------------------------------------------- #
     # ------------------ LOAD THE EVOKED OF INTEREST ------------ #
     # ----------------------------------------------------------- #
 
     # all sequences pooled together
-    evoked_all_standard = evoked_funcs.load_evoked(subject='all', filter_name='all_standard', filter_not=None)
-    evoked_all_viol = evoked_funcs.load_evoked(subject='all', filter_name='all_viol', filter_not=None)
-    evoked_full_seq_all_standard = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_all_standard', filter_not=None)
+    evoked_all_standard = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_all', filter_not=None)
+    evoked_all_viol = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_all', filter_not=None)
+    evoked_full_seq_all_standard = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard_all', filter_not=None)
 
     # one key per sequence ID
-    evoked_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='standard_seq', filter_not='pos')  #
-    evoked_viol_seq = evoked_funcs.load_evoked(subject='all', filter_name='viol_seq', filter_not='pos')  #
-    evoked_full_seq_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard', filter_not=None)
+    evoked_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_seq', filter_not='pos')  #
+    evoked_viol_seq = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_seq', filter_not='pos')  #
+    evoked_full_seq_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard_seq', filter_not=None)
+    evoked_full_seq_teststandard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None)
+    evoked_full_seq_habituation_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None)
 
     evoked_viol_seq1_pos = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq1_pos', filter_not=None)  #
     evoked_viol_seq2_pos = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq2_pos', filter_not=None)  #
@@ -56,18 +66,15 @@ def script_group_avg():
     evoked_standard_seq7 = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard_seq7', filter_not='pos')  #
 
 
-
     def butterfly_grand_avg():
 
-        evoked_funcs.plot_butterfly_items_allsubj(evoked_standard_seq,violation_or_not=0)
-        evoked_funcs.plot_butterfly_items_allsubj(evoked_viol_seq,violation_or_not=1)
-
+        evoked_funcs.plot_butterfly_items_allsubj(evoked_standard_seq, violation_or_not=0)
+        evoked_funcs.plot_butterfly_items_allsubj(evoked_viol_seq, violation_or_not=1)
 
 
     # ----------------------------------------------------------- #
     # ------------------ EXTRACT GROUP GFP DATA ----------------- #
     # ----------------------------------------------------------- #
-
 
 
     def plot_gfp_super_cool(evoked_list, full_sequence=True, ch_type='eeg', save_path='', fig_name='', labels=None):
@@ -177,6 +184,58 @@ def script_group_avg():
         plot_gfp_super_cool(evoked_standard_seq7, full_sequence=True, ch_type=ch_type,
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP',
                             fig_name='full_seq_standard_seq7', labels=[''])
+
+
+def script_generate_heatmap_gfp_figures():
+
+    # ----------------------------------------------------------- #
+    # ---------------- GROUP GFP HEATMAP FIGURES ---------------- #
+    # ----------------------------------------------------------- #
+
+    filterdata = True
+    # Load required evoked data
+    evoked_full_seq_teststandard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None)
+    evoked_full_seq_habituation_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None)
+    evoked_viol_seq_pos = dict()
+    for seqID in range(1, 8):
+        evoked_viol_seq_pos['seq' + str(seqID)] = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None)
+
+    for ch_type in ['mag', 'grad', 'eeg']:
+        # Compute & store average gfp vectors in a data_to_plot dict (gfp per subject, then group average)
+        data_to_plot = {}
+        data_to_plot['hab'] = {}
+        data_to_plot['teststand'] = {}
+        data_to_plot['violpos1'] = {}
+        data_to_plot['violpos2'] = {}
+        data_to_plot['violpos3'] = {}
+        data_to_plot['violpos4'] = {}
+        for seqID in range(1, 8):
+            # Habituation trials
+            gfp_all_subs, times = GFP_funcs.gfp_evoked(evoked_full_seq_habituation_seq['full_seq_habituation_seq'+str(seqID)+'-'])
+            data_to_plot['hab']['seq'+str(seqID)] = np.mean(gfp_all_subs[ch_type], axis=0)
+            if filterdata:
+                data_to_plot['hab']['seq'+str(seqID)] = savgol_filter(np.mean(gfp_all_subs[ch_type], axis=0), window_length=13, polyorder=3)
+            else:
+                data_to_plot['hab']['seq'+str(seqID)] = np.mean(gfp_all_subs[ch_type], axis=0)
+            # TestStandard trials
+            gfp_all_subs, times = GFP_funcs.gfp_evoked(evoked_full_seq_teststandard_seq['full_seq_teststandard_seq'+str(seqID)+'-'])
+            if filterdata:
+                data_to_plot['teststand']['seq'+str(seqID)] = savgol_filter(np.mean(gfp_all_subs[ch_type], axis=0), window_length=13, polyorder=3)
+            else:
+                data_to_plot['teststand']['seq'+str(seqID)] = np.mean(gfp_all_subs[ch_type], axis=0)
+            # Violation trials
+            seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
+            for n, devpos in enumerate(violation_positions):
+                gfp_all_subs, times = GFP_funcs.gfp_evoked(evoked_viol_seq_pos['seq' + str(seqID)]['full_seq_viol_seq'+str(seqID)+'_pos' + str(devpos) + '-'])
+                data_to_plot['violpos'+str(n+1)]['seq' + str(seqID)] = np.mean(gfp_all_subs[ch_type], axis=0)
+                if filterdata:
+                    data_to_plot['violpos' + str(n + 1)]['seq' + str(seqID)] = savgol_filter(np.mean(gfp_all_subs[ch_type], axis=0), window_length=13, polyorder=3)
+                else:
+                    data_to_plot['violpos' + str(n + 1)]['seq' + str(seqID)] = np.mean(gfp_all_subs[ch_type], axis=0)
+
+        # Draw & save heatmap figure
+        evoked_funcs.allsequences_heatmap_figure(data_to_plot, times, cmap_style='unilateral', fig_title='GFP ' + ch_type,
+                                                 file_name=op.join(config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP', 'GFP_full_seq_allconds_heatmap_' + ch_type + '.png'))
 
 
 def various():
@@ -315,6 +374,4 @@ def various():
     grand_average.plot_topomap(times=times, ch_type='eeg', time_unit='s')
 
     mne.stats.permutation_cluster_test(all_evokeds)
-
-script_group_avg()
 
