@@ -11,6 +11,8 @@ from ABseq_func import *
 import config
 from scipy.stats import sem
 from ABseq_func import utils  # why do we need this now ?? (error otherwise)
+import matplotlib.ticker as ticker
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def generate_EMS_all_sequences(subject):
     """
@@ -486,6 +488,7 @@ def apply_EMS_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
     return True
 
+
 def plot_EMS_projection_for_seqID_old(epochs_list, sensor_type, seqID=1,EMS_filter_times=[x / 1000 for x in range(-100, 701, 50)], save_path=None,color_mean=None):
     """
     This will allow to plot the Projections of the EMS on the 4 positions of the violations.
@@ -540,6 +543,7 @@ def plot_EMS_projection_for_seqID_old(epochs_list, sensor_type, seqID=1,EMS_filt
         plt.close('all')
 
     return figure
+
 
 def plot_EMS_projection_for_seqID(epochs_list, sensor_type, seqID=1, EMS_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None, color_mean=None, plot_noviolation=True):
     """
@@ -596,6 +600,7 @@ def plot_EMS_projection_for_seqID(epochs_list, sensor_type, seqID=1, EMS_filter_
         plt.close('all')
 
     return figure
+
 
 def plot_EMS_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save_path=None):
     # this provides us with the position of the violations and the times
@@ -705,26 +710,31 @@ def plot_EMS_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
     return figure
 
-def plot_EMS_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None):
 
+def plot_EMS_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None):
 
     # window info, just for figure title
     win_tmin = epochs_list['test'][0][0].metadata.EMS_filter_tmin_window[0] * 1000
     win_tmax = epochs_list['test'][0][0].metadata.EMS_filter_tmax_window[0] * 1000
 
-    fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=True, constrained_layout=True)
+    fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
     fig.suptitle('EMS %s - window %d-%dms; N subjects = %d' % (
         sensor_type, win_tmin, win_tmax, len(epochs_list['test'])), fontsize=12)
     ax = axes.ravel()[::1]
-    ax[0].set_title('Sequence1', loc='right', weight='bold')
-    ax[1].set_title('Sequence2', loc='right', weight='bold')
-    ax[2].set_title('Sequence3', loc='right', weight='bold')
-    ax[3].set_title('Sequence4', loc='right', weight='bold')
-    ax[4].set_title('Sequence5', loc='right', weight='bold')
-    ax[5].set_title('Sequence6', loc='right', weight='bold')
-    ax[6].set_title('Sequence7', loc='right', weight='bold')
-
-# 'Dev pos %d' % violpos_list[4], loc='right', weight='bold')
+    ax[0].set_title('Repeat', loc='left', weight='bold')
+    ax[1].set_title('Alternate', loc='left', weight='bold')
+    ax[2].set_title('Pairs', loc='left', weight='bold')
+    ax[3].set_title('Quadruplets', loc='left', weight='bold')
+    ax[4].set_title('Pairs+Alt', loc='left', weight='bold')
+    ax[5].set_title('Shrinking', loc='left', weight='bold')
+    ax[6].set_title('Complex', loc='left', weight='bold')
+    seqtxtXY = ['xxxxxxxxxxxxxxxx',
+                'xYxYxYxYxYxYxYxY',
+                'xxYYxxYYxxYYxxYY',
+                'xxxxYYYYxxxxYYYY',
+                'xxYYxYxYxxYYxYxY',
+                'xxxxYYYYxxYYxYxY',
+                'xYxxxYYYYxYYxxxY']
 
     if sensor_type == 'mag':
         vmin = -5e-13
@@ -766,21 +776,33 @@ def plot_EMS_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             data_mean.append(mean)
 
         width = 75
+        # Add vertical lines, and "xY"
         for xx in range(16):
             ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
-        ax[n].imshow(data_mean, extent=[min(times)*1000, max(times)*1000, 0, 6*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+            txt = seqtxtXY[n][xx]
+            ax[n].text(250*(xx+1)-125, width*6+(width/3), txt, horizontalalignment='center', fontsize=16)
+        im = ax[n].imshow(data_mean, extent=[min(times)*1000, max(times)*1000, 0, 6*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
         ax[n].set_yticks(np.arange(width/2, 6*width, width))
-        ax[n].set_yticklabels(['Dev pos %d' % violpos_list[4], 'Dev pos %d' % violpos_list[3], 'Dev pos %d' % violpos_list[2], 'Dev pos %d' % violpos_list[1], 'Standard','Habituation'])
+        ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3], 'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1], 'Standard','Habituation'])
         ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
+
+        # add deviant marks
         for k in range(4):
             viol_pos = violpos_list[k+1]
             x = 250 * (viol_pos - 1)
             y1 = (4-k)*width
             y2 = (4-1-k)*width
-            ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=4)
-            ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=2)
+            ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
+            ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
+        # add colorbar
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        # cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.5, pad=.2, aspect=10)
+        cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
+        cb.ax.yaxis.set_offset_position('left')
+        cb.set_label('a. u.')
         n += 1
     axes.ravel()[-1].set_xlabel('Time (ms)')
 
