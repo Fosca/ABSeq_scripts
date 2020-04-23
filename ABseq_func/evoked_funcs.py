@@ -8,6 +8,7 @@ from ABseq_func import *
 from ABseq_func import utils   # why do we need this now ?? (error otherwise)
 from scipy.signal import savgol_filter
 from scipy.stats import sem
+import matplotlib.ticker as ticker
 
 def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks",
                          violation_or_not=1):
@@ -154,6 +155,21 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
 
 
 def create_evoked(subject, cleaned=True):
+    """
+    This function creates several types of evoked (epochs averages, "-ave.fif") for a given subject:
+    - Full 16-items sequences [full_seq]:
+        - Habituation sequences [_habituation]: all sequencesIDs pooled together [_all] + 1 for each sequenceID [_seqN]
+        - TestStandard sequences [_teststandard] (non violated, within test blocks): all sequencesIDs pooled together [_all]  + 1 for each sequenceID [_seqN]
+        - Standard sequences [_standard] (all non violated, whether within habituation or test blocks): all sequencesIDs pooled together [_all] + 1 for each sequenceID [_seqN]
+        - Violated sequences [_viol]: one for each sequenceID & position (7 x 4) [_seqN_posN]
+    - Sequence individual items [items]:
+        - Habituation items [_habituation]: all sequencesIDs pooled together [_all] + 1 for each sequenceID [_seqN]
+        - TestStandard items [_teststandard] (non violated, within test blocks): all sequencesIDs pooled together [_all]  + 1 for each sequenceID [_seqN]
+        - Standard items [_standard] (all non violated, whether within habituation or test blocks): all sequencesIDs pooled together [_all] + 1 for each sequenceID [_seqN]
+        - Standard items balanced [_standard_balanced] (non violated, whether within habituation or test blocks, matched in position with violations): all sequencesIDs pooled together [_all] + 1 for each sequenceID [_seqN]
+        - Violated sequences [_viol]: one for each sequenceID [_seqN] and one for each sequenceID & position (7 x 4) [_seqN_posN]
+        - ?? Standard items violpositions [_standard] (non violated items from violated sequences with matched postions): for each sequenceID & position (7 x 4) [_seqN_posN] ??
+    """
     # create folder for evoked
     path_evo = op.join(config.meg_dir, subject, 'evoked')
     if cleaned:
@@ -166,19 +182,19 @@ def create_evoked(subject, cleaned=True):
     # ========== evoked on full 16-items seq ================
     # =======================================================
 
-    epochs_full_sequence['ViolationInSequence == "0"'].average().save(
-        op.join(path_evo, 'full_seq_all_standard-ave.fif'))
+    epochs_full_sequence['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'full_seq_standard_all-ave.fif'))
+    epochs_full_sequence['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'full_seq_teststandard_all-ave.fif'))
+    epochs_full_sequence['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'full_seq_habituation_all-ave.fif'))
 
     for k in range(1, 8):
-        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(
-            op.join(path_evo, 'full_seq_standard_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'full_seq_standard_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'full_seq_teststandard_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'full_seq_habituation_seq%i-ave.fif' % k))
         # determine the position of the deviants
         tmp = epochs_full_sequence['SequenceID == "%i" and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_full_sequence[
-                'SequenceID == "%i" and  ViolationInSequence == "%i"' % (k, int(pos_viol))].average().save(
-                op.join(path_evo, 'full_seq_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_full_sequence['SequenceID == "%i" and  ViolationInSequence == "%i"' % (k, int(pos_viol))].average().save(op.join(path_evo, 'full_seq_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
     del epochs_full_sequence
     # evoked on individual items
 
@@ -187,26 +203,25 @@ def create_evoked(subject, cleaned=True):
     # =======================================================
 
     epochs_items = epoching_funcs.load_epochs_items(subject)
-    epochs_items['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'all_standard-ave.fif'))
-    epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'all_viol-ave.fif'))
+    epochs_items['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
+    epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
+    epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
+    epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
-    epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'balanced_standard-ave.fif'))
+    epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
     for k in range(1, 8):
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(
-            op.join(path_evo, 'standard_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationOrNot == "1"' % k].average().save(
-            op.join(path_evo, 'viol_seq%i-ave.fif' % k))
-        epochs_balanced['SequenceID == "%i" and ViolationOrNot == "0"' % k].average().save(
-            op.join(path_evo, 'balanced_standard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == "%i" and ViolationOrNot == "1"' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
+        epochs_balanced['SequenceID == "%i" and ViolationOrNot == "0"' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
         # determine the position of the deviants
         tmp = epochs_items['SequenceID == "%i" and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "1"' % (k, pos_viol)].average().save(
-                op.join(path_evo, 'viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "0"' % (k, pos_viol)].average().save(
-                op.join(path_evo, 'standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "1"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "0"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
 
     del epochs_items
 
@@ -417,3 +432,103 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
     else:
         plt.fill_between(times, ub, lb, color=color, alpha=.2)
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
+
+
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None):
+
+    """
+    :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
+                         each contains keys 'seq1', 'seq2', 'seq3', 'seq4', 'seq5', 'seq6', 'seq7'
+                         each contains a data vector
+    :param times: x values
+    :param cmap_style: 'unilateral' scale uses min-max (& viridis), 'bilateral' uses -absolutemax & +abolutemax (& blue/white/red)
+    :param fig_title:
+    :param save_path:
+    :return: figure
+    """
+    # Additional parameters
+    cmap_rescale_ratio = 0.2  # 'saturate' the colormap, min/max will be reduced with this ratio
+
+    # Create figure
+    fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
+    fig.suptitle(fig_title, fontsize=12)
+    ax = axes.ravel()[::1]
+
+    # Get max absolute value of the whole dataset to use it as vmin/vmax
+    maxlist = []
+    minlist = []
+    maxabslist = []
+    for key1 in data_to_plot.keys():
+        for key2 in data_to_plot[key1].keys():
+            maxlist.append(max(data_to_plot[key1][key2]))
+            minlist.append(min(data_to_plot[key1][key2]))
+            maxabslist.append(max(data_to_plot[key1][key2], key=abs))
+
+    # colormap
+    if cmap_style == 'unilateral':
+        cmap = 'viridis'
+        vmin = min(minlist)
+        vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
+    else:
+        cmap = 'RdBu_r'
+        vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
+        vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
+
+    n = 0
+    for seqID in range(1, 8):
+
+        # Sequence info
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
+
+        # Subfig title
+        ax[seqID-1].set_title(seqname, loc='left', weight='bold')
+
+        # Data
+        y_list = []
+        y_list.append(data_to_plot['hab']['seq' + str(seqID)])
+        y_list.append(data_to_plot['teststand']['seq' + str(seqID)])
+        y_list.append(data_to_plot['violpos1']['seq' + str(seqID)])
+        y_list.append(data_to_plot['violpos2']['seq' + str(seqID)])
+        y_list.append(data_to_plot['violpos3']['seq' + str(seqID)])
+        y_list.append(data_to_plot['violpos4']['seq' + str(seqID)])
+
+        width = 75
+        # Add vertical lines, and "xY"
+        for xx in range(16):
+            ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
+            ax[n].text(250 * (xx + 1) - 125, width * 6 + (width / 3), seqtxtXY[xx], horizontalalignment='center', fontsize=16)
+        im = ax[n].imshow(y_list, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmap, vmin=vmin, vmax=vmax)
+        # ax[n].set_xlim(-500, 4250)
+        # ax[n].legend(loc='upper left', fontsize=10)
+        ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
+        fig.canvas.draw()
+        ax[n].set_yticklabels(['Violation (pos. %d)' % violation_positions[3], 'Violation (pos. %d)' % violation_positions[2],
+                               'Violation (pos. %d)' % violation_positions[1], 'Violation (pos. %d)' % violation_positions[0],
+                               'Standard', 'Habituation'])
+        ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
+
+        # add deviant marks
+        for k in range(4):
+            viol_pos = violation_positions[k]
+            x = 250 * (viol_pos - 1)
+            y1 = (4 - k) * width
+            y2 = (4 - 1 - k) * width
+            ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
+            ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
+        # add colorbar
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        # cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.5, pad=.2, aspect=10)
+        cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
+        cb.ax.yaxis.set_offset_position('left')
+        cb.set_label('a. u.')
+        n += 1
+    axes.ravel()[-1].set_xlabel('Time (ms)')
+
+    figure = plt.gcf()
+    if file_name is not None:
+        print('Saving '+file_name)
+        figure.savefig(file_name, bbox_inches='tight', dpi=300)
+        plt.close('all')
+
+    return figure
