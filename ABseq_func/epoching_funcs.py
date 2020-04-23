@@ -80,6 +80,39 @@ def get_seqID(presented_sequences):
 
     return seqID, complexity, sequence_entropy, violation_positions
 
+def get_seqInfo(seqID):
+    if seqID == 1:
+        seqname = 'Repeat'
+        seqtxtXY = 'xxxxxxxxxxxxxxxx'
+        violation_positions = [9, 12, 13, 15]
+    elif seqID == 2:
+        seqname = 'Alternate'
+        seqtxtXY = 'xYxYxYxYxYxYxYxY'
+        violation_positions = [9, 12, 14, 15]
+    elif seqID == 3:
+        seqname = 'Pairs'
+        seqtxtXY = 'xxYYxxYYxxYYxxYY'
+        violation_positions = [10, 11, 14, 15]
+    elif seqID == 4:
+        seqname = 'Quadruplets'
+        seqtxtXY = 'xxxxYYYYxxxxYYYY'
+        violation_positions = [9, 12, 13, 15]
+    elif seqID == 5:
+        seqname = 'Pairs+Alt'
+        seqtxtXY = 'xxYYxYxYxxYYxYxY'
+        violation_positions = [10, 11, 14, 15]
+    elif seqID == 6:
+        seqname = 'Shrinking'
+        seqtxtXY = 'xxxxYYYYxxYYxYxY'
+        violation_positions = [10, 11, 14, 15]
+    elif seqID == 7:
+        seqname = 'Complex'
+        seqtxtXY = 'xYxxxYYYYxYYxxxY'
+        violation_positions = [9, 12, 14, 15]
+    else:
+        print('This sequence was not recognized!!!! ')
+
+    return seqname, seqtxtXY, violation_positions
 
 def update_metadata_rejected(subject, epochs_items):
     run_info_subject_dir = op.join(config.run_info_dir, subject)
@@ -384,6 +417,11 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         raw.set_eeg_reference(projection=True)
     del raw_list
 
+    # Save resampled, concatenated runs (in case we need it)
+    print('Saving concatenated runs')
+    fname = op.join(meg_subject_dir, subject + '_allruns_final_raw.fif')
+    raw.save(fname, overwrite=True)
+
     meg = False
     if 'meg' in config.ch_types:
         meg = True
@@ -393,22 +431,6 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         meg = 'mag'
     eeg = 'eeg' in config.ch_types
     picks = mne.pick_types(raw.info, meg=meg, eeg=eeg, stim=True, eog=True, exclude=())
-
-    # # ---------------------------------------------------------------------------------------------------------------- #
-    # # DO THIS BEFORE CONCAT??
-    # # Resampling the raw data while keeping events from original raw data, to avoid potential loss of
-    # # events when downsampling: https://www.nmr.mgh.harvard.edu/mne/dev/auto_examples/preprocessing/plot_resample.html
-    # # Find events
-    events = mne.find_events(raw, stim_channel=config.stim_channel,
-                             consecutive=True,
-                             min_duration=config.min_event_duration,
-                             shortest_event=config.shortest_event)
-    #
-    # print('  Downsampling raw data')
-    # raw, events = raw.resample(config.resample_sfreq, npad='auto', events=events)
-    # if len(events) != len(runs)*46*16:
-    #     raise Exception('We expected %i events but we got %i'%(len(runs)*46*16,len(events)))
-    # # ---------------------------------------------------------------------------------------------------------------- #
 
     # Construct metadata from csv events file
     metadata = epoching_funcs.convert_csv_info_to_metadata(run_info_subject_dir)
