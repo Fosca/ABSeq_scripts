@@ -19,8 +19,20 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="30" column="24" selection-start-line="30" selection-end-line="31" />
+            <state relative-caret-position="270">
+              <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+              <folding>
+                <element signature="e#0#31#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ABseq_func/cluster_funcs.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="57" selection-start-line="8" selection-start-column="57" selection-end-line="8" selection-end-column="78" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -31,8 +43,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="362">
-              <caret line="343" column="26" selection-start-line="343" selection-start-column="26" selection-end-line="343" selection-end-column="26" />
+            <state relative-caret-position="545">
+              <caret line="343" column="19" selection-start-line="343" selection-start-column="19" selection-end-line="343" selection-end-column="19" />
               <folding>
                 <element signature="e#0#27#0" expanded="true" />
               </folding>
@@ -43,22 +55,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/run_cluster.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="8" column="40" lean-forward="true" selection-start-line="8" selection-start-column="40" selection-end-line="8" selection-end-column="40" />
+            <state relative-caret-position="270">
+              <caret line="18" column="130" selection-start-line="18" selection-start-column="130" selection-end-line="18" selection-end-column="130" />
               <folding>
                 <element signature="e#0#27#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/ABseq_func/cluster_funcs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="133" column="37" selection-start-line="133" selection-start-column="4" selection-end-line="133" selection-end-column="37" />
-              <folding>
-                <element signature="e#0#31#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -99,24 +99,41 @@
         <option value="$PROJECT_DIR$/ABseq_func/stats_funcs.py" />
         <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/11-Regress_out_surprise.py" />
-        <option value="$PROJECT_DIR$/run_cluster.py" />
         <option value="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" />
         <option value="$PROJECT_DIR$/ABseq_func/TP_funcs.py" />
+        <option value="$PROJECT_DIR$/run_cluster.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="23" />
+    <option name="x" value="310" />
+    <option name="y" value="39" />
     <option name="width" value="1440" />
     <option name="height" value="877" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
-    <navigator proportions="" version="1">
+    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
+          <expand>
+            <path>
+              <item name="ABSeq_scripts" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/Documents/Fosca/Post_doc/Projects/ABSeq/scripts/ABSeq_scripts" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+            <path>
+              <item name="ABSeq_scripts" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="~/Documents/Fosca/Post_doc/Projects/ABSeq/scripts/ABSeq_scripts" type="442cc68d:ScopeViewTreeModel$RootNode" />
+              <item name="ABseq_func" type="9f88c78c:ScopeViewTreeModel$FileNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="ProjectPane" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -135,13 +152,6 @@
         </RuleState>
       </list>
     </option>
-  </component>
-  <component name="RunManager">
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.11-Regress_out_surprise" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -165,9 +175,30 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="877" extended-state="0" />
+    <frame x="44" y="24" width="1440" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4952153" visible="true" weight="0.2966878" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.24964234" />
+      <window_info id="Favorites" order="2" sideWeight="0.5047847" side_tool="true" weight="0.21207266" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3523677" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4015748" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32903227" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50277776" side_tool="true" weight="0.3292683" />
+      <window_info anchor="bottom" id="Python Console" order="8" sideWeight="0.49722221" weight="0.32939634" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32909605" />
+      <window_info anchor="bottom" id="Version Control" order="10" weight="0.3299539" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Data View" order="3" weight="0.3297568" />
+      <window_info anchor="right" x="0" y="0" width="310" height="677" id="Documentation" order="4" side_tool="true" weight="0.3297568" />
+    </layout>
+    <layout-to-restore>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.4952153" visible="true" weight="0.2966878" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.24964234" />
       <window_info id="Favorites" order="2" sideWeight="0.5047847" side_tool="true" weight="0.21207266" />
@@ -187,7 +218,7 @@
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" weight="0.3297568" />
       <window_info anchor="right" x="0" y="0" width="310" height="677" id="Documentation" order="4" side_tool="true" weight="0.3297568" />
-    </layout>
+    </layout-to-restore>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="j ai ajouté le script a faire tourner sur le cluster" />
@@ -444,10 +475,25 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ABseq_func/GFP_funcs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RUN_ALL.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/11-Regress_out_surprise.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="30" column="24" selection-start-line="30" selection-end-line="31" />
+        <state relative-caret-position="270">
+          <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
@@ -456,8 +502,8 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
     </entry>
     <entry file="file://$PROJECT_DIR$/ABseq_func/cluster_funcs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="133" column="37" selection-start-line="133" selection-start-column="4" selection-end-line="133" selection-end-column="37" />
+        <state relative-caret-position="120">
+          <caret line="8" column="57" selection-start-line="8" selection-start-column="57" selection-end-line="8" selection-end-column="78" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
           </folding>
@@ -466,21 +512,18 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
     </entry>
     <entry file="file://$PROJECT_DIR$/ABseq_func/TP_funcs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="362">
-          <caret line="343" column="26" selection-start-line="343" selection-start-column="26" selection-end-line="343" selection-end-column="26" />
+        <state relative-caret-position="545">
+          <caret line="343" column="19" selection-start-line="343" selection-start-column="19" selection-end-line="343" selection-end-column="19" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/run_cluster.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="40" lean-forward="true" selection-start-line="8" selection-start-column="40" selection-end-line="8" selection-end-column="40" />
+        <state relative-caret-position="270">
+          <caret line="18" column="130" selection-start-line="18" selection-start-column="130" selection-end-line="18" selection-end-column="130" />
           <folding>
             <element signature="e#0#27#0" expanded="true" />
           </folding>
