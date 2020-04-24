@@ -334,14 +334,17 @@ def regress_out_optimal_omega(subject,clean=True):
     for key in results.keys():
         results[key] = np.asarray(results[key])
 
-    epochs._data = np.transpose(results['residual'],(1,2,0))
+    epochs_residual = epochs.copy()
+    epochs_reg_coeff_surprise = epochs.copy()
+
+    epochs_residual._data = np.transpose(results['residual'],(1,2,0))
     save_name = op.join(config.meg_dir,subject,subject+'_residuals_surprise-epo.fif')
-    epochs.save(save_name)
+    epochs_residual.save(save_name)
 
     # ============= it is the topomap of this that is going to tell us the contribution of the topography of the variance ====
-    epochs._data = results['predictions']
+    epochs_reg_coeff_surprise._data = np.transpose(results['predictions'],(1,2,0))
     save_name = op.join(config.meg_dir,subject,subject+'_regcoeff_surprise-epo.fif')
-    epochs.save(save_name)
+    epochs_reg_coeff_surprise.save(save_name)
 
     res_fname = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject,'residuals_results.npy')
     np.save(res_fname,results)
