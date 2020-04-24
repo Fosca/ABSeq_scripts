@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="211fbd7b-dfb2-409d-b4bd-d5ac723468de" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/11-Regress_out_surprise.py" beforeDir="false" afterPath="$PROJECT_DIR$/11-Regress_out_surprise.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/TP_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" beforeDir="false" afterPath="$PROJECT_DIR$/ABseq_func/cluster_funcs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_cluster.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_cluster.py" afterDir="false" />
+    <list default="true" id="cbe206ca-f846-4847-87b4-3bb02bc5a905" name="Default Changelist" comment="Ajouté stats_funcs">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/99-linear_regressions_tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/99-linear_regressions_tests.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,6 +11,7 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+<<<<<<< Updated upstream
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
@@ -66,6 +64,8 @@
       </file>
     </leaf>
   </component>
+=======
+>>>>>>> Stashed changes
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -73,21 +73,10 @@
       </list>
     </option>
   </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>times</find>
-      <find>fname</find>
-      <find>connectivity</find>
-      <find>nperm</find>
-      <find>cluster_info</find>
-      <find>save</find>
-      <find>meg</find>
-      <find>eeg</find>
-    </findStrings>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+<<<<<<< Updated upstream
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -136,10 +125,19 @@
       <pane id="ProjectPane" />
     </panes>
   </component>
+=======
+  <component name="ProjectId" id="1aIa9KfUwU1UMCzjlDdOzPe7RFM" />
+>>>>>>> Stashed changes
   <component name="PropertiesComponent">
-    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="PyConsoleConfigurable.Python Console" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings is-module-sdk="true">
+        <option name="myUseModuleSdk" value="true" />
+      </console-settings>
+    </option>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -158,22 +156,86 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="211fbd7b-dfb2-409d-b4bd-d5ac723468de" name="Default Changelist" comment="" />
-      <created>1586255428246</created>
+      <changelist id="cbe206ca-f846-4847-87b4-3bb02bc5a905" name="Default Changelist" comment="" />
+      <created>1586425409612</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1586255428246</updated>
+      <updated>1586425409612</updated>
     </task>
-    <task id="LOCAL-00001" summary="j ai ajouté le script a faire tourner sur le cluster">
-      <created>1586445123519</created>
+    <task id="LOCAL-00001" summary="Ajouté stats_funcs">
+      <created>1586445970163</created>
       <option name="number" value="00001" />
       <option name="presentableId" value="LOCAL-00001" />
       <option name="project" value="LOCAL" />
-      <updated>1586445123519</updated>
+      <updated>1586445970163</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Rajouté option &quot;cleaned&quot; dans load_evoked avec un seul sujet&#10;Petite modif de la fonction de plot de courbes avec bandes SEM pour y intégrer le choix du ch_type">
+      <created>1586446720789</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1586446720789</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Plusieurs corrections des fonctions de stats_cluter avec plot (problèmes d'indices des channels en jonglant avec des datasets différents: uniquement un ch_type pour les stats, mais données d'origine avec les 3 ch_types souvent requises).">
+      <created>1586446930536</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1586446930536</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Adapté pour utiliser les fonctions de ABseq_func.stats_funcs">
+      <created>1586446965361</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1586446965361</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Minor corrections, corrected chunking for 'Complex' sequence">
+      <created>1587539530624</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1587539530624</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Enlevé fonction &quot;run_epochs&quot; puisque déplacée depuis quelques temps dans epoching_funcs et plus utilisée ici">
+      <created>1587539738541</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1587539738541</updated>
+    </task>
+    <task id="LOCAL-00007" summary="- Mise à jour de la fonction pour générer les figures evoked et GFP (car nouveau nommage fichiers evoked)&#10;- Ajout fonction pour générer les figures GFP heatmap (créer dict avec GFPs et appeler la fonction de plot)">
+      <created>1587648188710</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1587648188711</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Mise à jour fonction pour générer la figure projected EMS heatmap">
+      <created>1587648357307</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1587648357307</updated>
+    </task>
+    <task id="LOCAL-00009" summary="- Mise à jour de la fonction pour créer les evoked par sujet. Rationalisé le nommage des fichiers -ave.fif créés.&#10;- Ajout d'une fonction pour créer la figure 'heatmap' des 7 séquences X 6 types d'essais. Prends en entrée un dict contenant 7x6 vecteurs.">
+      <created>1587648567591</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1587648567591</updated>
+    </task>
+    <task id="LOCAL-00010" summary="- Ajouté une fonction 'get_seqInfo', utile pour certaines figures, qui retourne le nom de la séquence, les positions des violations, et sa version xY&#10;- Ajouté l'export d'un fichier fif contenant l'ensemble des runs concaténés après resampling, au moment de la création des epochs (en vue d'importation dans SPM)&#10;- Corrections mineures">
+      <created>1587648967054</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1587648967054</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
+<<<<<<< Updated upstream
   <component name="ToolWindowManager">
     <frame x="44" y="24" width="1440" height="877" extended-state="0" />
     <editor active="true" />
@@ -530,5 +592,43 @@ inds_o.append(np.where(omegas_computed == omegas_of_interest[k])[0][0])</express
         </state>
       </provider>
     </entry>
+=======
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Ajouté stats_funcs" />
+    <MESSAGE value="Rajouté option &quot;cleaned&quot; dans load_evoked avec un seul sujet&#10;Petite modif de la fonction de plot de courbes avec bandes SEM pour y intégrer le choix du ch_type" />
+    <MESSAGE value="Plusieurs corrections des fonctions de stats_cluter avec plot (problèmes d'indices des channels en jonglant avec des datasets différents: uniquement un ch_type pour les stats, mais données d'origine avec les 3 ch_types souvent requises)." />
+    <MESSAGE value="Adapté pour utiliser les fonctions de ABseq_func.stats_funcs" />
+    <MESSAGE value="Minor corrections, corrected chunking for 'Complex' sequence" />
+    <MESSAGE value="Enlevé fonction &quot;run_epochs&quot; puisque déplacée depuis quelques temps dans epoching_funcs et plus utilisée ici" />
+    <MESSAGE value="- Mise à jour de la fonction pour générer les figures evoked et GFP (car nouveau nommage fichiers evoked)&#10;- Ajout fonction pour générer les figures GFP heatmap (créer dict avec GFPs et appeler la fonction de plot)" />
+    <MESSAGE value="Mise à jour fonction pour générer la figure projected EMS heatmap" />
+    <MESSAGE value="- Mise à jour de la fonction pour créer les evoked par sujet. Rationalisé le nommage des fichiers -ave.fif créés.&#10;- Ajout d'une fonction pour créer la figure 'heatmap' des 7 séquences X 6 types d'essais. Prends en entrée un dict contenant 7x6 vecteurs." />
+    <MESSAGE value="- Ajouté une fonction 'get_seqInfo', utile pour certaines figures, qui retourne le nom de la séquence, les positions des violations, et sa version xY&#10;- Ajouté l'export d'un fichier fif contenant l'ensemble des runs concaténés après resampling, au moment de la création des epochs (en vue d'importation dans SPM)&#10;- Corrections mineures" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Ajouté une fonction 'get_seqInfo', utile pour certaines figures, qui retourne le nom de la séquence, les positions des violations, et sa version xY&#10;- Ajouté l'export d'un fichier fif contenant l'ensemble des runs concaténés après resampling, au moment de la création des epochs (en vue d'importation dans SPM)&#10;- Corrections mineures" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/08-make_evoked.py</url>
+          <line>240</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+>>>>>>> Stashed changes
   </component>
 </project>
