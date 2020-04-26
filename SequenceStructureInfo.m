@@ -148,21 +148,24 @@ for nseq=1:numel(data.Sequence)
     posExpr = 1;
     chksize = 0;
     openedBefore = 0;
+    InChk = 1;
     while posExpr <= size(expr,2)
         if strcmp(expr(posExpr), ']')
-            openedBefore = openedBefore - 1;
-            nO = openedBefore;
+            InChk = InChk - 1;
+            nO = 1;
         elseif strcmp(expr(posExpr), '[')
+            if posReal>1
+                InChk = InChk + 1;
+            end
         else
-            nO = nO + 1;
-            openedBefore = nO - 1;
-            chksize = chksize + 1;
+            nO = nO + InChk;
             data.OpenNodes.(seq)(posReal) = nO;
             posReal = posReal + 1;   
         end
         posExpr = posExpr + 1;
     end
 data.OpenNodes.AAAABBBBAABBABAB
+
     % ======== NodesClosing ========= %
     nO = data.OpenNodes.(seq);
     for posReal = 1:size(nO,2)-1
