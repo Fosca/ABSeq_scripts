@@ -71,13 +71,13 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
             p_value = p_values[clu_idx]
 
             cluster_info[i_clu] = {'sig_times': sig_times, 'time_inds': time_inds, 'signal': signals,
-                                   'channel_inds': ch_inds, 'channels_cluster': ch_inds, 'p_values': p_value}
+                                   'channels_cluster': ch_inds, 'p_values': p_value}
 
         cluster_info['pos'] = pos
         cluster_info['ncluster'] = i_clu + 1
         cluster_info['T_obs'] = T_obs
 
-        return cluster_info
+    return cluster_info
 
 
 def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, T_obs_max=5., fname='', figname_initial=''):

@@ -81,12 +81,12 @@ def correlate_surprise_regressors(subject, list_omegas, clean = False,plot_figur
     return correlation_matrix
 
 # ======================================================================================================================
-def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,prefix='',Ridge=False):
+def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,prefix='',Ridge=False,hfilter=20):
 
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=clean)
     epochs.pick_types(meg=True, eeg=True)
-    # epochs.crop(tmin=0,tmax=0.3)
-    epochs.filter(None,30)
+    if hfilter is not None:
+        epochs.filter(None,hfilter)
 
     if decim is not None:
         epochs.decimate(decim)
@@ -108,13 +108,13 @@ def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,
             surprise_name = "surprise_%i" % omega
             r2_surprise[omega] = linear_regression_from_sklearn(epochs_for_reg_normalized, surprise_name)
         # ===== save all the regression results =========
-        fname = prefix +'r2_surprise.npy'
+        fname = prefix +'results_surprise.npy'
         np.save(op.join(out_path,fname),r2_surprise)
 
     else:
         surprise_names = ["surprise_%i" % omega for omega in omega_list]
         results_ridge = multi_ridge_regression_allIO(epochs_for_reg_normalized,surprise_names)
-        fname = prefix +'Ridge_surprise.npy'
+        fname = prefix +'results_Ridge_surprise.npy'
         np.save(op.join(out_path,fname),results_ridge)
 
     return True
@@ -138,13 +138,14 @@ def normalize_data(epochs_to_normalize):
 def linear_regression_from_sklearn(epochs_for_reg_normalized,surprise_name):
     """
     This function does a very simple linear regression. We store the predicted y_preds, the regression coefficients
-    and the r2_score per sensor and per time
+    the r2_score per sensor and per time and the mean squared error
     :param epochs_for_reg: the epochs data on which we run the regression
     :param names: the regression variables
     :return:
     """
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import r2_score
+    from sklearn.metrics import mean_squared_error
 
     y = epochs_for_reg_normalized.get_data()
     x = np.asarray(epochs_for_reg_normalized.metadata[surprise_name])
@@ -152,25 +153,25 @@ def linear_regression_from_sklearn(epochs_for_reg_normalized,surprise_name):
     results = {'regcoef_%s'%surprise_name:[]}
     results['regcoeff_intercept'] = []
     results['r2_score'] = []
-    results['score_per_channel']=[]
+    results['score_per_channel']= []
+    results['mean_squared_error'] = []
+    results['mean_squared_error_per_channel'] = []
+    results['n_trials'] = y.shape[0]
 
     for time in range(y.shape[2]):
         reg = LinearRegression().fit(x[:,np.newaxis], y[:,:,time])
-
         results['regcoeff_intercept'].append(reg.intercept_)
         results['regcoef_%s'%surprise_name].append(reg.coef_)
         results['r2_score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
         y_pred = reg.predict(x[:,np.newaxis])
         r2 = [r2_score(y_pred[:,k],y[:,k,time]) for k in range(y.shape[1])]
         results['score_per_channel'].append(r2)
+        mse_p_chan = [mean_squared_error(y_pred[:,k],y[:,k,time]) for k in range(y.shape[1])]
+        results['mean_squared_error_per_channel'].append(mse_p_chan)
+        results['mean_squared_error'].append(mean_squared_error(y_pred,y[:,:,time]))
 
-        # y_pred = reg.predict(x[:,np.newaxis])
-        # results['r2_score'].append(r2_score(y_pred, y[:,:,time]))
-    # y_pred = reg.predict(x[:,np.newaxis])
-    # y_pred_main = np.matmul(reg.intercept_[:,np.newaxis],np.ones(x[:,np.newaxis].T.shape)) + np.matmul(reg.coef_,x[:,np.newaxis].T)
     for key in results.keys():
         results[key] = np.asarray(results[key])
-
 
     results['times'] = epochs_for_reg_normalized.times
 
@@ -178,7 +179,6 @@ def linear_regression_from_sklearn(epochs_for_reg_normalized,surprise_name):
 
 
 # ======================================================================================================================
-
 def plot_r2_surprise(subjects_list,tmin=None,tmax = None, vmin = None,vmax=None,fname = 'r2_surprise.npy',omegas_of_interest = range(1,300),times_of_interest = [-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7]):
 
     mat_2_plot = []
@@ -204,7 +204,6 @@ def plot_r2_surprise(subjects_list,tmin=None,tmax = None, vmin = None,vmax=None,
         interval_true_false = np.logical_and(np.asarray(times_of_interest)<=(tmax),(np.asarray(times_of_interest)>=(tmin)))
         times_of_interest = list(np.asarray(times_of_interest)[np.where(interval_true_false)[0]])
 
-    omegas_computed = np.asarray(list(surprise_dict.keys()))
     inds_t = [np.where(times == times_of_interest[k])[0][0] for k in range(len(times_of_interest))]
 
     plt.figure(figsize=(10,20))
@@ -220,8 +219,76 @@ def plot_r2_surprise(subjects_list,tmin=None,tmax = None, vmin = None,vmax=None,
 
     return mat_2_plot, times
 
+# ======================================================================================================================
+def compute_posterior_probability(subjects_list,fname = 'results_surprise.npy',omega_list=range(1,300)):
+    """
+    This function returns a dictionnary that contains, per time point, the posterior probability of each model.
+    The interesting thing about this is that for each time point, the posterior sums to 1, so it normalizes the stuff and
+    we should have a nicer plot.
+
+    :param subjects_list:
+    :param fname:
+    :return:
+    """
+
+    posterior = {'per_channel':{omega:[] for omega in omega_list},'all_channels':{omega:[] for omega in omega_list}, 'times':[]}
+
+    for subject in subjects_list:
+        out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
+        surprise_dict = np.load(op.join(out_path, fname), allow_pickle=True).item()
+        posterior['times'] = surprise_dict['times']
+        n = surprise_dict['n_trials']
+        # loop per time point on the mse to compute the posterior
+        for omega in omega_list:
+            print("==== running the regression for omega %i =======" % omega)
+            surprise_name = "surprise_%i" % omega
+            surprise = surprise_dict[surprise_name]
+            mse = surprise['mean_squared_error']
+            mse_per_channel = surprise_dict['mean_squared_error_per_channel']
+            for tt in range(mse.shape[1]):
+                BIC_tt = n * np.log(mse[:,tt])
+                p_tt = np.exp(-BIC_tt/2)
+                p_tt_chan = [np.exp(n * np.log(mse_per_channel[:,k,tt])) for k in range(mse_per_channel.shape[1])]
+                posterior['all_channels'][omega].append(p_tt)
+                posterior['per_channel'][omega].append(p_tt_chan)
+
+        np.save(op.join(out_path, 'posterior.npy'),posterior)
+
+    return posterior
 
 
+# ======================================================================================================================
+def for_plot_posterior_probability(subjects_list, fname='posterior.npy', omega_list=range(1, 300)):
+    """
+    We plot the posterior built from the mse of the model across all the sensors.
+
+    :param subjects_list:
+    :param fname:
+    :return:
+    """
+    post = []
+    omegas = []
+    times = []
+    subject_number = []
+
+    for ii, subject in subjects_list:
+        out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
+        posterior = np.load(op.join(out_path, fname), allow_pickle=True).item()
+        the_times = posterior['times']
+        # loop per time point on the mse to compute the posterior
+        for omega in omega_list:
+            post.append(posterior['all_channels'][omega])
+            times.append(the_times)
+            omegas.append([omega]*len(the_times))
+            subject_number.append([ii]*len(the_times))
+
+    diction = {'posterior':post,'omega':omegas,'time':times,'subject':subject_number}
+    dataFrame_posterior = pd.DataFrame.from_dict(diction)
+
+
+
+
+    return dataFrame_posterior
 
 
 # ======================================================================================================================
@@ -267,6 +334,33 @@ def compute_and_save_argmax_omega(omega_list=range(1, 300)):
     :return:
     """
     r2_omegas, times = plot_r2_surprise(config.subjects_list, fname='r2_surprise.npy', omegas_of_interest=omega_list)
+
+
+    # =============== LOOK AT THE DATA ACROSS SUBJECTS ===============
+    r2_max = []
+    r2_omegas_all_subj = np.squeeze(r2_omegas)
+    omega_argmax_subj = np.zeros((19,r2_omegas_all_subj.shape[-1]))
+    timet = range(r2_omegas_all_subj.shape[-1])
+    for subj in range(19):
+        for time in timet:
+            omega_subjects = r2_omegas_all_subj[subj,:, time]
+            for_max = omega_subjects
+            max_val = np.max(for_max)
+            r2_max.append(max_val)
+            omega_argmax_subj[subj,time] = omega_list[np.where(for_max == max_val)[0][0]]
+
+    mean = np.mean(omega_argmax_subj,axis=0)
+    sem = np.std(omega_argmax_subj,axis=0)/np.sqrt(19)
+
+    fig, ax = plt.subplots(1, 1)
+    ax.fill_between(times, mean-sem,mean + sem, alpha=0.5)
+    plt.plot(times,mean)
+    plt.xticks([-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7])
+    plt.xlabel('Times in seconds')
+    plt.ylabel('Omegas')
+
+
+    # ================ AVERAGE ACROSS PARTICIPANTS ==================
     r2_max = []
     omega_argmax = []
     r2_omegas_mean = np.squeeze(np.mean(r2_omegas, axis=0))
@@ -277,6 +371,7 @@ def compute_and_save_argmax_omega(omega_list=range(1, 300)):
         omega_argmax.append(omega_list[np.where(for_max == max_val)[0][0]])
 
     omega_argmax = np.asarray(omega_argmax)
+
     save_name = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'argmax_omega.npy')
     np.save(save_name, omega_argmax)
 
@@ -352,4 +447,72 @@ def regress_out_optimal_omega(subject,clean=True):
 
     return results
 
+
+# ======================================================================================================================
+def regress_surprise_in_cluster(subject_list, cluster_info, omega_list=range(1, 300), clean=True):
+    """
+    This function regresses the data within a cluster as a function of the surprise for all the omegas specified in omega_list.
+    4 different types of regressions are considered,
+    1 - 'original_data' : for each channel and time-point
+    2 - 'average_time' : averaging the data across time
+    3 - 'average_channels' : averaging the data across channels
+    4 - 'average_channels_and_times' : averaging the data across channels and time
+
+    :param subject_list:
+    :param cluster_info: a dictionnary containing  the keys
+    'sig_times': the significant times
+    'channels_cluster' : the channels that are significant
+    'ch_type': the type of channel
+    :param omega_list: The list of omegas for which we compute the regressions.
+    :return: dataFrame containing the results of all the regressions
+    """
+
+    sig_times = cluster_info['sig_times']
+    sig_channels = cluster_info['channels_cluster']
+    ch_type = cluster_info['ch_type']
+
+    results = {subject: {} for subject in subject_list}
+
+    for subject in subject_list:
+        results[subject] = {'average_channels_and_times': {}, 'average_channels': {}, 'average_times': {},
+                            'original_data': {}}
+
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=clean)
+        metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
+        epochs.metadata = metadata
+
+        if ch_type in ['grad', 'mag']:
+            epochs.pick_types(meg=ch_type, eeg=False)
+        elif ch_type in ['eeg']:
+            epochs.pick_types(meg=False, eeg=True)
+        else:
+            print('Invalid ch_type')
+
+        epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_1"].values))[0]]
+        # ========= select the significant times and channels ======
+        epochs.crop(tmin=np.min(sig_times), tmax=np.max(sig_times))
+        epochs.pick(sig_channels)  # not sure this is working actually
+        epochs_avg_time = epochs.copy()
+        epochs_avg_time._data = np.transpose(np.mean(epochs_avg_time._data, axis=2)[:, np.newaxis], (0, 2, 1))
+        epochs_avg_channels = epochs.copy()
+        epochs_avg_channels._data = np.mean(epochs_avg_channels._data, axis=1)[:, np.newaxis]
+        epochs_avg_channels_times = epochs.copy()
+        epochs_avg_channels_times._data = np.mean(epochs_avg_time._data, axis=1)[:, np.newaxis]
+
+        # ============== And now the regressions =============================================================
+        for key in results[subject].keys():
+            results[subject][key] = {omega: {} for omega in omega_list}
+
+        for omega in omega_list:
+            print("==== running the regression for omega %i =======" % omega)
+            surprise_name = "surprise_%i" % omega
+            results[subject]['original_data'][omega] = TP_funcs.linear_regression_from_sklearn(epochs, surprise_name)
+            results[subject]['average_times'][omega] = TP_funcs.linear_regression_from_sklearn(epochs_avg_time,
+                                                                                               surprise_name)
+            results[subject]['average_channels'][omega] = TP_funcs.linear_regression_from_sklearn(epochs_avg_channels,
+                                                                                                  surprise_name)
+            results[subject]['average_channels_and_times'][omega] = TP_funcs.linear_regression_from_sklearn(
+                epochs_avg_channels_times, surprise_name)
+
+    return results
 

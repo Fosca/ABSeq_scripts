@@ -128,8 +128,7 @@ def linear_reg(subject):
 def surprise_omegas_analysis(subject):
     list_omegas = range(1,300)
     metadata_updated = TP_funcs.from_epochs_to_surprise(subject, list_omegas, clean=True, order=1)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None)
-
+    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None,hfilter=10)
 
 def regress_out_optimal_omega_cluster(subject):
     TP_funcs.regress_out_optimal_omega(subject, clean=True)
