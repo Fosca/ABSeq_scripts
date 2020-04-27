@@ -28,6 +28,26 @@ omega_argmax, times = TP_funcs.compute_and_save_argmax_omega(omega_list=range(1,
 # no average at all. This is done for all the values of omega <3
 
 
+posterior = TP_funcs.compute_posterior_probability(config.subjects_list)
+outdict = TP_funcs.compute_optimal_omega_per_channel(config.subjects_list, fname='posterior.npy', omega_list=range(1, 300))
+
+
+import os.path as op
+out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', config.subjects_list)
+surprise_dict = np.load(op.join(out_path, 'results_surprise.npy'), allow_pickle=True).item()
+
+
+df_posterior = TP_funcs.for_plot_posterior_probability([config.subjects_list[0]])
+
+import seaborn as sns
+
+df_post = np.asarray(np.vstack(df_posterior['posterior'].values))
+
+fig = sns.heatmap(np.log(df_post))
+
+
+
+
 
 
 

@@ -231,30 +231,76 @@ def compute_posterior_probability(subjects_list,fname = 'results_surprise.npy',o
     :return:
     """
 
-    posterior = {'per_channel':{omega:[] for omega in omega_list},'all_channels':{omega:[] for omega in omega_list}, 'times':[]}
-
     for subject in subjects_list:
+        posterior = {'per_channel': {omega: [] for omega in omega_list},
+                     'all_channels': {omega: [] for omega in omega_list}, 'times': []}
+
         out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
         surprise_dict = np.load(op.join(out_path, fname), allow_pickle=True).item()
         posterior['times'] = surprise_dict['times']
-        n = surprise_dict['n_trials']
+        n = surprise_dict[1]['n_trials']
         # loop per time point on the mse to compute the posterior
         for omega in omega_list:
-            print("==== running the regression for omega %i =======" % omega)
-            surprise_name = "surprise_%i" % omega
-            surprise = surprise_dict[surprise_name]
+            print("==== running the computation for omega %i =======" % omega)
+            surprise = surprise_dict[omega]
             mse = surprise['mean_squared_error']
-            mse_per_channel = surprise_dict['mean_squared_error_per_channel']
-            for tt in range(mse.shape[1]):
-                BIC_tt = n * np.log(mse[:,tt])
+            mse_per_channel = surprise['mean_squared_error_per_channel']
+            for tt in range(mse.shape[0]):
+                BIC_tt = n * np.log(mse[tt])
                 p_tt = np.exp(-BIC_tt/2)
-                p_tt_chan = [np.exp(n * np.log(mse_per_channel[:,k,tt])) for k in range(mse_per_channel.shape[1])]
+                p_tt_chan = [np.exp(n * np.log(mse_per_channel[tt,k])) for k in range(mse_per_channel.shape[1])]
                 posterior['all_channels'][omega].append(p_tt)
                 posterior['per_channel'][omega].append(p_tt_chan)
 
-        np.save(op.join(out_path, 'posterior.npy'),posterior)
+        np.save(op.join(config.result_path, 'TP_effects', 'surprise_omegas',subject,'posterior.npy'),posterior)
 
-    return posterior
+
+# ======================================================================================================================
+def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omega_list=range(1, 300)):
+    """
+    We plot the posterior built from the mse of the model across all the sensors.
+
+    :param subjects_list:
+    :param fname:
+    :return:
+    """
+    post_per_channels = []
+    omegas = []
+    times = []
+    subject_number = []
+
+    for ii, subject in enumerate(subjects_list):
+        out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
+        posterior = np.load(op.join(out_path, fname), allow_pickle=True).item()
+        the_times = posterior['times']
+        # loop per time point on the mse to compute the posterior
+        for omega in omega_list:
+            post_per_channels.append(posterior['per_channel'][omega])
+            times.append(the_times)
+            omegas.append([omega]*len(the_times))
+            subject_number.append([ii]*len(the_times))
+
+    post_per_channels = np.asarray(post_per_channels)
+
+    # ======== compute the mean across participants ================
+    post_per_channels = np.mean(post_per_channels,axis=0)
+
+    # ======== find the maximal value across omegas ================
+    omegas_max = np.zeros((post_per_channels.shape[1],post_per_channels.shape[2]))
+    for t in range(post_per_channels.shape[1]):
+        for chan in range(post_per_channels.shape[2]):
+            for_max = post_per_channels[:,t,chan]
+            inds_max = np.where(for_max==np.max(for_max))[0]
+            omegas_max[t,chan] = omega_list[inds_max[0]]
+
+    diction = {'omega_arg_max':omegas_max,'omega':omega_list,'time':the_times}
+
+    # =========== save omega optimal ===============
+    out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
+    np.save(out_path,diction)
+
+    return diction
+
 
 
 # ======================================================================================================================
@@ -271,7 +317,7 @@ def for_plot_posterior_probability(subjects_list, fname='posterior.npy', omega_l
     times = []
     subject_number = []
 
-    for ii, subject in subjects_list:
+    for ii, subject in enumerate(subjects_list):
         out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
         posterior = np.load(op.join(out_path, fname), allow_pickle=True).item()
         the_times = posterior['times']
@@ -284,8 +330,6 @@ def for_plot_posterior_probability(subjects_list, fname='posterior.npy', omega_l
 
     diction = {'posterior':post,'omega':omegas,'time':times,'subject':subject_number}
     dataFrame_posterior = pd.DataFrame.from_dict(diction)
-
-
 
 
     return dataFrame_posterior
