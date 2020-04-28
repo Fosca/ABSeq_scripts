@@ -11,9 +11,9 @@ from matplotlib import pyplot as plt
 cleaned = True
 
 # =========================================================== #
-# Prepare metadatafilters for different analyses
+# Define metadatafilters for different analyses
 # =========================================================== #
-filters = dict()
+filters = dict()  # contains analysis name & associated contrast (metadatafilters for cond1, for cond2)
 filters['OddEven'] = [
     '(StimPosition==2 | StimPosition==4 | StimPosition==6 | StimPosition==8 | StimPosition==10 | StimPosition==12 | StimPosition==14)',
     '(StimPosition==3 | StimPosition==5 | StimPosition==7 | StimPosition==9 | StimPosition==11 | StimPosition==13 | StimPosition==15)']
@@ -35,11 +35,14 @@ filters['QuadOpenBis'] = [
 filters['QuadCloseBis'] = [
     '(StimPosition==8)',
     '(StimPosition==12 | StimPosition==4)']
+filters['ChunkBeginning'] = [
+    '(ChunkBeginning==0)',
+    '(ChunkBeginning==1)']
 
 # =========================================================== #
-# Set contrast analysis with corresponding metadata filters
+# Set contrast analysis with corresponding metadata filters (we could add a loop to run different analyses successively)
 # =========================================================== #
-analysis_name = 'QuadCloseBis'
+analysis_name = 'ChunkBeginning'
 cond_filters = filters[analysis_name]
 print('\n#=====================================================================#\n        Analysis: ' + analysis_name + '\n' + cond_filters[0])
 print('vs.\n' + cond_filters[1] + '\n#=====================================================================#\n')
@@ -67,7 +70,7 @@ for nsub, subject in enumerate(config.subjects_list):
         epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
         epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
 
-    # ====== remove deviant items from the comparison ========== #
+    # ====== remove sequences with deviants from the comparison ========== #
     print('We remove items from trials with violation')
     epochs = epochs["ViolationInSequence == 0"]
 
@@ -79,7 +82,7 @@ for nsub, subject in enumerate(config.subjects_list):
         # Computed evoked
         evokeds = [epochs[name].average() for name in cond_filters_seq]
 
-        # Save evoked (used later for plots)
+        # Save evoked per condition (used later for plots)
         path_evo = op.join(config.meg_dir, subject, 'evoked')
         if cleaned:
             path_evo = path_evo + '_cleaned'
