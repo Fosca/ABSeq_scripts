@@ -16,6 +16,10 @@ from MarkovModel_Python import IdealObserver as IO
 import matplotlib.pyplot as plt
 from mne.stats import linear_regression
 
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+
 # ======================================================================================================================
 def remove_pause(seq, post, Nitem):
     """
@@ -230,7 +234,6 @@ def compute_posterior_probability(subject,fname = 'results_surprise.npy',omega_l
     :param fname:
     :return:
     """
-
 
     posterior = {'per_channel': [],
                  'all_channels': [], 'times': [],'n_trials':[]}
@@ -519,14 +522,13 @@ def regress_out_optimal_omega(subject,clean=True):
 
 
 # ======================================================================================================================
-def regress_out_optimal_omega_per_channel(subject, clean=True, decim=None):
+def regress_out_optimal_omega_per_channel(subject, clean=True):
 
+    # =========== load the optimal parameters =========
     load_optimal = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
-    optimal_omega = np.load(load_optimal)
-
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import r2_score
-
+    optimal_omega = np.load(load_optimal,allow_pickle=True).item()
+    optimal_omega = optimal_omega['omega_arg_max']
+    # =========== load the data on which to perform the regression =========
     epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
     metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
     epochs.metadata = metadata
@@ -534,49 +536,55 @@ def regress_out_optimal_omega_per_channel(subject, clean=True, decim=None):
     epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_1"].values))[0]]
     y = epochs.get_data()
 
+    # =========== we initialize the output =========
+    n_trials, n_channels, n_times = y.shape
+    residual_model_no_constant = np.zeros((n_trials, n_channels, n_times))
+    residual_model_constant = np.zeros((n_trials, n_channels, n_times))
+    residual_constant = np.zeros((n_trials, n_channels, n_times))
+    residual_surprise = np.zeros((n_trials, n_channels, n_times))
 
-    results = {}
-    results['regcoeff_intercept'] = []
-    results['regcoef_'] = []
-    results['score'] = []
-    results['omega'] = []
-    results['residual'] = []
-    results['times'] = epochs.times
-    results['predictions'] = []
-    results['score_per_channel'] = []
 
+    # ======== we run the regression for each time point and each channel ===============
     for time in range(y.shape[2]):
         for channel in range(y.shape[1]):
+            print("----- running the regression for time %i and channel %i -----"%(time,channel))
             surprise_name = "surprise_%i" % optimal_omega[time,channel]
             x = np.asarray(epochs.metadata[surprise_name])
+            x = x[:, np.newaxis]
+            # ========== regression with constant ==============
+            reg_with_constant = LinearRegression().fit(x, y[:, channel, time])
+            # ========== regression without constant ==============
+            reg_without_constant = LinearRegression(fit_intercept=False).fit(x, y[:, channel, time])
 
-        print("======= time step %i =========="%time)
-        surprise_name = "surprise_%i"%omega_argmax[time]
-        x = np.asarray(epochs.metadata[surprise_name])
-        reg = LinearRegression().fit(x[:,np.newaxis], y[:,:,time])
-        results['regcoeff_intercept'].append(reg.intercept_)
-        results['regcoef_'].append(reg.coef_)
-        results['omega'].append(omega_argmax[time])
-        y_pred = reg.predict(x[:,np.newaxis])
-        r2 = [r2_score(y_pred[:,k],y[:,k,time]) for k in range(y.shape[1])]
-        results['score_per_channel'].append(r2)
-        results['score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
-        results['predictions'].append(np.matmul(reg.coef_,x[:,np.newaxis].T))
-        y_residual_time = y[:,:,time] - np.matmul(reg.coef_,x[:,np.newaxis].T).T
-        results['residual'].append(y_residual_time)
-
+            residual_model_constant[:,channel,time] = y[:,channel,time] - reg_with_constant.predict(x)
+            residual_constant[:,channel,time] = y[:,channel,time] - np.squeeze(reg_with_constant.intercept_*x)
+            residual_surprise[:,channel,time] = y[:,channel,time] - np.squeeze(reg_with_constant.coef_*x)
+            residual_model_no_constant[:,channel,time] = y[:,channel,time] - reg_without_constant.predict(x)
 
     # ============================================================================================================
-    epochs_residual_surprise_no_constant_model = epochs.copy()
-    epochs_residual_constant = epochs.copy()
-    epochs_residual_surprise = epochs.copy()
+
+    epo_residual_model_constant = epochs.copy()
+    epo_residual_constant = epochs.copy()
+    epo_residual_surprise = epochs.copy()
+    epo_residual_model_no_constant = epochs.copy()
+
+    epo_residual_model_constant._data = residual_model_constant
+    epo_residual_constant._data = residual_constant
+    epo_residual_surprise._data = residual_surprise
+    epo_residual_model_no_constant._data = residual_model_no_constant
 
 
+    save_name = op.join(config.meg_dir,subject,subject+'residual_model_constant-epo.fif')
+    epo_residual_model_constant.save(save_name)
 
-    epochs_residual._data = np.transpose(results['residual'],(1,2,0))
-    save_name = op.join(config.meg_dir,subject,subject+'_residuals_surprise-epo.fif')
-    epochs_residual.save(save_name)
+    save_name = op.join(config.meg_dir,subject,subject+'residual_constant-epo.fif')
+    epo_residual_constant.save(save_name)
 
+    save_name = op.join(config.meg_dir,subject,subject+'residual_surprise-epo.fif')
+    epo_residual_surprise.save(save_name)
+
+    save_name = op.join(config.meg_dir,subject,subject+'residual_model_no_constant-epo.fif')
+    epo_residual_model_no_constant.save(save_name)
 
 
 
