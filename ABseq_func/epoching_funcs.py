@@ -323,6 +323,16 @@ def load_epochs_items(subject, cleaned=True):
     return epochs
 
 
+def load_resid_epochs_items(subject, type='residual_model_constant'):
+    print("Processing subject: %s" % subject)
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    extension = subject + type + '-epo'
+    fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+    print("Input: ", fname_in)
+    epochs = mne.read_epochs(fname_in, preload=True)
+    return epochs
+
+
 def load_epochs_full_sequence(subject, cleaned=True):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
