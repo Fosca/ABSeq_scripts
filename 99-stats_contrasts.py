@@ -4,6 +4,7 @@ from ABseq_func import *
 import mne
 import numpy as np
 from matplotlib import pyplot as plt
+from importlib import reload
 
 
 # /!\ Analysis is performed with all non-violated sequences (from hab & test blocks) /!\
@@ -117,17 +118,19 @@ for seqID in range(1, 8):
         cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
         cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
 
+        # Significant clusters
+        T_obs, clusters, p_values, _ = cluster_stats
+        good_cluster_inds = np.where(p_values < p_threshold)[0]
+        print("Good clusters: %s" % good_cluster_inds)
+
         # PLOT CLUSTERS
-        figname_initial = fig_path + op.sep + analysis_name + '_seq' + str(seqID) + '_stats_' + ch_type
-        stats_funcs.plot_clusters(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial)
+        if len(good_cluster_inds) > 0:
+            figname_initial = fig_path + op.sep + analysis_name + '_seq' + str(seqID) + '_stats_' + ch_type
+            stats_funcs.plot_clusters(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial)
 
         # =========================================================== #
         # ==========  cluster evoked data plot
         # =========================================================== #
-
-        T_obs, clusters, p_values, _ = cluster_stats
-        good_cluster_inds = np.where(p_values < p_threshold)[0]
-        print("Good clusters: %s" % good_cluster_inds)
 
         if len(good_cluster_inds) > 0:
             # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
