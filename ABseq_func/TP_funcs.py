@@ -220,39 +220,58 @@ def plot_r2_surprise(subjects_list,tmin=None,tmax = None, vmin = None,vmax=None,
     return mat_2_plot, times
 
 # ======================================================================================================================
-def compute_posterior_probability(subjects_list,fname = 'results_surprise.npy',omega_list=range(1,300)):
+def compute_posterior_probability(subject,fname = 'results_surprise.npy',omega_list=range(1,300)):
     """
     This function returns a dictionnary that contains, per time point, the posterior probability of each model.
     The interesting thing about this is that for each time point, the posterior sums to 1, so it normalizes the stuff and
     we should have a nicer plot.
 
-    :param subjects_list:
+    :param subject_ID:
     :param fname:
     :return:
     """
 
-    for subject in subjects_list:
-        posterior = {'per_channel': {omega: [] for omega in omega_list},
-                     'all_channels': {omega: [] for omega in omega_list}, 'times': []}
 
-        out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
-        surprise_dict = np.load(op.join(out_path, fname), allow_pickle=True).item()
-        posterior['times'] = surprise_dict['times']
-        n = surprise_dict[1]['n_trials']
-        # loop per time point on the mse to compute the posterior
-        for omega in omega_list:
-            print("==== running the computation for omega %i =======" % omega)
-            surprise = surprise_dict[omega]
-            mse = surprise['mean_squared_error']
-            mse_per_channel = surprise['mean_squared_error_per_channel']
-            for tt in range(mse.shape[0]):
-                BIC_tt = n * np.log(mse[tt])
-                p_tt = np.exp(-BIC_tt/2)
-                p_tt_chan = [np.exp(n * np.log(mse_per_channel[tt,k])) for k in range(mse_per_channel.shape[1])]
-                posterior['all_channels'][omega].append(p_tt)
-                posterior['per_channel'][omega].append(p_tt_chan)
+    posterior = {'per_channel': [],
+                 'all_channels': [], 'times': [],'n_trials':[]}
 
-        np.save(op.join(config.result_path, 'TP_effects', 'surprise_omegas',subject,'posterior.npy'),posterior)
+    out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
+    surprise_dict = np.load(op.join(out_path, fname), allow_pickle=True).item()
+    posterior['times'] = surprise_dict['times']
+    n = surprise_dict[1]['n_trials']
+    posterior['n_trials'] = n
+
+    for omega in omega_list:
+        print("==== running the computation for omega %i =======" % omega)
+        surprise = surprise_dict[omega]
+        mse = surprise['mean_squared_error']
+        mse_per_channel = surprise['mean_squared_error_per_channel']
+        p_omega = []
+        p_omega_chan = []
+        for tt in range(mse.shape[0]):
+            BIC_tt = n * np.log(mse[tt])
+            p_tt = np.exp(-BIC_tt/2)
+            p_tt_chan = [np.exp(n * np.log(mse_per_channel[tt,k])) for k in range(mse_per_channel.shape[1])]
+            p_omega.append(p_tt)
+            p_omega_chan.append(p_tt_chan)
+
+        posterior['all_channels'].append(p_omega)
+        posterior['per_channel'].append(p_omega_chan)
+
+
+    posterior['all_channels'] = np.asarray(posterior['all_channels'])
+    posterior['per_channel'] = np.asarray(posterior['per_channel'])
+
+    # ========== and now we normalize across the values of omega =============
+
+    for t in range(posterior['all_channels'].shape[1]):
+        norm = np.sum(posterior['all_channels'][:,t])
+        posterior['all_channels'][:, t] = posterior['all_channels'][:,t]/norm
+        for k in range(posterior['per_channel'].shape[2]):
+            norm_chan = np.sum(posterior['per_channel'][:,t,k])
+            posterior['per_channel'][:,t,k] = posterior['per_channel'][:,t,k] / norm_chan
+
+    np.save(op.join(config.result_path, 'TP_effects', 'surprise_omegas',subject,'posterior.npy'),posterior)
 
 
 # ======================================================================================================================
@@ -282,29 +301,31 @@ def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omeg
             subject_number.append([ii]*len(the_times))
         post_per_channels.append(post_per_channels_per_subject)
 
-    post_per_channels = np.asarray(post_per_channels)
-    print("====== the shape of posterior per channels is ======")
-    print(post_per_channels.shape)
-    # ======== compute the mean across participants ================
-    post_per_channels = np.mean(post_per_channels,axis=0)
-    print("====== after the mean the shape of posterior per channels is ======")
-    print(post_per_channels.shape)
+    omega_max = []
+    for ii, subject in enumerate(subjects_list):
+        post_per_subj = np.asarray(post_per_channels[ii])
+        omegas_max_subj = np.zeros((post_per_subj.shape[1],post_per_subj.shape[2]))
+        for t in range(post_per_subj.shape[1]):
+            for chan in range(post_per_subj.shape[2]):
+                for_max = post_per_subj[:,t,chan]
+                inds_max = np.where(for_max==np.max(for_max))[0]
+                omegas_max_subj[t,chan] = omega_list[inds_max[0]]
+        omega_max.append(omegas_max_subj)
 
+    omega_max = np.asarray(omega_max)
     # ======== find the maximal value across omegas ================
-    omegas_max = np.zeros((post_per_channels.shape[1],post_per_channels.shape[2]))
-    for t in range(post_per_channels.shape[1]):
-        for chan in range(post_per_channels.shape[2]):
-            for_max = post_per_channels[:,t,chan]
-            inds_max = np.where(for_max==np.max(for_max))[0]
-            omegas_max[t,chan] = omega_list[inds_max[0]]
-
-    diction = {'omega_arg_max':omegas_max,'omega':omega_list,'time':the_times}
+    diction = {'omega_arg_max':omega_max,'omega':omega_list,'time':the_times,'posterior_per_channels':post_per_channels}
 
     # =========== save omega optimal ===============
     out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
     np.save(out_path,diction)
 
     return diction
+
+
+
+
+
 
 
 
@@ -495,6 +516,69 @@ def regress_out_optimal_omega(subject,clean=True):
 
 
     return results
+
+
+# ======================================================================================================================
+def regress_out_optimal_omega_per_channel(subject, clean=True, decim=None):
+
+    load_optimal = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
+    optimal_omega = np.load(load_optimal)
+
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import r2_score
+
+    epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
+    metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
+    epochs.metadata = metadata
+    epochs.pick_types(meg=True, eeg=True)
+    epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_1"].values))[0]]
+    y = epochs.get_data()
+
+
+    results = {}
+    results['regcoeff_intercept'] = []
+    results['regcoef_'] = []
+    results['score'] = []
+    results['omega'] = []
+    results['residual'] = []
+    results['times'] = epochs.times
+    results['predictions'] = []
+    results['score_per_channel'] = []
+
+    for time in range(y.shape[2]):
+        for channel in range(y.shape[1]):
+            surprise_name = "surprise_%i" % optimal_omega[time,channel]
+            x = np.asarray(epochs.metadata[surprise_name])
+
+        print("======= time step %i =========="%time)
+        surprise_name = "surprise_%i"%omega_argmax[time]
+        x = np.asarray(epochs.metadata[surprise_name])
+        reg = LinearRegression().fit(x[:,np.newaxis], y[:,:,time])
+        results['regcoeff_intercept'].append(reg.intercept_)
+        results['regcoef_'].append(reg.coef_)
+        results['omega'].append(omega_argmax[time])
+        y_pred = reg.predict(x[:,np.newaxis])
+        r2 = [r2_score(y_pred[:,k],y[:,k,time]) for k in range(y.shape[1])]
+        results['score_per_channel'].append(r2)
+        results['score'].append(reg.score(x[:,np.newaxis], y[:,:,time]))
+        results['predictions'].append(np.matmul(reg.coef_,x[:,np.newaxis].T))
+        y_residual_time = y[:,:,time] - np.matmul(reg.coef_,x[:,np.newaxis].T).T
+        results['residual'].append(y_residual_time)
+
+
+    # ============================================================================================================
+    epochs_residual_surprise_no_constant_model = epochs.copy()
+    epochs_residual_constant = epochs.copy()
+    epochs_residual_surprise = epochs.copy()
+
+
+
+    epochs_residual._data = np.transpose(results['residual'],(1,2,0))
+    save_name = op.join(config.meg_dir,subject,subject+'_residuals_surprise-epo.fif')
+    epochs_residual.save(save_name)
+
+
+
 
 
 # ======================================================================================================================

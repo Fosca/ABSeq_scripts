@@ -134,8 +134,10 @@ def regress_out_optimal_omega_cluster(subject):
     TP_funcs.regress_out_optimal_omega(subject, clean=True)
 
 
-def surprise_stuff(subject):
-    # TP_funcs.compute_posterior_probability(config.subjects_list)
-    TP_funcs.compute_optimal_omega_per_channel(config.subjects_list, fname='posterior.npy',
-                                                         omega_list=range(1, 300))
+def compute_posterior_probability(subject):
+    TP_funcs.compute_posterior_probability(subject)
+
+
+    # TP_funcs.compute_optimal_omega_per_channel(config.subjects_list, fname='posterior.npy',
+    #                                                      omega_list=range(1, 300))
 
