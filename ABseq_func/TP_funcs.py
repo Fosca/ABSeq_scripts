@@ -528,6 +528,8 @@ def regress_out_optimal_omega_per_channel(subject, clean=True):
     load_optimal = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
     optimal_omega = np.load(load_optimal,allow_pickle=True).item()
     optimal_omega = optimal_omega['omega_arg_max']
+    optimal_omega = np.mean(optimal_omega,axis=0)
+
     # =========== load the data on which to perform the regression =========
     epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
     metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
@@ -543,12 +545,11 @@ def regress_out_optimal_omega_per_channel(subject, clean=True):
     residual_constant = np.zeros((n_trials, n_channels, n_times))
     residual_surprise = np.zeros((n_trials, n_channels, n_times))
 
-
     # ======== we run the regression for each time point and each channel ===============
     for time in range(y.shape[2]):
         for channel in range(y.shape[1]):
             print("----- running the regression for time %i and channel %i -----"%(time,channel))
-            surprise_name = "surprise_%i" % optimal_omega[time,channel]
+            surprise_name = "surprise_%i" % int(np.round(optimal_omega[time,channel],0))
             x = np.asarray(epochs.metadata[surprise_name])
             x = x[:, np.newaxis]
             # ========== regression with constant ==============

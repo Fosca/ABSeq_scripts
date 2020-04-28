@@ -16,7 +16,9 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('EMS', 'ems', 'ems', queue='Nspin_bigM', sublist_subjects=['sub16-ma_190185'])
 # cluster_funcs.create_qsub('linear_reg', 'lreg', 'lreg', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('surprise_omegas_analysis', 'surp_Omega', 'surp_Omega', queue='Nspin_bigM')
-cluster_funcs.create_qsub('compute_posterior_probability', 'pstprob', 'pstprob', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('compute_posterior_probability', 'pstprob', 'pstprob', queue='Nspin_bigM')
+cluster_funcs.create_qsub('regress_out_optimal_omega_per_channel', 'reg_omega', 'reg_omega', queue='Nspin_bigM')
+
 
 
 print('Tomaste')

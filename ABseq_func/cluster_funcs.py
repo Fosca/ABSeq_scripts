@@ -138,6 +138,9 @@ def compute_posterior_probability(subject):
     TP_funcs.compute_posterior_probability(subject)
 
 
+def regress_out_optimal_omega_per_channel(subject):
+    TP_funcs.regress_out_optimal_omega_per_channel(subject)
+
     # TP_funcs.compute_optimal_omega_per_channel(config.subjects_list, fname='posterior.npy',
     #                                                      omega_list=range(1, 300))
 
