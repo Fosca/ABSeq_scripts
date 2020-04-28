@@ -281,9 +281,12 @@ def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omeg
             subject_number.append([ii]*len(the_times))
 
     post_per_channels = np.asarray(post_per_channels)
-
+    print("====== the shape of posterior per channels is ======")
+    print(post_per_channels.shape)
     # ======== compute the mean across participants ================
     post_per_channels = np.mean(post_per_channels,axis=0)
+    print("====== after the mean the shape of posterior per channels is ======")
+    print(post_per_channels.shape)
 
     # ======== find the maximal value across omegas ================
     omegas_max = np.zeros((post_per_channels.shape[1],post_per_channels.shape[2]))
