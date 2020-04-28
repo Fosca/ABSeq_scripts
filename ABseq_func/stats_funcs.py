@@ -105,8 +105,8 @@ def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, 
             cinfo = cluster_info[i_clu]
             T_obs_map = cluster_info['T_obs'][cinfo['time_inds'], ...].mean(axis=0)
             mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
-            mask[cinfo['channel_inds'], :] = True
-
+            # mask[cinfo['channel_inds'], :] = True
+            mask[cinfo['channels_cluster'], :] = True
 
             fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
             image, _ = plot_topomap(T_obs_map, cluster_info['pos'], mask=mask, axes=ax_topo,
