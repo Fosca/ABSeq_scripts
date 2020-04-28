@@ -273,12 +273,14 @@ def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omeg
         out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
         posterior = np.load(op.join(out_path, fname), allow_pickle=True).item()
         the_times = posterior['times']
+        post_per_channels_per_subject = []
         # loop per time point on the mse to compute the posterior
         for omega in omega_list:
-            post_per_channels.append(posterior['per_channel'][omega])
+            post_per_channels_per_subject.append(posterior['per_channel'][omega])
             times.append(the_times)
             omegas.append([omega]*len(the_times))
             subject_number.append([ii]*len(the_times))
+        post_per_channels.append(post_per_channels_per_subject)
 
     post_per_channels = np.asarray(post_per_channels)
     print("====== the shape of posterior per channels is ======")
@@ -553,12 +555,12 @@ def regress_surprise_in_cluster(subject_list, cluster_info, omega_list=range(1, 
         for omega in omega_list:
             print("==== running the regression for omega %i =======" % omega)
             surprise_name = "surprise_%i" % omega
-            results[subject]['original_data'][omega] = TP_funcs.linear_regression_from_sklearn(epochs, surprise_name)
-            results[subject]['average_times'][omega] = TP_funcs.linear_regression_from_sklearn(epochs_avg_time,
+            results[subject]['original_data'][omega] = linear_regression_from_sklearn(epochs, surprise_name)
+            results[subject]['average_times'][omega] = linear_regression_from_sklearn(epochs_avg_time,
                                                                                                surprise_name)
-            results[subject]['average_channels'][omega] = TP_funcs.linear_regression_from_sklearn(epochs_avg_channels,
+            results[subject]['average_channels'][omega] = linear_regression_from_sklearn(epochs_avg_channels,
                                                                                                   surprise_name)
-            results[subject]['average_channels_and_times'][omega] = TP_funcs.linear_regression_from_sklearn(
+            results[subject]['average_channels_and_times'][omega] =  linear_regression_from_sklearn(
                 epochs_avg_channels_times, surprise_name)
 
     return results
