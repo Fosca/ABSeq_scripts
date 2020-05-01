@@ -5,6 +5,7 @@ import numpy as np
 from mne.stats import permutation_cluster_1samp_test
 from mne.viz import plot_topomap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.stats import sem
 
 
 # ======================================================================================================================
@@ -66,7 +67,7 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
             time_inds, space_inds = np.squeeze(clusters[clu_idx])
             ch_inds = np.unique(space_inds)
             time_inds = np.unique(time_inds)
-            signals = data_array_chtype[..., ch_inds].mean(axis=-1)
+            signals = data_array_chtype[..., ch_inds].mean(axis=-1)  # is this correct ??
             sig_times = times[time_inds]
             p_value = p_values[clu_idx]
 
@@ -94,8 +95,8 @@ def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, 
     :return:
     """
 
-    colors = 'r', 'steelblue'
-    linestyles = '-', '--'
+    color = 'r'
+    linestyle = '-'
     T_obs_min = -T_obs_max
 
     cluster_info = extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch_type)
@@ -118,19 +119,27 @@ def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, 
             plt.colorbar(image, cax=ax_colorbar, format='%0.1f')
             ax_topo.set_xlabel('Averaged t-map\n({:0.1f} - {:0.1f} ms)'.format(
                 *cinfo['sig_times'][[0, -1]]))
+            ax_topo.set(title=fname)
 
+            # signal average & sem (over subjects)
             ax_signals = divider.append_axes('right', size='300%', pad=1.2)
-            for signal, name, col, ls in zip(cinfo['signal'], [fname], colors, linestyles):
-                ax_signals.plot(cluster_info['times'], signal * 1e6, color=col, linestyle=ls, label=name)
+            # for signal, name, col, ls in zip(cinfo['signal'], [fname], colors, linestyles):
+            #     ax_signals.plot(cluster_info['times'], signal * 1e6, color=col, linestyle=ls, label=name)  # why  signal*1e6 ??
+            mean = np.mean(cinfo['signal'], axis=0)
+            ub = mean + sem(cinfo['signal'], axis=0)
+            lb = mean - sem(cinfo['signal'], axis=0)
+            ax_signals.fill_between(cluster_info['times'], ub, lb, color=color, alpha=.2)
+            ax_signals.plot(cluster_info['times'], mean, color=color, linestyle=linestyle, label=fname)
 
-            ax_signals.axvline(0, color='k', linestyle=':', label='stimulus onset')
+            # ax_signals.axvline(0, color='k', linestyle=':', label='stimulus onset')
+            ax_signals.axhline(0, color='k', linestyle='-', linewidth=0.5)
             ax_signals.set_xlim([cluster_info['times'][0], cluster_info['times'][-1]])
             ax_signals.set_xlabel('Time [ms]')
-            ax_signals.set_ylabel('Amplitude [uV]')
+            ax_signals.set_ylabel('Amplitude')
 
             ymin, ymax = ax_signals.get_ylim()
             ax_signals.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.3)
-            ax_signals.legend(loc='lower right')
+            # ax_signals.legend(loc='lower right')
             title = 'Cluster #{0} (p < {1:0.3f})'.format(i_clu + 1, cinfo['p_values'])
             ax_signals.set(ylim=[ymin, ymax], title=title)
 
