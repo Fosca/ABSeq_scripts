@@ -39,9 +39,18 @@ def remove_pause(seq, post, Nitem):
 
 
 # ======================================================================================================================
-def from_epochs_to_surprise(subject, list_omegas, clean = False,order = 1):
+def from_epochs_to_surprise(subject, list_omegas,order = 1):
 
+    """
+    :param subject:
+    :param list_omegas:
+    :param order:
+    :return:
+    """
 
+    print("================== The surprise is computed on the non-cleaned epochs and metadata  !!!! ==========")
+
+    clean = False
     metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
     # extract the sequences from the metadata, add the pauses as code '2' and concatenate them
     runs = np.unique(metadata['RunNumber'])
@@ -65,6 +74,31 @@ def from_epochs_to_surprise(subject, list_omegas, clean = False,order = 1):
         metadata_updated = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=field_name, new_field_values=surprise)
 
     return metadata_updated
+
+# =====================================================================================================================
+
+def append_surprise_to_metadata_clean(subject):
+    """
+    This function corrects the mistake I made when computing the surprise for the epochs cleaned (doing as if the trials where close to each other)
+    :param subject:
+    :return:
+    """
+
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
+
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
+    good_idx = [len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))]
+
+    metadata_clean = metadata[good_idx]
+
+    with open(metadata_path,'wb') as fid:
+        pickle.dump(metadata_clean,fid)
+
+    return True
+
+
 
 # ======================================================================================================================
 def correlate_surprise_regressors(subject, list_omegas, clean = False,plot_figure=False):
@@ -317,7 +351,7 @@ def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omeg
 
     omega_max = np.asarray(omega_max)
     # ======== find the maximal value across omegas ================
-    diction = {'omega_arg_max':omega_max,'omega':omega_list,'time':the_times,'posterior_per_channels':post_per_channels}
+    diction = {'omega_arg_max':omega_max,'omega':omega_list,'time':the_times}
 
     # =========== save omega optimal ===============
     out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', 'omega_optimal_per_channels.npy')
@@ -350,18 +384,21 @@ def for_plot_posterior_probability(subjects_list, fname='posterior.npy', omega_l
         out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
         posterior = np.load(op.join(out_path, fname), allow_pickle=True).item()
         the_times = posterior['times']
+        post_subj = []
         # loop per time point on the mse to compute the posterior
         for omega in omega_list:
-            post.append(posterior['all_channels'][omega])
+            post_subj.append(posterior['all_channels'][omega])
             times.append(the_times)
             omegas.append([omega]*len(the_times))
             subject_number.append([ii]*len(the_times))
+        post.append(post_subj)
 
+    post = np.asarray(post)
     diction = {'posterior':post,'omega':omegas,'time':times,'subject':subject_number}
-    dataFrame_posterior = pd.DataFrame.from_dict(diction)
+    # dataFrame_posterior = pd.DataFrame.from_dict(diction)
 
 
-    return dataFrame_posterior
+    return diction
 
 
 # ======================================================================================================================

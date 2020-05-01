@@ -123,24 +123,14 @@ def linear_reg(subject):
     from ABseq_func import linear_reg_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
     linear_reg_funcs.run_linear_regression(subject, cleaned=True)
 
-
-
 def surprise_omegas_analysis(subject):
     list_omegas = range(1,300)
-    metadata_updated = TP_funcs.from_epochs_to_surprise(subject, list_omegas, clean=True, order=1)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None,hfilter=10)
-
-def regress_out_optimal_omega_cluster(subject):
+    TP_funcs.append_surprise_to_metadata_clean(subject)
+    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=False, decim=None,hfilter=10)
     TP_funcs.regress_out_optimal_omega(subject, clean=True)
-
-
-def compute_posterior_probability(subject):
     TP_funcs.compute_posterior_probability(subject)
-
-
-def regress_out_optimal_omega_per_channel(subject):
     TP_funcs.regress_out_optimal_omega_per_channel(subject)
 
-    # TP_funcs.compute_optimal_omega_per_channel(config.subjects_list, fname='posterior.npy',
-    #                                                      omega_list=range(1, 300))
+def simplified_linear_regression(subject):
+    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject)
 
