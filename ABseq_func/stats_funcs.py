@@ -68,6 +68,7 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
             ch_inds = np.unique(space_inds)
             time_inds = np.unique(time_inds)
             signals = data_array_chtype[..., ch_inds].mean(axis=-1)  # is this correct ??
+            # signals = data_array_chtype[..., ch_inds].mean(axis=1)  # is this correct ??
             sig_times = times[time_inds]
             p_value = p_values[clu_idx]
 
@@ -81,7 +82,7 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
     return cluster_info
 
 
-def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, T_obs_max=5., fname='', figname_initial=''):
+def plot_clusters_old(cluster_stats, p_threshold, data, data_array_chtype, ch_type, T_obs_max=5., fname='', figname_initial=''):
     """
     This function plots the clusters
 
@@ -148,5 +149,68 @@ def plot_clusters(cluster_stats, p_threshold, data, data_array_chtype, ch_type, 
             fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.png'
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300)
+
+    return True
+
+
+def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial=''):
+    """
+    This function plots the clusters
+
+    :param cluster_info:
+    :param good_cluster_inds: indices of the cluster to plot
+    :param T_obs_max: colormap limit
+    :param fname:
+    :param figname_initial:
+    :return:
+    """
+    color = 'r'
+    linestyle = '-'
+    T_obs_min = -T_obs_max
+
+    for i_clu in range(cluster_info['ncluster']):
+        cinfo = cluster_info[i_clu]
+        T_obs_map = cluster_info['T_obs'][cinfo['time_inds'], ...].mean(axis=0)
+        mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
+        # mask[cinfo['channel_inds'], :] = True
+        mask[cinfo['channels_cluster'], :] = True
+
+        fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
+        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], mask=mask, axes=ax_topo,vmin=T_obs_min, vmax=T_obs_max,show=False)
+        divider = make_axes_locatable(ax_topo)
+        # add axes for colorbar
+        ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
+        plt.colorbar(image, cax=ax_colorbar, format='%0.1f')
+        ax_topo.set_xlabel('Averaged t-map\n({:0.1f} - {:0.1f} ms)'.format(*cinfo['sig_times'][[0, -1]]))
+        ax_topo.set(title=ch_type+': '+fname)
+
+        # signal average & sem (over subjects)
+        ax_signals = divider.append_axes('right', size='300%', pad=1.2)
+        # for signal, name, col, ls in zip(cinfo['signal'], [fname], colors, linestyles):
+        #     ax_signals.plot(cluster_info['times'], signal * 1e6, color=col, linestyle=ls, label=name)  # why  signal*1e6 ??
+        mean = np.mean(cinfo['signal'], axis=0)
+        ub = mean + sem(cinfo['signal'], axis=0)
+        lb = mean - sem(cinfo['signal'], axis=0)
+        ax_signals.fill_between(cluster_info['times'], ub, lb, color=color, alpha=.2)
+        ax_signals.plot(cluster_info['times'], mean, color=color, linestyle=linestyle, label=fname)
+
+        # ax_signals.axvline(0, color='k', linestyle=':', label='stimulus onset')
+        ax_signals.axhline(0, color='k', linestyle='-', linewidth=0.5)
+        ax_signals.set_xlim([cluster_info['times'][0], cluster_info['times'][-1]])
+        ax_signals.set_xlabel('Time [ms]')
+        ax_signals.set_ylabel('Amplitude')
+
+        ymin, ymax = ax_signals.get_ylim()
+        ax_signals.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.3)
+        # ax_signals.legend(loc='lower right')
+        title = 'Cluster #{0} (p < {1:0.3f})'.format(i_clu + 1, cinfo['p_values'])
+        ax_signals.set(ylim=[ymin, ymax], title=title)
+
+        fig.tight_layout(pad=0.5, w_pad=0)
+        fig.subplots_adjust(bottom=.05)
+        fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.png'
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name, dpi=300)
+    plt.close('all)')
 
     return True
