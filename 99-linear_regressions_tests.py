@@ -11,17 +11,17 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from importlib import reload
 
 # ======================== REGRESSORS TO INCLUDE AND RESULTS FOLDER ========================= #
-Only_group_part = False  # False means running the regressions at the individual level, True to just analyze and plot the group results
-analysis_name = 'ChunkInfoAnalysis_v1'
+Only_group_part = True  # False means running the regressions at the individual level, True to just analyze and plot the group results
+analysis_name = 'RepeatAlter&Viol'
 regress_path = op.join(config.result_path, 'linear_models', analysis_name)
-names = ["Identity", "RepeatAlter", "WithinChunkPosition", "ChunkDepth"]
+names = ["RepeatAlter", "ViolationOrNot"]
 
 if Only_group_part == False:
     # ========================= RUN LINEAR REGRESSION FOR EACH SUBJECT ========================== #
     for subject in config.subjects_list:
         linear_reg_funcs.run_linear_regression_v2(analysis_name, names, subject, cleaned=True)
 
-    # Create evoked with each (unique) level of the regressor
+    # Create evoked with each (unique) level of the regressor / involves loading data again
     for subject in config.subjects_list:
         evoked_funcs.create_evoked_for_regression_factors(names, subject, cleaned=True)
 
@@ -125,11 +125,11 @@ for x, regressor_name in enumerate(betas.keys()):
     plt.close(fig)
 
 # ======================= RUN CLUSTER STATISTICS ====================== #
-nperm = 5000  # number of permutations
+nperm = 10000  # number of permutations
 threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
 p_threshold = 0.05
-tmin = 0.0  # timewindow to test (crop data)
-tmax = 0.600  # timewindow to test (crop data)
+tmin = 0.000  # timewindow to test (crop data)
+tmax = 0.500  # timewindow to test (crop data)
 fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
 utils.create_folder(fig_path)
 
@@ -147,48 +147,61 @@ for ch_type in ch_types:
         cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_condition, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
         cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_condition, data_array_chtype, ch_type)
 
+        # Significant clusters
+        T_obs, clusters, p_values, _ = cluster_stats
+        good_cluster_inds = np.where(p_values < p_threshold)[0]
+        print("Good clusters: %s" % good_cluster_inds)
+
         # PLOT CLUSTERS
-        figname_initial = fig_path + op.sep + 'stats_' + ch_type + '_' + regressor_name
-        stats_funcs.plot_clusters(cluster_stats, p_threshold, data_condition, data_array_chtype, ch_type, T_obs_max=5.,
-                                  fname=analysis_name, figname_initial=figname_initial)
+        if len(good_cluster_inds) > 0:
+            figname_initial = fig_path + op.sep + 'stats_' + ch_type + '_' + regressor_name
+            # stats_funcs.plot_clusters(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial)
+            stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=analysis_name+'_'+regressor_name, figname_initial=figname_initial)
 
         # =========================================================== #
         # ==========  cluster evoked data plot
         # =========================================================== #
 
-        # ------------------ LOAD THE EVOKED FOR THE CURRENT REGRESSOR ------------ #
-        evoked_reg = evoked_funcs.load_evoked(subject='all', filter_name=regressor_name, filter_not=None, cleaned=True)
+        if len(good_cluster_inds) > 0:
+            # ------------------ LOAD THE EVOKED FOR THE CURRENT REGRESSOR ------------ #
+            evoked_reg = evoked_funcs.load_evoked(subject='all', filter_name=regressor_name, filter_not='seqID', cleaned=True)
 
-        T_obs, clusters, p_values, _ = cluster_stats
-        good_cluster_inds = np.where(p_values < p_threshold)[0]
-        print("Good clusters: %s" % good_cluster_inds)
+            # T_obs, clusters, p_values, _ = cluster_stats
+            # good_cluster_inds = np.where(p_values < p_threshold)[0]
+            # print("Good clusters: %s" % good_cluster_inds)
 
-        for i_clu, clu_idx in enumerate(good_cluster_inds):
+            for i_clu, clu_idx in enumerate(good_cluster_inds):
 
-            # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
-            time_inds, space_inds = np.squeeze(clusters[clu_idx])
-            ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
+                cinfo = cluster_info[i_clu]
 
-            # ----------------- PLOT ----------------- #
-            fig, ax = plt.subplots(1, 1, figsize=(10, 5))
-            fig.suptitle(ch_type, fontsize=12, weight='bold')
-            plt.axvline(0, linestyle='-', color='black', linewidth=2)
-            for xx in range(3):
-                plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-            ax.set_xlabel('Time (ms)')
-            condnames = list(evoked_reg.keys())
-            if len(condnames) == 2:
-                colorslist = ['r', 'b']
-            else:
-                NUM_COLORS = len(condnames)
-                cm = plt.get_cmap('jet')
-                colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
-            for ncond, condname in enumerate(condnames):
-                data = evoked_reg[condname].copy()
-                evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, ch_inds, color=colorslist[ncond], filter=True, axis=None)
-            plt.legend(loc='upper right', fontsize=9)
-            ax.set_xlim([-100, 750])
-            plt.title(ch_type + '_' + regressor_name + '_clust_' + str(i_clu+1))
-            fig_name = fig_path + op.sep + 'stats_' + ch_type + '_' + regressor_name + '_clust_' + str(i_clu+1) + '_evo.png'
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name, dpi=300)
+                # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
+                time_inds, space_inds = np.squeeze(clusters[clu_idx])
+                ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
+
+                # ----------------- PLOT ----------------- #
+                fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+                # fig.suptitle(ch_type, fontsize=12, weight='bold')
+                plt.axvline(0, linestyle='-', color='black', linewidth=2)
+                for xx in range(3):
+                    plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+                ax.set_xlabel('Time (ms)')
+                condnames = list(evoked_reg.keys())
+                if len(condnames) == 2:
+                    colorslist = ['r', 'b']
+                else:
+                    NUM_COLORS = len(condnames)
+                    cm = plt.get_cmap('jet')
+                    colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+                for ncond, condname in enumerate(condnames):
+                    data = evoked_reg[condname].copy()
+                    evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, ch_inds, color=colorslist[ncond], filter=True, axis=None)
+                ymin, ymax = ax.get_ylim()
+                ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
+                plt.legend(loc='upper right', fontsize=9)
+                ax.set_xlim([-100, 750])
+                ax.set_ylim([ymin, ymax])
+                plt.title(ch_type + '_' + regressor_name + '_clust_' + str(i_clu+1), fontsize=10, weight='bold')
+                fig.tight_layout(pad=0.5, w_pad=0)
+                fig_name = fig_path + op.sep + 'stats_' + ch_type + '_' + regressor_name + '_clust_' + str(i_clu+1) + '_evo.png'
+                print('Saving ' + fig_name)
+                plt.savefig(fig_name, dpi=300)
