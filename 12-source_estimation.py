@@ -31,9 +31,11 @@ fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
 subject = config.subjects_list[1]
 
 # source_estimation_funcs.prepare_bem(subject, fsMRI_dir)
-source_estimation_funcs.create_source_space(subject, fsMRI_dir)
-source_estimation_funcs.forward_solution(subject, fsMRI_dir)
-source_estimation_funcs.inverse_operator(subject)
+# Create coregistration "-trans.fif" file
+# mne.gui.coregistration(subject=subject, subjects_dir=fsMRI_dir)
+# source_estimation_funcs.create_source_space(subject, fsMRI_dir)
+# source_estimation_funcs.forward_solution(subject, fsMRI_dir)
+# source_estimation_funcs.inverse_operator(subject)
 source_estimation_funcs.source_estimates(subject, 'items_standard_all', evoked_filter_not=None)
 
 
