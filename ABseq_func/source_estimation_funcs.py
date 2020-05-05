@@ -28,6 +28,8 @@ def prepare_bem(subject, fsMRI_dir):
 
 
 def create_source_space(subject, fsMRI_dir):
+    print('Subject ' + subject + ': create_source_space ======================')
+
     meg_subject_dir = op.join(config.meg_dir, subject)
     # Create source space
     src = mne.setup_source_space(subject, spacing=config.spacing, subjects_dir=fsMRI_dir)
@@ -35,12 +37,18 @@ def create_source_space(subject, fsMRI_dir):
 
 
 def forward_solution(subject, fsMRI_dir):
+    print('Subject ' + subject + ': forward_solution ======================')
+
     meg_subject_dir = op.join(config.meg_dir, subject)
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
     # BEM solution
     fname_bem = op.join(meg_subject_dir, '%s-5120-5120-5120-bem-sol.fif' % subject)
+    # Coregistration file
+    fname_trans = fname_trans = op.join(config.meg_dir, subject, subject + '-trans.fif')
+    # Source space
+    src = mne.read_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'))
     # Forward solution
     fwd = mne.make_forward_solution(evoked[0].info, fname_trans, src, fname_bem, mindist=config.mindist)
     extension = '_%s-fwd' % (config.spacing)
@@ -57,8 +65,9 @@ def compute_noise_cov(subject):
 
 
 def inverse_operator(subject):
-    meg_subject_dir = op.join(config.meg_dir, subject)
+    print('Subject ' + subject + ': inverse_operator ======================')
 
+    meg_subject_dir = op.join(config.meg_dir, subject)
     # Noise covariance
     cov = compute_noise_cov(subject)
     # Load some evoked data (just for info?)
@@ -76,10 +85,13 @@ def inverse_operator(subject):
 
 
 def source_estimates(subject, evoked_filter_name, evoked_filter_not=None):
+    print('Subject ' + subject + ': source_estimates: evoked ' + evoked_filter_name + '======================')
+
     meg_subject_dir = op.join(config.meg_dir, subject)
 
     # Load evoked
-    evoked = evoked_funcs.load_evoked(subject='all', filter_name=evoked_filter_name + '_allseq', evoked_filter_not=None, cleaned=True)
+    evoked = evoked_funcs.load_evoked(subject=subject, filter_name=evoked_filter_name, filter_not=evoked_filter_not, cleaned=True)
+    evoked = evoked[list(evoked.keys())[0]]  # first key
     # Load inverse operator
     extension = '_%s-inv' % (config.spacing)
     fname_inv = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
