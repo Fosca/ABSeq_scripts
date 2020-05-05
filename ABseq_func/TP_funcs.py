@@ -58,7 +58,7 @@ def from_epochs_to_surprise(subject, list_omegas,order = 1):
     for ome in list_omegas:
         print("========== DETERMINING THE SURPRISE FOR LEAKY WINDOW OF %i ITEMS ========="%ome)
         options = {'Decay': ome, 'prior_weight': 1}
-        field_name = 'surprise_%i'%ome
+        field_name = 'surprise_%.005f'%ome
         surprise = []
         for run in runs:
             metadata_run = metadata[metadata['RunNumber']==run]
@@ -136,6 +136,7 @@ def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,
     r2_surprise = {omega:[] for omega in omega_list}
     r2_surprise['times'] = epochs.times
     epochs_for_reg = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_1"].values))[0]]
+    epochs_for_reg = epochs_for_reg["SequenceID != 1"]
     epochs_for_reg_normalized = normalize_data(epochs_for_reg)
 
     out_path = op.join(config.result_path, 'TP_effects', 'surprise_omegas', subject)
@@ -143,7 +144,7 @@ def run_linear_regression_surprises(subject,omega_list,clean=False,decim = None,
     if not Ridge:
         for omega in omega_list:
             print("==== running the regression for omega %i ======="%omega)
-            surprise_name = "surprise_%i" % omega
+            surprise_name = "surprise_%.005f" % omega
             r2_surprise[omega] = linear_regression_from_sklearn(epochs_for_reg_normalized, surprise_name)
         # ===== save all the regression results =========
         fname = prefix +'results_surprise.npy'

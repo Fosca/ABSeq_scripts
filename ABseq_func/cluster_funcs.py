@@ -124,13 +124,24 @@ def linear_reg(subject):
     linear_reg_funcs.run_linear_regression(subject, cleaned=True)
 
 def surprise_omegas_analysis(subject):
-    list_omegas = range(1,300)
+    import numpy as np
+    from ABseq_func import TP_funcs
+
+    list_omegas = np.logspace(-1,2,50)
+
+    TP_funcs.from_epochs_to_surprise(subject,list_omegas)
     TP_funcs.append_surprise_to_metadata_clean(subject)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=False, decim=None,hfilter=10)
-    TP_funcs.regress_out_optimal_omega(subject, clean=True)
-    TP_funcs.compute_posterior_probability(subject)
-    TP_funcs.regress_out_optimal_omega_per_channel(subject)
+    from importlib import reload
+    reload(TP_funcs)
+    # TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=50,hfilter=None)
+    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None,hfilter=10)
+
+    # ----------- then we have to compute the optimal omega for each time and channel -------------
+    # TP_funcs.regress_out_optimal_omega(subject, clean=True)
+    # TP_funcs.compute_posterior_probability(subject)
+    # TP_funcs.regress_out_optimal_omega_per_channel(subject)
 
 def simplified_linear_regression(subject):
+    from ABseq_func import linear_reg_funcs
     linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject)
 
