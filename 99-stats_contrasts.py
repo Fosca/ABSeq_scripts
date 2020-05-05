@@ -23,13 +23,16 @@ The pair of conditions to compare is defined using metadata filters below
 # Options
 # =========================================================== #
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
-resid_epochs_type = 'residual_model_constant'  # 'residual_surprise'  'residual_model_constant'
-DoFirstLevel = True  # To compute the contrasts (delta 2 conditions) and evoked for each subject
+resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
+# /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
+DoFirstLevel = False  # To compute the contrasts (delta 2 conditions) and evoked for each subject
 DoSecondLevel = True  # Run the group level statistics
 analyses_to_do = ['OddEven', 'PairsOpen', 'PairsClose', 'QuadOpen', 'QuadClose',  'QuadOpenBis', 'QuadCloseBis',
                   'ChunkBeginning', 'ChunkBeginningBis', 'RepeatAlter']
-# analyses_to_do = ['RepeatAlter']
+analyses_to_do = ['OddEven']
+
+
 # =========================================================== #
 # Define metadatafilters for different analyses
 # note: 'and SequenceID == x' is added later in the seqID loop
@@ -37,24 +40,25 @@ analyses_to_do = ['OddEven', 'PairsOpen', 'PairsClose', 'QuadOpen', 'QuadClose',
 filters = dict()  # contains analysis name & associated contrast (metadatafilters for cond1, for cond2)
 filters['OddEven'] = ['(ViolationInSequence == 0 and (StimPosition==2 | StimPosition==4 | StimPosition==6 | StimPosition==8 | StimPosition==10 | StimPosition==12 | StimPosition==14))',
                       '(ViolationInSequence == 0 and (StimPosition==3 | StimPosition==5 | StimPosition==7 | StimPosition==9 | StimPosition==11 | StimPosition==13 | StimPosition==15))']
-filters['PairsOpen'] = ['(StimPosition==5 | StimPosition==9 | StimPosition==13)',
-                        '(StimPosition==7 | StimPosition==11 | StimPosition==15)']
-filters['PairsClose'] = ['(StimPosition==4 | StimPosition==8 | StimPosition==12)',
-                         '(StimPosition==2 | StimPosition==6 | StimPosition==10)']
-filters['QuadOpen'] = ['(StimPosition==5)',
-                       '(StimPosition==9)']
-filters['QuadClose'] = ['(StimPosition==8)',
-                        '(StimPosition==12)']
-filters['QuadOpenBis'] = ['(StimPosition==5 | StimPosition==13)',
-                          '(StimPosition==9)']
-filters['QuadCloseBis'] = ['(StimPosition==8)',
-                           '(StimPosition==12 | StimPosition==4)']
-filters['ChunkBeginning'] = ['(ChunkBeginning==0)',
-                             '(ChunkBeginning==1)']
-filters['ChunkBeginningBis'] = ['(ChunkBeginning==0 and StimPosition!=1 and StimPosition!=16)',
-                                '(ChunkBeginning==1 and StimPosition!=1 and StimPosition!=16)']
-filters['RepeatAlter'] = ['(RepeatAlter==0)',
-                          '(RepeatAlter==1)']
+filters['PairsOpen'] = ['(ViolationInSequence == 0 and (StimPosition==5 | StimPosition==9 | StimPosition==13))',
+                        '(ViolationInSequence == 0 and (StimPosition==7 | StimPosition==11 | StimPosition==15))']
+filters['PairsClose'] = ['(ViolationInSequence == 0 and (StimPosition==4 | StimPosition==8 | StimPosition==12))',
+                         '(ViolationInSequence == 0 and (StimPosition==2 | StimPosition==6 | StimPosition==10))']
+filters['QuadOpen'] = ['(ViolationInSequence == 0 and (StimPosition==5))',
+                       '(ViolationInSequence == 0 and (StimPosition==9))']
+filters['QuadClose'] = ['(ViolationInSequence == 0 and (StimPosition==8))',
+                        '(ViolationInSequence == 0 and (StimPosition==12))']
+filters['QuadOpenBis'] = ['(ViolationInSequence == 0 and (StimPosition==5 | StimPosition==13))',
+                          '(ViolationInSequence == 0 and (StimPosition==9))']
+filters['QuadCloseBis'] = ['(ViolationInSequence == 0 and (StimPosition==8))',
+                           '(ViolationInSequence == 0 and (StimPosition==12 | StimPosition==4))']
+filters['ChunkBeginning'] = ['(ViolationInSequence == 0 and (ChunkBeginning==0))',
+                             '(ViolationInSequence == 0 and (ChunkBeginning==1))']
+filters['ChunkBeginningBis'] = ['(ViolationInSequence == 0 and (ChunkBeginning==0 and StimPosition!=1 and StimPosition!=16))',
+                                '(ViolationInSequence == 0 and (ChunkBeginning==1 and StimPosition!=1 and StimPosition!=16))']
+filters['RepeatAlter'] = ['(ViolationInSequence == 0 and (RepeatAlter==0))',
+                          '(ViolationInSequence == 0 and (RepeatAlter==1))']
+
 if DoFirstLevel:
     # =========================================================== #
     # Set contrast analysis with corresponding metadata filters
@@ -85,7 +89,13 @@ if DoFirstLevel:
         for nsub, subject in enumerate(config.subjects_list):
 
             # Load data & update metadata (in case new things were added)
-            if resid_epochs:
+            if resid_epochs and resid_epochs_type=='reg_repeataltern_surpriseOmegainfinity':
+                print("Processing subject: %s" % subject)
+                resid_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
+                fname_in = op.join(resid_path, 'residuals-epo.fif')
+                print("Input: ", fname_in)
+                epochs = mne.read_epochs(fname_in, preload=True)
+            elif resid_epochs:
                 epochs = epoching_funcs.load_resid_epochs_items(subject, type=resid_epochs_type)
             else:
                 if cleaned:
@@ -94,7 +104,6 @@ if DoFirstLevel:
                 else:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
-
 
             # Generate list of evoked objects from conditions names
 
@@ -159,6 +168,12 @@ if DoSecondLevel:
         # =========================================================== #
         # Group stats
         # =========================================================== #
+        nperm = 500  # number of permutations
+        threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
+        p_threshold = 0.05
+        tmin = 0.000  # timewindow to test (crop data)
+        tmax = 0.500  # timewindow to test (crop data)
+
         # ==== For each seqID === #
         for seqID in range(1, 8):
 
@@ -168,11 +183,6 @@ if DoSecondLevel:
                                             allsubs_contrast_data['Seq' + str(seqID)][0].info, tmin=-0.1)
 
             # RUN THE STATS
-            nperm = 10000  # number of permutations
-            threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
-            p_threshold = 0.05
-            tmin = 0.000  # timewindow to test (crop data)
-            tmax = 0.500  # timewindow to test (crop data)
             dataEpArray.crop(tmin=tmin, tmax=tmax)  # crop
 
             ch_types = ['eeg', 'grad', 'mag']
@@ -245,9 +255,9 @@ if DoSecondLevel:
 
                         cinfo = cluster_info[i_clu]
 
-                        # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
-                        time_inds, space_inds = np.squeeze(clusters[clu_idx])
-                        ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
+                        # # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
+                        # time_inds, space_inds = np.squeeze(clusters[clu_idx])
+                        # ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
 
                         # ----------------- PLOT ----------------- #
                         fig, ax = plt.subplots(1, 1, figsize=(6, 3))
@@ -265,7 +275,7 @@ if DoSecondLevel:
                             colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
                         for ncond, condname in enumerate(condnames):
                             data = evoked_reg[condname].copy()
-                            evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, ch_inds, color=colorslist[ncond], filter=True, axis=None)
+                            evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=True, axis=None)
                         ymin, ymax = ax.get_ylim()
                         ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
                         # plt.legend(loc='upper right', fontsize=9)
@@ -316,9 +326,9 @@ if DoSecondLevel:
 
                     cinfo = cluster_info[i_clu]
 
-                    # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
-                    time_inds, space_inds = np.squeeze(clusters[clu_idx])
-                    ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
+                    # # ----------------- SELECT CHANNELS OF INTEREST ----------------- #
+                    # time_inds, space_inds = np.squeeze(clusters[clu_idx])
+                    # ch_inds = np.unique(space_inds)  # list of channels we want to average and plot (!should be from one ch_type!)
 
                     # ----------------- PLOT ----------------- #
                     fig, ax = plt.subplots(1, 1, figsize=(6, 3))
@@ -336,7 +346,7 @@ if DoSecondLevel:
                         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
                     for ncond, condname in enumerate(condnames):
                         data = evoked_reg[condname].copy()
-                        evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, ch_inds, color=colorslist[ncond], filter=True, axis=None)
+                        evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=True, axis=None)
                     ymin, ymax = ax.get_ylim()
                     ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
                     # plt.legend(loc='upper right', fontsize=9)

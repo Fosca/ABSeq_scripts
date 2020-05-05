@@ -252,8 +252,8 @@ def create_evoked_for_regression_factors(regressor_names, subject, cleaned=True)
     # ====== remove some items (excluded from the linear model) ====== #
     print('We remove the first sequence item for which the surprise is not well computed and for which there is no RepeatAlter')
     epochs_items = epochs_items["StimPosition > 1"]
-    print('We remove items from trials with violation')
-    epochs_items = epochs_items["ViolationInSequence == 0"]
+    # print('We remove items from trials with violation')
+    # epochs_items = epochs_items["ViolationInSequence == 0"]
 
     # ===== create evoked for each level of each regressor_name ===== #
     for regressor_name in regressor_names:
@@ -422,9 +422,9 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
     lb = mean - sem(group_data_seq, axis=0)
 
     if filter == True:
-        mean = savgol_filter(mean, 11, 3)
-        ub = savgol_filter(ub, 11, 3)
-        lb = savgol_filter(lb, 11, 3)
+        mean = savgol_filter(mean, 9, 3)
+        ub = savgol_filter(ub, 9, 3)
+        lb = savgol_filter(lb, 9, 3)
 
     if axis is not None:
         axis.fill_between(times, ub, lb, color=color, alpha=.2)

@@ -79,8 +79,8 @@ def run_linear_regression_v2(analysis_name, regressor_names, subject, cleaned=Tr
     # # ====== remove some items from the linear model ==========
     print('We remove the first sequence item for which the surprise is not well computed and for which there is no RepeatAlter')
     epochs = epochs["StimPosition > 1"]
-    print('We remove items from trials with violation')
-    epochs = epochs["ViolationInSequence == 0"]
+    # print('We remove items from trials with violation')
+    # epochs = epochs["ViolationInSequence == 0"]
 
     # ====== regressors
     names = regressor_names

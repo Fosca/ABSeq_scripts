@@ -29,11 +29,11 @@ def run_cluster_permutation_test_1samp(data, ch_type='eeg', nperm=2 ** 12, thres
 
     # subset of the data, as array
     if ch_type == 'eeg':
-        data_array_chtype = np.array([data.pick_types(meg=False, eeg=True)[c].get_data() for c in range(len(data))])
-    elif ch_type == 'mag':
-        data_array_chtype = np.array([data.pick_types(meg=ch_type, eeg=False)[c].get_data() for c in range(len(data))])
-    elif ch_type == 'grad':
-        data_array_chtype = np.array([data.pick_types(meg=ch_type, eeg=False)[c].get_data() for c in range(len(data))])
+        data.pick_types(meg=False, eeg=True)
+        data_array_chtype = np.array([data[c].get_data() for c in range(len(data))])
+    else:
+        data.pick_types(meg=ch_type, eeg=False)
+        data_array_chtype = np.array([data[c].get_data() for c in range(len(data))])
     data_array_chtype = np.transpose(np.squeeze(data_array_chtype), (0, 2, 1))  # transpose for clustering
 
     # stat func
@@ -56,7 +56,8 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
 
     T_obs, clusters, p_values, _ = cluster_stats
     good_cluster_inds = np.where(p_values < p_threshold)[0]
-    pos = mne.find_layout(data.info).pos
+    pos = mne.find_layout(data.info, ch_type=ch_type).pos
+    print("We found %i positions for ch_type %s" % (len(pos), ch_type))
     times = data.times * 1e3
 
     if len(good_cluster_inds) > 0:
@@ -78,6 +79,12 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
         cluster_info['pos'] = pos
         cluster_info['ncluster'] = i_clu + 1
         cluster_info['T_obs'] = T_obs
+        if ch_type == 'eeg':
+            tmp = data.copy().pick_types(meg=False, eeg=True)
+            cluster_info['data_info'] = tmp.info
+        else:
+            tmp = data.copy().pick_types(meg=ch_type, eeg=False)
+            cluster_info['data_info'] = tmp.info
 
     return cluster_info
 
@@ -172,11 +179,20 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         cinfo = cluster_info[i_clu]
         T_obs_map = cluster_info['T_obs'][cinfo['time_inds'], ...].mean(axis=0)
         mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
-        # mask[cinfo['channel_inds'], :] = True
         mask[cinfo['channels_cluster'], :] = True
 
+        # plt.close('all')
+        # plt.figure()
+        # plot_topomap(T_obs_map, cluster_info['pos'])
+
+        # plot_topomap(T_obs_map, cluster_info['data_info'], mask=mask)
+        # pos = mne.find_layout(data_stat.info, ch_type=ch_type).pos
+        # npos= pos[:, [0, 1]]
+        # plt.figure()
+        # plot_topomap(T_obs_map, pos=data_stat.info, mask=mask)
+
         fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], mask=mask, axes=ax_topo,vmin=T_obs_min, vmax=T_obs_max,show=False)
+        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
         divider = make_axes_locatable(ax_topo)
         # add axes for colorbar
         ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
