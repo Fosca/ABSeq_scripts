@@ -145,3 +145,7 @@ def simplified_linear_regression(subject):
     from ABseq_func import linear_reg_funcs
     linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject)
 
+
+def simplified_with_complexity(subject):
+    from ABseq_func import linear_reg_funcs
+    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject,with_complexity=True)

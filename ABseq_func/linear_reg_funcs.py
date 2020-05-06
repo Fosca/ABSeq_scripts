@@ -116,7 +116,7 @@ def run_linear_regression_v2(analysis_name, regressor_names, subject, cleaned=Tr
     # plt.close('all')
 
 
-def run_linear_reg_surprise_repeat_alt(subject):
+def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False):
 
     TP_funcs.append_surprise_to_metadata_clean(subject)
 
@@ -126,6 +126,10 @@ def run_linear_reg_surprise_repeat_alt(subject):
 
     # ============ build the repeatAlter and the surprise 299 for n+1 ==================
     metadata_notclean = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+
+    # ====== attention il faut que je code à la main la présence de répétition ou d'alternance ===========
+
+    metadata_notclean = repeat_alternate_from_metadata(metadata_notclean)
     RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
     RepeatAlternp1_notclean.append(np.nan)
     Surprisenp1_notclean = metadata_notclean["surprise_299"].values[1:].tolist()
@@ -143,13 +147,6 @@ def run_linear_reg_surprise_repeat_alt(subject):
     epochs.metadata = metadata
     epochs.pick_types(meg=True, eeg=True)
 
-
-    np.unique(metadata[np.isnan(epochs.metadata['RepeatAlter'])]['StimPosition'].values)
-    np.unique(metadata[np.isnan(epochs.metadata['surprise_299'])]['StimPosition'].values)
-    np.unique(metadata[np.isnan(metadata['RepeatAlternp1'])]['StimPosition'].values)
-    np.unique(metadata[np.isnan(metadata['Surprisenp1'])]['StimPosition'].values)
-
-
     epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_299"].values))[0]]
     epochs = epochs[np.where(1 - np.isnan(epochs.metadata["RepeatAlternp1"].values))[0]]
 
@@ -160,29 +157,36 @@ def run_linear_reg_surprise_repeat_alt(subject):
     # Omega infinity for n+1 (not defined for the last item of the 16)
 
     names = ["Intercept", "surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]
+    if with_complexity:
+        names.append("Complexity")
     for name in names:
         print(name)
         print(np.unique(epochs.metadata[name].values))
-
 
     lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
 
 
     # Save surprise regression results
     out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
+    if with_complexity:
+        out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity_complexity', subject)
+
     utils.create_folder(out_path)
     lin_reg['Intercept'].beta.save(op.join(out_path, 'beta_intercept-ave.fif'))
     lin_reg['surprise_299'].beta.save(op.join(out_path, 'beta_surpriseN-ave.fif'))
     lin_reg['Surprisenp1'].beta.save(op.join(out_path, 'beta_surpriseNp1-ave.fif'))
     lin_reg['RepeatAlternp1'].beta.save(op.join(out_path, 'beta_RepeatAlternp1-ave.fif'))
     lin_reg['RepeatAlter'].beta.save(op.join(out_path, 'beta_RepeatAlter-ave.fif'))
-
+    if with_complexity:
+        lin_reg['Complexity'].beta.save(op.join(out_path, 'beta_Complexity-ave.fif'))
 
     # save the residuals epoch in the same folder
 
     residuals = epochs.get_data()-lin_reg['Intercept'].beta.data
     for nn in ["surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]:
         residuals = residuals - np.asarray([epochs.metadata[nn].values[i]*lin_reg[nn].beta._data for i in range(len(epochs))])
+    if with_complexity:
+        residuals = residuals - np.asarray([epochs.metadata["Complexity"].values[i]*lin_reg["Complexity"].beta._data for i in range(len(epochs))])
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
@@ -190,5 +194,21 @@ def run_linear_reg_surprise_repeat_alt(subject):
     # save the residuals epoch in the same folder
     residual_epochs.save(out_path+op.sep+'residuals-epo.fif', overwrite=True)
 
-
     return True
+
+
+def repeat_alternate_from_metadata(metadata):
+
+    stimuli = metadata['StimID'].values.tolist()
+    ra = [1*(x!=0) for x in np.diff(stimuli)]
+    ra = [np.nan]+ra
+    count = 0
+    while count < len(stimuli):
+        print(count)
+        if (count%16)==0:
+            ra[count]=np.nan
+        count +=1
+
+    metadata["RepeatAlter"] = np.asarray(ra)
+    return metadata
+
