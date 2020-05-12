@@ -29,7 +29,7 @@ N_JOBS = config.N_JOBS
 parallel, run_func, _ = parallel_func(epoching_funcs.run_epochs, n_jobs=N_JOBS)
 
 epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list)
 
 epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, baseline=None) for subject in config.subjects_list)
