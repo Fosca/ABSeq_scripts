@@ -40,8 +40,8 @@ elif os.name == 'posix':
 
 study_path = os.path.join(root_path, 'data') + os.path.sep
 result_path = os.path.join(root_path, 'results') + os.path.sep
-cluster_path = os.path.join(root_path, 'scripts','ABSeq_scripts','cluster') + os.path.sep
-scripts_path = os.path.join(root_path, 'scripts','ABSeq_scripts') + os.path.sep
+cluster_path = os.path.join(root_path, 'scripts', 'ABSeq_scripts', 'cluster') + os.path.sep
+scripts_path = os.path.join(root_path, 'scripts', 'ABSeq_scripts') + os.path.sep
 
 
 EMS_path = os.path.join(result_path, 'EMS') + os.path.sep
@@ -232,13 +232,13 @@ bads['sub03-mr_190273'] = dict(
 
 bads['sub04-rf_190499'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2243', 'EEG017', 'EEG041', 'EEG024', 'EEG014', 'EEG006'],  #
-    run02=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2243', 'EEG017', 'EEG041', 'EEG024', 'EEG014', 'EEG006'],  #
+    run02=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2243', 'EEG017', 'EEG041', 'EEG024', 'EEG014', 'EEG006', 'EEG032'],  #
     run03=['MEG0213', 'MEG0311', 'MEG2643', 'EEG017', 'EEG041', 'EEG024', 'EEG018', 'EEG032'],  #
     run04=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2241', 'EEG017', 'EEG041', 'EEG024', 'EEG045', 'EEG044', 'EEG032'],  #
     run05=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1943', 'MEG1941', 'EEG017', 'EEG024', 'EEG039', 'EEG047', 'EEG037', 'EEG038', 'EEG041'],  #
     run06=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1943', 'MEG2241', 'EEG017', 'EEG024', 'EEG039', 'EEG047', 'EEG037', 'EEG041'],  #
     run07=['MEG0213', 'MEG0311', 'MEG2643', 'EEG017', 'EEG041', 'EEG024'],  #
-    run08=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1941', 'EEG017', 'EEG041', 'EEG024'],  #
+    run08=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1941', 'EEG017', 'EEG018', 'EEG019', 'EEG041', 'EEG022', 'EEG023', 'EEG024', 'EEG027'],  #
     run09=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1942', 'EEG017', 'EEG041', 'EEG024', 'EEG048', 'EEG024'],  #
     run10=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1941', 'EEG017', 'EEG041', 'EEG024'],  #
     run11=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1941', 'EEG017', 'EEG041', 'EEG024'],  #
@@ -577,7 +577,7 @@ l_freq = 0.10
 #   The high-frequency cut-off in the lowpass filtering step.
 #   Keep it None if no lowpass filtering should be applied.
 
-h_freq = 200
+h_freq = 200  # meaningless since we downsample at 250Hz? We cannot exploit frequencies below 250/2?
 
 ###############################################################################
 # MAXFILTER PARAMETERS
@@ -886,7 +886,7 @@ rejcomps_man = defaultdict(default_reject_comps)
 rejcomps_man['sub01-pa_190002'] = dict(eeg=[0], meg=[3, 2])
 rejcomps_man['sub02-ch_180036'] = dict(eeg=[0, 1, 11], meg=[7, 0, 63])
 rejcomps_man['sub03-mr_190273'] = dict(eeg=[1, 4], meg=[23, 2, 24])
-rejcomps_man['sub04-rf_190499'] = dict(eeg=[15, 0, 7], meg=[7, 16])
+rejcomps_man['sub04-rf_190499'] = dict(eeg=[15, 0, 7, 9], meg=[25, 19, 7, 16, 0, 71])
 rejcomps_man['sub05-cr_170417'] = dict(eeg=[0, 19], meg=[25, 0])
 rejcomps_man['sub06-kc_160388'] = dict(eeg=[1, 19], meg=[57, 12, 9])
 rejcomps_man['sub07-jm_100109'] = dict(eeg=[1, 3], meg=[0, 1])
@@ -1040,7 +1040,7 @@ h_trans_bandwidth = 'auto'
 #  ``N_JOBS`` : int
 #    An integer that specifies how many subjects you want to run in parallel.
 
-N_JOBS = 2
+N_JOBS = 1
 
 # ``random_state`` : None | int | np.random.RandomState
 #    To specify the random generator state. This allows to have
