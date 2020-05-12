@@ -9,6 +9,7 @@ from ABseq_func import utils   # why do we need this now ?? (error otherwise)
 from scipy.signal import savgol_filter
 from scipy.stats import sem
 import matplotlib.ticker as ticker
+import copy
 
 def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks",
                          violation_or_not=1):
@@ -18,8 +19,8 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
     else:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_Items', subject)
         if ylim_eeg == 10:  # i.e., if default value
-            ylim_eeg = 3;
-            ylim_mag = 150;
+            ylim_eeg = 3
+            ylim_mag = 150
             ylim_grad = 40
 
     if not os.path.exists(fig_path):
@@ -64,51 +65,267 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
 
 
 
-def plot_butterfly_items_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks",
-                         violation_or_not=1):
+def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1):
 
     # Figures folder
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', 'GROUP')
+        ylim_eeg = 4
+        ylim_mag = 200
+        ylim_grad = 70
     else:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_Items', 'GROUP')
-        if ylim_eeg == 10:  # i.e., if default value
-            ylim_eeg = 3;
-            ylim_mag = 150;
-            ylim_grad = 40
+        ylim_eeg = 1.5
+        ylim_mag = 70
+        ylim_grad = 20
 
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
-    ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
-    topomap_args = dict(time_unit='s')
+    ts_args = dict(gfp=True, time_unit='ms', ylim=ylim)
+    topomap_args = dict(time_unit='ms', ylim=ylim)
+    topotimes = np.arange(0.070, 0.501, 0.050)
+    topo_avg = 0.020
+
 
     for x, seq in enumerate(evoked.keys()):
+        # Sequence info
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x+1)
+
         evokeds_seq = evoked[seq]
         grand_avg_seq = mne.grand_average([evokeds_seq[i][0] for i in range(len(evokeds_seq))])
 
-        fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='eeg', times=times, show=False)
+        # EEG
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(5, 3))
+        grand_avg_seq.plot(axes=axes, picks='eeg', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('EEG: '+seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
         fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
         print('Saving ' + fig_name)
-        plt.savefig(fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        # topomaps
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='eeg', time_unit='ms', title='EEG: '+seqname, vmin=-ylim_eeg*0.6, vmax=ylim_eeg*0.6, average=topo_avg)
+        fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '_TOPOS.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
 
         # MAG
-        fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='mag', times=times, show=False)
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(5, 3))
+        grand_avg_seq.plot(axes=axes, picks='mag', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('MAG: ' + seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        # Save
         fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
         print('Saving ' + fig_name)
-        plt.savefig(fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        # topomaps
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='mag', time_unit='ms', title='MAG: '+seqname, vmin=-ylim_mag*0.6, vmax=ylim_mag*0.6, average=topo_avg)
+        fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '_TOPOS.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+
+        # GRAD
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(5, 3))
+        grand_avg_seq.plot(axes=axes, picks='grad', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('GRAD: ' + seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        # Save
+        fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        # topomaps
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='grad', time_unit='ms', title='GRAD: '+seqname, vmin=-ylim_grad*0.6, vmax=ylim_grad*0.6, average=topo_avg)
+        fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '_TOPOS.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+
+        # Previous version
+        # # EEG
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
+        #                                     topomap_args=topomap_args, picks='eeg', times=times, show=False)
+        # fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
+        # print('Saving ' + fig_name)
+        # plt.savefig(fig_name)
+        # plt.close(fig)
+        #
+        # # MAG
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
+        #                                     topomap_args=topomap_args, picks='mag', times=times, show=False)
+        # fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
+        # print('Saving ' + fig_name)
+        # plt.savefig(fig_name)
+        # plt.close(fig)
+        #
+        # # #GRAD
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
+        #                                     topomap_args=topomap_args, picks='grad', times=times, show=False)
+        # fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
+        # print('Saving ' + fig_name)
+        # plt.savefig(fig_name)
+        # plt.close(fig)
+
+
+def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=1):
+
+    # Grand average
+    tmp = list(evoked.keys())
+    evoked_seq = evoked[tmp[0]]
+    grand_avg_seq = mne.grand_average([evoked_seq[i][0] for i in range(len(evoked_seq))])
+
+    # Figures folder & Ylim
+    if violation_or_not:
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', 'GROUP')
+        ylim_eeg = 2.0
+        ylim_mag = 130
+        ylim_grad = 40
+    else:
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_Items', 'GROUP')
+        ylim_eeg = 1.5
+        ylim_mag = 70
+        ylim_grad = 20
+    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
+
+    for ch_type in ['eeg', 'mag', 'grad']:
+        if ch_type == 'eeg':
+            ymax = ylim_eeg
+            ymin = -ymax
+        elif ch_type == 'mag':
+            ymax = ylim_mag
+            ymin = -ymax
+        elif ch_type == 'grad':
+            ymax = ylim_grad
+            ymin = -ymax
+        time_peak1 = grand_avg_seq.get_peak(ch_type=ch_type, tmin=0.000, tmax=0.100, mode='abs')[1]
+        time_peak2 = grand_avg_seq.get_peak(ch_type=ch_type, tmin=0.100, tmax=0.200, mode='abs')[1]
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(8, 4))
+        grand_avg_seq.plot(axes=axes, picks=ch_type, gfp=False, spatial_colors=True, show=True, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title(ch_type)
+        peak_line = axes.axvline(x=time_peak1*1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
+        peak_line = axes.axvline(x=time_peak2*1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        fig_name = fig_path + op.sep + (ch_type + '_AllSeq_.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        # topomaps
+        fig = grand_avg_seq.plot_topomap([time_peak1, time_peak2], ch_type=ch_type, time_unit='ms', title=ch_type+ '_AllSeq', vmin=ymin*0.6, vmax=ymax*0.6, average=0.010)
+        fig_name = fig_path + op.sep + (ch_type+'_AllSeq_TOPOS.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+
+
+def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=0):
+
+    # Figures folder & lims
+    if violation_or_not:
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_FullSequence', 'GROUP')
+    else:
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_FullSequence', 'GROUP')
+        if ylim_eeg == 10:  # i.e., if default value
+            ylim_eeg = 3
+            ylim_mag = 150
+            ylim_grad = 40
+    utils.create_folder(fig_path)
+
+    # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
+    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
+
+    for x, seq in enumerate(evoked.keys()):
+        # Sequence info
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x+1)
+
+        evokeds_seq = evoked[seq]
+        grand_avg_seq = mne.grand_average([evokeds_seq[i][0] for i in range(len(evokeds_seq))])
+
+        # EEG
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1), topomap_args=topomap_args, picks='eeg', times=times, show=False)
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
+        grand_avg_seq.plot(axes=axes, picks='eeg', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('EEG: '+seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+        plt.close(fig)
+
+        # MAG
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1), topomap_args=topomap_args, picks='mag', times=times, show=False)
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
+        grand_avg_seq.plot(axes=axes, picks='mag', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('MAG: ' + seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        # Save
+        fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
+        print('Saving ' + fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
 
         # #GRAD
-        fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='grad', times=times, show=False)
+        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1), topomap_args=topomap_args, picks='grad', times=times, show=False)
+        fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
+        grand_avg_seq.plot(axes=axes, picks='grad', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
+        axes.texts = []
+        axes.set_title('GRAD: ' + seqname)
+        # Remove spines
+        for key in ('top', 'right'):
+            axes.spines[key].set(visible=False)
+        # Correct the small topomap
+        tmp = fig.get_axes()
+        smallfigax = tmp[1]
+        smallfigax.set_aspect('equal')
+        # Save
         fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
         print('Saving ' + fig_name)
-        plt.savefig(fig_name)
+        fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
-
 
 
 def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks"):
@@ -360,13 +577,15 @@ def average_evoked(evoked_dict):
     return evoked_dict_average
 
 
-def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, label=None, filter=True):
+def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
+
+    evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
     cm = plt.get_cmap('viridis')
     color_mean = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
 
-    fig, ax = plt.subplots(1, 1, figsize=(10, 5))
+    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
     plt.axvline(0, linestyle='-', color='black', linewidth=2)
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
@@ -375,29 +594,101 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, label=None, filter=True):
     # fig_name_save = save_path + op.sep + '' + fig_name + '_' + ch_type + '.png'
 
     for nseq in range(7):
-        cond = list(evoked_dict.keys())[nseq]
-        data = evoked_dict[cond].copy()
+        cond = list(evoked_dict_copy.keys())[nseq]
+        data = copy.deepcopy(evoked_dict)
+        data = data[cond]
         times = data[0][0].times*1000
 
         group_data_seq = []
         for nn in range(len(data)):
-            sub_data = data[nn][0]
-            sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
-            group_data_seq.append(sub_data[ch_inds].mean(axis=0))
-
+            sub_data = data.copy()[nn][0]
+            if ch_type == 'eeg':
+                tmp = copy.deepcopy(sub_data)
+                sub_data_ch = np.array(tmp.pick_types(meg=False, eeg=True)._data)
+            else:
+                tmp = copy.deepcopy(sub_data)
+                sub_data_ch = np.array(tmp.pick_types(meg=ch_type, eeg=False)._data)
+            if np.size(ch_inds) > 1:
+                group_data_seq.append(sub_data_ch[ch_inds].mean(axis=0))
+            else:
+                group_data_seq.append(sub_data_ch[ch_inds])
         mean = np.mean(group_data_seq, axis=0)
         ub = mean + sem(group_data_seq, axis=0)
         lb = mean - sem(group_data_seq, axis=0)
 
-        if filter==True:
-            mean = savgol_filter(mean, 11, 3)
-            ub = savgol_filter(ub, 11, 3)
-            lb = savgol_filter(lb, 11, 3)
+        if filter == True:
+            mean = savgol_filter(mean, 9, 3)
+            ub = savgol_filter(ub, 9, 3)
+            lb = savgol_filter(lb, 9, 3)
+
+        # Sequence info
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq+1)
 
         plt.fill_between(times, ub, lb, color=color_mean[nseq], alpha=.2)
-        plt.plot(times, mean, color=color_mean[nseq], linewidth=1.5, label=cond)
+        plt.plot(times, mean, color=color_mean[nseq], linewidth=1.5, label=seqname)
     plt.legend(loc='upper right', fontsize=9)
+    # Remove spines
+    for key in ('top', 'right'):
+        ax.spines[key].set(visible=False)
     ax.set_xlim([-100, 750])
+    # fig.savefig(fig_name_save, bbox_inches='tight', dpi=300)
+    # plt.close('all')
+
+
+def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
+
+    evoked_dict_copy = copy.deepcopy(evoked_dict)
+
+    NUM_COLORS = 7
+    cm = plt.get_cmap('viridis')
+    color_mean = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+
+    fig, ax = plt.subplots(1, 1, figsize=(18, 4))
+    plt.axvline(0, linestyle='-', color='black', linewidth=2)
+    for xx in range(16):
+        plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+    ax.set_xlabel('Time (ms)')
+    # fig.suptitle('', fontsize=12)
+    # fig_name_save = save_path + op.sep + '' + fig_name + '_' + ch_type + '.png'
+
+    for nseq in range(7):
+        cond = list(evoked_dict_copy.keys())[nseq]
+        data = copy.deepcopy(evoked_dict)
+        data = data[cond]
+        times = data[0][0].times*1000
+
+        group_data_seq = []
+        for nn in range(len(data)):
+            sub_data = data.copy()[nn][0]
+            if ch_type == 'eeg':
+                tmp = copy.deepcopy(sub_data)
+                sub_data_ch = np.array(tmp.pick_types(meg=False, eeg=True)._data)
+            else:
+                tmp = copy.deepcopy(sub_data)
+                sub_data_ch = np.array(tmp.pick_types(meg=ch_type, eeg=False)._data)
+            if np.size(ch_inds) > 1:
+                group_data_seq.append(sub_data_ch[ch_inds].mean(axis=0))
+            else:
+                group_data_seq.append(sub_data_ch[ch_inds])
+        mean = np.mean(group_data_seq, axis=0)
+        ub = mean + sem(group_data_seq, axis=0)
+        lb = mean - sem(group_data_seq, axis=0)
+
+        if filter == True:
+            mean = savgol_filter(mean, 9, 3)
+            ub = savgol_filter(ub, 9, 3)
+            lb = savgol_filter(lb, 9, 3)
+
+        # Sequence info
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq+1)
+
+        plt.fill_between(times, ub, lb, color=color_mean[nseq], alpha=.2)
+        plt.plot(times, mean, color=color_mean[nseq], linewidth=1.5, label=seqname)
+    plt.legend(loc='best', fontsize=9)
+    # Remove spines
+    for key in ('top', 'right'):
+        ax.spines[key].set(visible=False)
+    ax.set_xlim([-500, 4000])
     # fig.savefig(fig_name_save, bbox_inches='tight', dpi=300)
     # plt.close('all')
 
@@ -415,7 +706,10 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
             sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
         elif ch_type == 'grad':
             sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
-        group_data_seq.append(sub_data[ch_inds].mean(axis=0))
+        if np.size(ch_inds) > 1:
+            group_data_seq.append(sub_data[ch_inds].mean(axis=0))
+        else:
+            group_data_seq.append(sub_data[ch_inds])
 
     mean = np.mean(group_data_seq, axis=0)
     ub = mean + sem(group_data_seq, axis=0)
