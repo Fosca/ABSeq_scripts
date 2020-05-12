@@ -205,3 +205,94 @@ for ch_type in ch_types:
                 fig_name = fig_path + op.sep + 'stats_' + ch_type + '_' + regressor_name + '_clust_' + str(i_clu+1) + '_evo.png'
                 print('Saving ' + fig_name)
                 plt.savefig(fig_name, dpi=300)
+
+
+def tmp_script_repeataltern_surprise_regression_figures():
+
+    analysis_name = 'reg_repeataltern_surpriseOmegainfinity'
+    regress_path = op.join(config.result_path, 'linear_models', analysis_name)
+    names = ["intercept", "RepeatAlter", "RepeatAlternp1", "surpriseN", "surpriseNp1"]
+
+    # =========== LOAD INDIVIDUAL REGRESSION RESULTS =========== #
+    # Load data from all subjects
+    betas = dict()
+    for name in names:
+        import glob
+        evoked_dict = []
+        for subj in config.subjects_list:
+            path_evo = op.join(regress_path, subj)
+            mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif'))
+            evoked_dict.append(mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif')))
+
+        betas[name] = mne.combine_evoked([evoked_dict[i][0] for i in range(len(config.subjects_list))], weights='equal')
+
+    # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
+    fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
+    utils.create_folder(fig_path)
+
+    # Loop over the 3 ch_types
+    plt.close('all')
+    ch_types = ['eeg', 'grad', 'mag']
+    for ch_type in ch_types:
+        fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
+        fig.suptitle(ch_type, fontsize=12, weight='bold')
+        ax = axes.ravel()[::1]
+        # Loop over the different betas
+        for x, regressor_name in enumerate(betas.keys()):
+            # ---- Data
+            evokeds = betas[regressor_name]
+            if ch_type == 'eeg':
+                betadata = evokeds.copy().pick_types(eeg=True, meg=False).data
+            elif ch_type == 'mag':
+                betadata = evokeds.copy().pick_types(eeg=False, meg='mag').data
+            elif ch_type == 'grad':
+                betadata = evokeds.copy().pick_types(eeg=False, meg='grad').data
+            minT = min(evokeds.times) * 1000
+            maxT = max(evokeds.times) * 1000
+            # ---- Plot
+            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
+            ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
+            for xx in range(3):
+                ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+            ax[x].set_xlabel('Time (ms)')
+            ax[x].set_ylabel('Channels')
+            ax[x].set_title(regressor_name, loc='center', weight='normal')
+            fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
+        fig_name = fig_path + op.sep + ('betas_' + ch_type + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name, dpi=300)
+        plt.close(fig)
+
+    # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
+    ylim_eeg = 20
+    ylim_mag = 600
+    ylim_grad = 200
+
+    # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
+    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
+    ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
+    topomap_args = dict(time_unit='s')
+    times = 'peaks'
+    for x, regressor_name in enumerate(betas.keys()):
+        evokeds = betas[regressor_name]
+        # EEG
+        fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name,
+                                 topomap_args=topomap_args, picks='eeg', times=times, show=False)
+        fig_name = fig_path + op.sep + ('EEG_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
+        # MAG
+        fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name,
+                                 topomap_args=topomap_args, picks='mag', times=times, show=False)
+        fig_name = fig_path + op.sep + ('MAG_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
+        # #GRAD
+        fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name,
+                                 topomap_args=topomap_args, picks='grad', times=times, show=False)
+        fig_name = fig_path + op.sep + ('GRAD_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
