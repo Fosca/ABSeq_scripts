@@ -84,8 +84,8 @@ def inverse_operator(subject):
     mne.minimum_norm.write_inverse_operator(fname_inv, inverse_operator)
 
 
-def source_estimates(subject, evoked_filter_name, evoked_filter_not=None):
-    print('Subject ' + subject + ': source_estimates: evoked ' + evoked_filter_name + '======================')
+def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None):
+    print('Subject ' + subject + ': source_estimates: evoked >> ' + evoked_filter_name + ' ======================')
 
     meg_subject_dir = op.join(config.meg_dir, subject)
 
