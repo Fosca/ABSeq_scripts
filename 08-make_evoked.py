@@ -24,10 +24,8 @@ parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked, n_jobs=N_JOBS)
 parallel(run_func(subject, cleaned=True) for subject in config.subjects_list)
 parallel(run_func(subject, cleaned=False) for subject in config.subjects_list)
 
-# ----------------------------------------------------------- #
-# -------- GENERATE EVOKED GROUP FIGURES (GFP...) ----------- #
-# ----------------------------------------------------------- #
-
+parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked_resid, n_jobs=N_JOBS)
+parallel(run_func(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity') for subject in config.subjects_list)
 
 def script_group_avg_and_plot_gfp():
 
@@ -361,9 +359,9 @@ def script_allsensors_heatmap_figures():
         evoked_funcs.allsequences_heatmap_figure(data_to_plot, times, cmap_style='unilateral', fig_title='GFP ' + ch_type,
                                                  file_name=op.join(config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP', 'GFP_full_seq_allconds_heatmap_' + ch_type + '.png'))
 
-script_group_avg_and_plot_gfp()
-script_generate_heatmap_gfp_figures()
-script_allsensors_heatmap_figures()
+# script_group_avg_and_plot_gfp()
+# script_generate_heatmap_gfp_figures()
+# script_allsensors_heatmap_figures()
 
 
 def various():
