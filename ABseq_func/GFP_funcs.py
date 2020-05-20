@@ -6,6 +6,10 @@ import mne
 import matplotlib.pyplot as plt
 from scipy.stats import sem
 from scipy.signal import savgol_filter
+import copy
+import matplotlib.ticker as ticker
+from ABseq_func import GFP_funcs
+from ABseq_func import epoching_funcs
 mne.set_log_level(verbose='WARNING')
 
 def plot_gfp_items_standard(epochs_items, subject, h_freq=20):
@@ -60,6 +64,7 @@ def plot_gfp_items_standard(epochs_items, subject, h_freq=20):
         plt.savefig(fig_name)
         plt.close(fig)
 
+
 def plot_gfp_items_deviant(epochs_items, subject, h_freq=20):
 
     # Figures folder
@@ -112,6 +117,7 @@ def plot_gfp_items_deviant(epochs_items, subject, h_freq=20):
         plt.savefig(fig_name)
         plt.close(fig)
 
+
 def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=20):
 
     # Figures folder
@@ -163,6 +169,7 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=20):
         print('Saving ' + fig_name)
         plt.savefig(fig_name)
         plt.close(fig)
+
 
 def plot_gfp_full_sequence_deviants_4pos(epochs_full_sequence, subject, h_freq=20):
 
@@ -227,6 +234,7 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_full_sequence, subject, h_freq=2
         plt.savefig(fig_name)
         plt.close(fig)
 
+
 def gfp_evoked(evoked_list,baseline=None):
 
     times = evoked_list[0][0].times
@@ -254,6 +262,7 @@ def gfp_evoked(evoked_list,baseline=None):
 
     return gfp_evoked,times
 
+
 def plot_GFP_with_sem(GFP_all_subjects,times, color_mean=None, label=None, filter=False):
 
     mean = np.mean(GFP_all_subjects, axis=0)
@@ -261,10 +270,90 @@ def plot_GFP_with_sem(GFP_all_subjects,times, color_mean=None, label=None, filte
     lb = mean - sem(GFP_all_subjects, axis=0)
 
     if filter==True:
-        mean = savgol_filter(mean, 11, 3)
-        ub = savgol_filter(ub, 11, 3)
-        lb = savgol_filter(lb, 11, 3)
+        mean = savgol_filter(mean, 9, 3)
+        ub = savgol_filter(ub, 9, 3)
+        lb = savgol_filter(lb, 9, 3)
 
     plt.fill_between(times, ub, lb, color=color_mean, alpha=.2)
     plt.plot(times, mean, color=color_mean, linewidth=1.5, label=label)
 
+
+def plot_GFP_timecourse_7seq(evoked_dict, ch_type='eeg', filter=True):
+    evoked_dict_copy = copy.deepcopy(evoked_dict)
+
+    # Additional parameters
+    units = dict(eeg='uV', grad='fT/cm', mag='fT')
+    ch_colors = dict(eeg='green', grad='red', mag='blue')
+
+    # Create group average GFP per sequence
+    allseq_mean = []
+    allseq_ub = []
+    allseq_lb = []
+    for nseq in range(7):
+        cond = list(evoked_dict_copy.keys())[nseq]
+        data = copy.deepcopy(evoked_dict)
+        data = data[cond]
+        gfp_cond, times = GFP_funcs.gfp_evoked(data)
+        mean = np.mean(gfp_cond[ch_type], axis=0)
+        ub = mean + sem(gfp_cond[ch_type], axis=0)
+        lb = mean - sem(gfp_cond[ch_type], axis=0)
+        if filter:
+            mean = savgol_filter(mean, 11, 3)
+            ub = savgol_filter(ub, 11, 3)
+            lb = savgol_filter(lb, 11, 3)
+        allseq_mean.append(mean)
+        allseq_ub.append(ub)
+        allseq_lb.append(lb)
+    times = times*1000
+
+    if times[-1] > 3000:
+        datatype = 'fullseq'
+        figsize = (9, 9)
+    else:
+        datatype = 'items'
+        figsize = (3, 9)
+
+    # Create figure
+    fig, ax = plt.subplots(7, 1, figsize=figsize, sharex=False, sharey=True, constrained_layout=True)
+    fig.suptitle(ch_type, fontsize=12)
+
+    # Plot
+    for nseq in range(7):
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
+        mean = allseq_mean[nseq]
+        ub = allseq_ub[nseq]
+        lb = allseq_lb[nseq]
+        ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
+        ax[nseq].fill_between(times, ub, lb, color='black', alpha=.2)
+        ax[nseq].plot(times, mean, color=ch_colors[ch_type], linewidth=1.5, label=seqname)
+        ax[nseq].axvline(0, linestyle='-', color='black', linewidth=2)
+        ax[nseq].set_xlim([min(times), max(times)])
+        # Add vertical lines
+        for xx in range(16):
+            ax[nseq].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
+        # Remove spines
+        for key in ('top', 'right', 'bottom'):
+            ax[nseq].spines[key].set(visible=False)
+        ax[nseq].set_ylabel('GFP (' + units[ch_type] + ')')
+        ax[nseq].set_xticks([], [])
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        ax[nseq].get_yaxis().set_major_formatter(fmt)
+        if datatype == 'items':
+            ax[nseq].get_yaxis().get_offset_text().set_position((-0.22, 0))  # move 'x10^x', does not work with y
+        elif datatype == 'fullseq':
+            ax[nseq].get_yaxis().get_offset_text().set_position((-0.07, 0))  # move 'x10^x', does not work with y
+    ax[nseq].set_xlabel('Time (ms)')
+    if datatype == 'items':
+        ax[nseq].set_xticks(range(0, 800, 200), [])
+    elif datatype == 'fullseq':
+        ax[nseq].set_xticks(range(-500, 4500, 500), [])
+        # Add "xY" using the same yval for all
+        ylim = ax[nseq].get_ylim()
+        yval = ylim[1] - ylim[1]*0.1
+        for nseq in range(7):
+            seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
+            for xx in range(16):
+                ax[nseq].text(250 * (xx + 1) - 125, yval, seqtxtXY[xx], horizontalalignment='center', fontsize=12)
+
+    return fig
