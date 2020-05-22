@@ -2,22 +2,15 @@ from __future__ import division
 from matplotlib import pyplot as plt
 import mne
 import numpy as np
+import os.path as op
 from mne.stats import permutation_cluster_1samp_test
 from mne.viz import plot_topomap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import sem
-
-
-# ======================================================================================================================
-# Coucou Samuel, utilises ca si tu veux raccourcir tes scripts de plot des clusters. Maintenant tu n'as qu'a faire:
-
-# ch_type = 'eeg'
-# p_threshold = 0.05
-# cluster_stats, _ = run_cluster_permutation_test_1samp(data,ch_type = ch_type)
-# plot_clusters(cluster_stats,p_threshold,data,ch_type,T_obs_max = 5.,fname='analysis_name',figname_initial='the_basic_name_for_figure')
-
-
-# ======================================================================================================================
+from scipy.signal import savgol_filter
+import matplotlib.ticker as ticker
+from ABseq_func import evoked_funcs
+import copy
 
 
 def run_cluster_permutation_test_1samp(data, ch_type='eeg', nperm=2 ** 12, threshold=None, n_jobs=6, tail=0):
@@ -160,7 +153,7 @@ def plot_clusters_old(cluster_stats, p_threshold, data, data_array_chtype, ch_ty
     return True
 
 
-def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial=''):
+def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial='', filter_smooth=False):
     """
     This function plots the clusters
 
@@ -207,6 +200,10 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         mean = np.mean(cinfo['signal'], axis=0)
         ub = mean + sem(cinfo['signal'], axis=0)
         lb = mean - sem(cinfo['signal'], axis=0)
+        if filter_smooth:
+            mean = savgol_filter(mean, 9, 3)
+            ub = savgol_filter(ub, 9, 3)
+            lb = savgol_filter(lb, 9, 3)
         ax_signals.fill_between(cluster_info['times'], ub, lb, color=color, alpha=.2)
         ax_signals.plot(cluster_info['times'], mean, color=color, linestyle=linestyle, label=fname)
 
@@ -230,3 +227,64 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
     plt.close('all)')
 
     return True
+
+
+def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', filter_smooth=False, legend=False, blackfig=False):
+    units = dict(eeg='uV', grad='fT/cm', mag='fT')
+
+    if legend:
+        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+    else:
+        fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+    if blackfig:
+        textcolor = 'white'
+        linecolor = 'white'
+        ax.set_facecolor((.2, .2, .2))
+        fig.patch.set_facecolor((.2, .2, .2))
+    else:
+        textcolor = 'black'
+        linecolor = 'black'
+    plt.axvline(0, linestyle='-', color=linecolor, linewidth=2)
+    for xx in range(3):
+        plt.axvline(250 * xx, linestyle='--', color=linecolor, linewidth=1)
+    ax.set_xlabel('Time (ms)', color=textcolor)
+    condnames = list(evoked_dict.keys())
+    if len(condnames) == 2:
+        colorslist = ['r', 'b']
+    else:
+        NUM_COLORS = len(condnames)
+        cm = plt.get_cmap('viridis')
+        colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    for ncond, condname in enumerate(condnames):
+        data = evoked_dict[condname].copy()
+        evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
+    ymin, ymax = ax.get_ylim()
+    ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
+    if legend:
+        # plt.legend(loc='best', fontsize=6)
+        l = plt.legend(fontsize=7, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
+        for text in l.get_texts():
+            text.set_color(textcolor)
+    for key in ('top', 'right'):  # Remove spines
+        ax.spines[key].set(visible=False)
+    # ax.spines['bottom'].set_position('zero')
+    fmt = ticker.ScalarFormatter(useMathText=True)
+    fmt.set_powerlimits((0, 0))
+    ax.get_yaxis().set_major_formatter(fmt)
+    ax.get_yaxis().get_offset_text().set_position((-0.07, 0))  # move 'x10-x', does not work with y
+    ax.set_xlim([-100, 750])
+    ax.set_ylim([ymin, ymax])
+    ax.set_ylabel(units[ch_type], color =textcolor)
+    ax.spines['bottom'].set_color(linecolor)
+    ax.spines['left'].set_color(linecolor)
+    ax.tick_params(axis='x', colors=textcolor)
+    ax.tick_params(axis='y', colors=textcolor)
+    plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1), fontsize=10, weight='bold', color=textcolor)
+    fig.tight_layout(pad=0.5, w_pad=0)
+
+    return fig
+
+
+
+
+
