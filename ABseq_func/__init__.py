@@ -8,5 +8,6 @@ from . import linear_reg_funcs
 from . import TP_funcs
 from . import stats_funcs
 from . import source_estimation_funcs
+from . import SVM_funcs
 
 

@@ -53,6 +53,13 @@ grand_avg_stand = mne.grand_average([evoked_all_stand[i][0] for i in range(len(e
 evoked_all_viol = evoked_all_viol['items_viol_all-']
 grand_avg_viol = mne.grand_average([evoked_all_viol[i][0] for i in range(len(evoked_all_viol))])
 
+
+# fig = grand_avg_stand.plot_topomap(times='auto', cmap='plasma')
+# fig_name = fig_path + op.sep + 'test.png'
+# print('Saving ' + fig_name)
+# fig.savefig(fig_name, bbox_inches='tight', dpi=300)
+# plt.close(fig)
+
 for ch_type in ['eeg', 'grad', 'mag']:
 
     # Get peak sensor from grand average all_seq

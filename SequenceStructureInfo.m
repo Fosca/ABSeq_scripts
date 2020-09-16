@@ -14,8 +14,9 @@ clearvars;clc
 % ChunkSize: 2 2 2 2 3 3 3
 % ChunkBeginning: 1 0 1 0 1 0 0
 % ChunkEnd: 0 1 0 1 0 0 1
-% NodesClosing: 0 1 0 2 0 0 3 (From Nelson et al., PNAS 2017 language paper)
-% OpenNodes: 1 2 2 3 2 3 4 (From Nelson et al., PNAS 2017 language paper)
+% % TODO:
+% % NodesClosing: 0 1 0 2 0 0 3 (From Nelson et al., PNAS 2017 language paper)
+% % OpenNodes: 1 2 2 3 2 3 4 (From Nelson et al., PNAS 2017 language paper)
 
 data = [];
 data.Sequence = {
@@ -142,36 +143,36 @@ for nseq=1:numel(data.Sequence)
         posExpr = posExpr + 1;
     end
     
-    % ======== OpenNodes ========= %
-    nO = 0;
-    posReal = 1; 
-    posExpr = 1;
-    chksize = 0;
-    openedBefore = 0;
-    InChk = 1;
-    while posExpr <= size(expr,2)
-        if strcmp(expr(posExpr), ']')
-            InChk = InChk - 1;
-            nO = 1;
-        elseif strcmp(expr(posExpr), '[')
-            if posReal>1
-                InChk = InChk + 1;
-            end
-        else
-            nO = nO + InChk;
-            data.OpenNodes.(seq)(posReal) = nO;
-            posReal = posReal + 1;   
-        end
-        posExpr = posExpr + 1;
-    end
-data.OpenNodes.AAAABBBBAABBABAB
+    % INCORRECT - TODO
+%     % ======== OpenNodes ========= %
+%     nO = 0;
+%     posReal = 1; 
+%     posExpr = 1;
+%     chksize = 0;
+%     openedBefore = 0;
+%     InChk = 1;
+%     while posExpr <= size(expr,2)
+%         if strcmp(expr(posExpr), ']')
+%             InChk = InChk - 1;
+%             nO = 1;
+%         elseif strcmp(expr(posExpr), '[')
+%             if posReal>1
+%                 InChk = InChk + 1;
+%             end
+%         else
+%             nO = nO + InChk;
+%             data.OpenNodes.(seq)(posReal) = nO;
+%             posReal = posReal + 1;   
+%         end
+%         posExpr = posExpr + 1;
+%     end
+%     % ======== NodesClosing ========= %
+%     nO = data.OpenNodes.(seq);
+%     for posReal = 1:size(nO,2)-1
+%         data.NodesClosing.(seq)(posReal) = nO(posReal) - nO(posReal+1) + 1;
+%     end
+%     data.NodesClosing.(seq)(posReal+1) = nO(posReal+1) - 1;
 
-    % ======== NodesClosing ========= %
-    nO = data.OpenNodes.(seq);
-    for posReal = 1:size(nO,2)-1
-        data.NodesClosing.(seq)(posReal) = nO(posReal) - nO(posReal+1) + 1;
-    end
-    data.NodesClosing.(seq)(posReal+1) = nO(posReal+1) - 1;
 end
 
 %% Create structures for each subject & variable (to be imported later in Python)

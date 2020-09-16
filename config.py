@@ -45,6 +45,7 @@ scripts_path = os.path.join(root_path, 'scripts', 'ABSeq_scripts') + os.path.sep
 
 
 EMS_path = os.path.join(result_path, 'EMS') + os.path.sep
+SVM_path = os.patth.join(result_path, 'SVM') + os.path.sep
 decoding_path = os.path.join(result_path, 'decoding') + os.path.sep
 GFP_path = os.path.join(result_path, 'GFP') + os.path.sep
 linear_models_path = os.path.join(result_path, 'linear_models') + os.path.sep
