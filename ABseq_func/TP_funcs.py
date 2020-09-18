@@ -1,3 +1,4 @@
+# This module contains the functions related to the computation of transition probabilities, surprise etc.
 import initialization_paths
 import numpy as np
 import csv
@@ -359,11 +360,6 @@ def compute_optimal_omega_per_channel(subjects_list, fname='posterior.npy', omeg
     np.save(out_path,diction)
 
     return diction
-
-
-
-
-
 
 
 

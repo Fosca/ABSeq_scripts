@@ -1,3 +1,4 @@
+# All the functions related to the computation and plotting of the GFP
 import config
 import os
 import os.path as op
@@ -12,113 +13,143 @@ from ABseq_func import GFP_funcs
 from ABseq_func import epoching_funcs
 mne.set_log_level(verbose='WARNING')
 
-def plot_gfp_items_standard(epochs_items, subject, h_freq=20):
+# ______________________________________________________________________________________________________________________
+def gfp_evoked(evoked_list,baseline=None):
+    """
+    Compute the global field power from the list of the evoked activities evoked_list.
+    :param evoked_list: List of evoked activities that may correspond to the different participants.
+    :param baseline: Set it to tmin < 0 if you want to baseline the evoked activity from tmin to 0
+    :return: Dictionnary that contains the gfp for all the types of sensors, times array
+    """
 
-    # Figures folder
-    fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Standard_Items', subject)
+    times = evoked_list[0][0].times
+    gfp_eeg_all = []
+    gfp_mag_all = []
+    gfp_grad_all = []
+
+    for evoked in evoked_list:
+
+        gfp_eeg = np.sum(evoked[0].copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
+        gfp_grad = np.sum(evoked[0].copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
+        gfp_mag = np.sum(evoked[0].copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
+
+        if baseline is not None:
+            for gfp in [gfp_eeg, gfp_grad, gfp_mag]:
+                gfp = mne.baseline.rescale(gfp, times, baseline=(baseline, 0))
+
+        gfp_eeg_all.append(gfp_eeg)
+        gfp_grad_all.append(gfp_grad)
+        gfp_mag_all.append(gfp_mag)
+
+    gfp_evoked = {'eeg':gfp_eeg_all,
+                  'grad':gfp_grad_all,
+                  'mag':gfp_mag_all}
+
+    return gfp_evoked, times
+
+# ______________________________________________________________________________________________________________________
+def plot_GFP_with_sem(GFP_all_subjects,times, color_mean=None, label=None, filter=False):
+    """
+    Plots the mean GFP_all_subjects with the sem of GFP_all_subjects in shaded areas
+    :param GFP_all_subjects: Could be the output of gfp_evoked
+    :param times: From the output of gfp_evoked
+    :param color_mean: Color for the mean of the GFP
+    :param label:
+    :param filter: If you want to lowpass filter the data to smooth it, e.g. for visualisation purposes.
+    :return: None
+    """
+
+    mean = np.mean(GFP_all_subjects, axis=0)
+    ub = mean + sem(GFP_all_subjects, axis=0)
+    lb = mean - sem(GFP_all_subjects, axis=0)
+
+    if filter==True:
+        mean = savgol_filter(mean, 9, 3)
+        ub = savgol_filter(ub, 9, 3)
+        lb = savgol_filter(lb, 9, 3)
+
+    plt.fill_between(times, ub, lb, color=color_mean, alpha=.2)
+    plt.plot(times, mean, color=color_mean, linewidth=1.5, label=label)
+
+# ______________________________________________________________________________________________________________________
+def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=20,standard_or_deviant = 'standard'):
+    """
+    For the subject 'subject', this function gets the corresponding epochs on each item and computes the GFP.
+    :param epochs_items:
+    :param subject: NIP of the participant
+    :param h_freq: High pass filter to filter the epochs and have a smoother GFP
+    :return: None : this function plots and saves, that's it.
+    """
+
+    # Crop the epochs_items data if config.tcrop is not None
+    if config.tcrop is not None:
+        epochs_items.crop(tmax=config.tcrop)
+
+    # Create the figure folder if it does not exist yet
+    if standard_or_deviant=="standard":
+        suffix = 'standard'
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Standard_Items', subject)
+    else:
+        suffix = 'deviant'
+        fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Deviant_Items', subject)
+
     if not os.path.exists(fig_path):
         os.makedirs(fig_path)
 
-    # Loop over the 3 ch_types
+    # Loop over the 3 ch_types and plot the GFP
     ch_types = ['eeg', 'grad', 'mag']
     for ch_type in ch_types:
-        print(ch_type)
-
-        plt.close('all')
-
+        print("Plotting the GFP for the 7 sequences for channel type %s .\n"%ch_type)
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
         if ch_type == 'eeg':
             fig.suptitle('GFP (EEG)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_standard_items_EEG.png'
+            fig_name = fig_path + op.sep + 'GFP_'+suffix+'_items_EEG.png'
         elif ch_type == 'mag':
             fig.suptitle('GFP (MAG)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_standard_items_MAG.png'
+            fig_name = fig_path + op.sep + 'GFP_'+suffix+'_items_MAG.png'
         elif ch_type == 'grad':
             fig.suptitle('GFP (GRAD)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_standard_items_GRAD.png'
-
-        # ax = axes.ravel()[::1]
+            fig_name = fig_path + op.sep + 'GFP_'+suffix+'_items_GRAD.png'
 
         plt.axvline(0, linestyle='-', color='black', linewidth=2)
         for xx in range(3):
             plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
         for x in range(7):
-            standards = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].average().savgol_filter(h_freq)
-            times = standards.times * 1000
+            if standard_or_deviant=="standard":
+                epochs_or_interest = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].average().savgol_filter(h_freq)
+            else:
+                epochs_or_interest = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "1"'].average().savgol_filter(h_freq)
+
+            times = epochs_or_interest.times * 1000
             if ch_type == 'eeg':
-                gfp = np.sum(standards.copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
+                gfp = np.sum(epochs_or_interest.copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
             elif ch_type == 'mag':
-                gfp = np.sum(standards.copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
+                gfp = np.sum(epochs_or_interest.copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
             elif ch_type == 'grad':
-                gfp = np.sum(standards.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
+                gfp = np.sum(epochs_or_interest.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
             gfp = mne.baseline.rescale(gfp, times, baseline=(-100, 0))
-            plt.plot(times, gfp, label=('SeqID_' + str(x + 1) + ', N=' + str(standards.nave)), linewidth=2)
+            plt.plot(times, gfp, label=('SeqID_' + str(x + 1) + ', N=' + str(epochs_or_interest.nave)), linewidth=2)
         plt.legend(loc='upper right', fontsize=9)
         ax.set_yticklabels([])
         ax.set_yticks([])
-        ax.set_xlim(-100, 750)
+        ax.set_xlim(times[0]*1000, times[-1]*1000)
         ax.set_xlabel('Time [ms]')
 
         # Save
         print('Saving ' + fig_name)
         plt.savefig(fig_name)
         plt.close(fig)
-
-
-def plot_gfp_items_deviant(epochs_items, subject, h_freq=20):
-
-    # Figures folder
-    fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Deviant_Items', subject)
-    if not os.path.exists(fig_path):
-        os.makedirs(fig_path)
-
-    # Loop over the 3 ch_types
-    ch_types = ['eeg', 'grad', 'mag']
-    for ch_type in ch_types:
-        print(ch_type)
-
         plt.close('all')
 
-        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-        if ch_type == 'eeg':
-            fig.suptitle('GFP (EEG)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_deviant_items_EEG.png'
-        elif ch_type == 'mag':
-            fig.suptitle('GFP (MAG)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_deviant_items_MAG.png'
-        elif ch_type == 'grad':
-            fig.suptitle('GFP (GRAD)', fontsize=12)
-            fig_name = fig_path + op.sep + 'GFP_deviant_items_GRAD.png'
-
-        # ax = axes.ravel()[::1]
-
-        plt.axvline(0, linestyle='-', color='black', linewidth=2)
-        for xx in range(3):
-            plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-        for x in range(7):
-            deviants = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == "1"'].average().savgol_filter(h_freq)
-            times = deviants.times * 1000
-            if ch_type == 'eeg':
-                gfp = np.sum(deviants.copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
-            elif ch_type == 'mag':
-                gfp = np.sum(deviants.copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
-            elif ch_type == 'grad':
-                gfp = np.sum(deviants.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
-            gfp = mne.baseline.rescale(gfp, times, baseline=(-100, 0))
-            plt.plot(times, gfp, label=('SeqID_' + str(x + 1) + ', N=' + str(deviants.nave)), linewidth=2)
-        plt.legend(loc='upper right', fontsize=9)
-        ax.set_yticklabels([])
-        ax.set_yticks([])
-        ax.set_xlim(-100, 750)
-        ax.set_xlabel('Time [ms]')
-
-        # Save
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
-
-
+# ______________________________________________________________________________________________________________________
 def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=20):
+    """
+    For each participant "subject", this function computes the GFP on the 16 item long sequence epoch
+    :param epochs_full_sequence: 16 item long sequence epoch
+    :param subject: The NIP of the subject
+    :param h_freq: High pass filter to filter the epochs and have a smoother GFP.
+    :return:
+    """
 
     # Figures folder
     fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Standard_FullSequence', subject)
@@ -170,8 +201,15 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=20):
         plt.savefig(fig_name)
         plt.close(fig)
 
-
-def plot_gfp_full_sequence_deviants_4pos(epochs_full_sequence, subject, h_freq=20):
+# ______________________________________________________________________________________________________________________
+def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=20):
+    """
+    For each participant "subject", this function plots the GFP only for the violations.
+    :param epochs_items:
+    :param subject: NIP of the participant
+    :param h_freq: High pass filter to filter the epochs and have a smoother GFP
+    :return: None
+    """
 
     # Figures folder
     fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP_Deviants4pos_FullSequence', subject)
@@ -197,7 +235,7 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_full_sequence, subject, h_freq=2
         ax = axes.ravel()[::1]
         for x in range(7):
             # Select only the trials with a violation (for one sequence)
-            seqEpochs = epochs_full_sequence['SequenceID == "' + str(x + 1) + '" and ViolationInSequence > 0'].copy()
+            seqEpochs = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence > 0'].copy()
             # Create 'Evoked' object that will contain the evoked response for each of the 4 deviant positions (of one sequence)
             data4pos = []
             all_devpos = np.unique(seqEpochs.metadata.ViolationInSequence)  # Position of deviants
@@ -234,51 +272,16 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_full_sequence, subject, h_freq=2
         plt.savefig(fig_name)
         plt.close(fig)
 
-
-def gfp_evoked(evoked_list,baseline=None):
-
-    times = evoked_list[0][0].times
-    gfp_eeg_all = []
-    gfp_mag_all = []
-    gfp_grad_all = []
-
-    for evoked in evoked_list:
-
-        gfp_eeg = np.sum(evoked[0].copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
-        gfp_grad = np.sum(evoked[0].copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
-        gfp_mag = np.sum(evoked[0].copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
-
-        if baseline is not None:
-            for gfp in [gfp_eeg, gfp_grad, gfp_mag]:
-                gfp = mne.baseline.rescale(gfp, times, baseline=(baseline, 0))
-
-        gfp_eeg_all.append(gfp_eeg)
-        gfp_grad_all.append(gfp_grad)
-        gfp_mag_all.append(gfp_mag)
-
-    gfp_evoked = {'eeg':gfp_eeg_all,
-                  'grad':gfp_grad_all,
-                  'mag':gfp_mag_all}
-
-    return gfp_evoked,times
-
-
-def plot_GFP_with_sem(GFP_all_subjects,times, color_mean=None, label=None, filter=False):
-
-    mean = np.mean(GFP_all_subjects, axis=0)
-    ub = mean + sem(GFP_all_subjects, axis=0)
-    lb = mean - sem(GFP_all_subjects, axis=0)
-
-    if filter==True:
-        mean = savgol_filter(mean, 9, 3)
-        ub = savgol_filter(ub, 9, 3)
-        lb = savgol_filter(lb, 9, 3)
-
-    plt.fill_between(times, ub, lb, color=color_mean, alpha=.2)
-    plt.plot(times, mean, color=color_mean, linewidth=1.5, label=label)
-
-
+# ______________________________________________________________________________________________________________________
 def plot_GFP_timecourse_7seq(evoked_dict, ch_type='eeg', filter=True):
+    """
+    Function to plot the mean and the sem of the GFP for all the sequences across the participants.
+    :param evoked_dict:
+    :param ch_type:
+    :param filter:
+    :return:
+    """
+
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters

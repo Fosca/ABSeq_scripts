@@ -139,7 +139,9 @@ def GAT_EMS(subject):
 def GAT_EMS_4pos(subject):
     """
     The EMS at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
-    Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
+    Dictionnary contains the GAT for each sequence separately and for each violation position.
+    The difference with the previous function is that it tests only the positions that could be violated for a given sequence.
+    GAT_all contains the average over all the sequences
     :param EMS_results: output of generate_EMS_all_sequences
     :return: GAT averaged over the 4 classification folds
     """

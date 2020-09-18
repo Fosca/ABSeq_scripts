@@ -1,3 +1,4 @@
+# This module contains all the functions that allow the computations to run on the cluster.
 from __future__ import division
 import initialization_paths
 from ABseq_func import *

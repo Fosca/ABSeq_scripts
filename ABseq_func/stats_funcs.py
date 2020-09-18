@@ -42,7 +42,10 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
         cluster_stats = permutation_cluster_1samp_test(...)
         and returns all the useful things for the plots
 
-    :return: dictionnary containing all the information
+    :return: dictionnary containing all the information:
+    - position of the sensors
+    - number of clusters
+    - The T-value of the cluster
 
     """
     cluster_info = {'times': data.times * 1e3, 'p_threshold': p_threshold, 'ch_type': ch_type}

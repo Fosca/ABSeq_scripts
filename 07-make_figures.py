@@ -17,8 +17,8 @@ def make_figures(subject):
     # -- PLOTS -- #
     evoked_funcs.plot_butterfly_items(epochs, subject, violation_or_not=1)
     evoked_funcs.plot_butterfly_items(epochs, subject, violation_or_not=0)
-    GFP_funcs.plot_gfp_items_standard(epochs, subject, h_freq=20)
-    GFP_funcs.plot_gfp_items_deviant(epochs, subject, h_freq=20)
+    GFP_funcs.plot_gfp_items_standard_or_deviants(epochs, subject, h_freq=20,standard_or_deviant='standard')
+    GFP_funcs.plot_gfp_items_standard_or_deviants(epochs, subject, h_freq=20,standard_or_deviant='deviant')
 
     # ----------------------------------------------------------------------------------------------------------- #
     # PLOTS - Full-sequence epochs

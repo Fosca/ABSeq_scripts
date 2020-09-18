@@ -1,3 +1,4 @@
+# This module contains functions for epoching the data and for loading the saved epochs.
 import csv
 import os
 import numpy as np
@@ -8,12 +9,11 @@ import os.path as op
 import mne
 import glob
 import warnings
-from ABseq_func import epoching_funcs
 from autoreject import AutoReject
 import pickle
-from pandas import read_pickle
 
 def read_info_csv(filename):
+
     presented_seq = []
     violation_position = []
 
@@ -120,7 +120,7 @@ def update_metadata_rejected(subject, epochs_items):
     # Find removed epochs to exclude them for the metadata structure
     tokeep = [i for i, x in enumerate(epochs_items.drop_log) if not x]
 
-    metadata = epoching_funcs.convert_csv_info_to_metadata(run_info_subject_dir)
+    metadata = convert_csv_info_to_metadata(run_info_subject_dir)
     metadata_pandas = pd.DataFrame.from_dict(metadata, orient='index')
     metadata_pandas = pd.DataFrame.transpose(metadata_pandas)
     metadata_pandas = metadata_pandas.loc[tokeep, :]
@@ -158,7 +158,7 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
             with open(metadata_path,'rb') as fid:
                 metadata = pickle.load(fid)
         else:
-            metadata = epoching_funcs.convert_csv_info_to_metadata(run_info_subject_dir)
+            metadata = convert_csv_info_to_metadata(run_info_subject_dir)
             metadata = pd.DataFrame.from_dict(metadata, orient='index')
             metadata = pd.DataFrame.transpose(metadata)
 
@@ -443,7 +443,7 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
     picks = mne.pick_types(raw.info, meg=meg, eeg=eeg, stim=True, eog=True, exclude=())
 
     # Construct metadata from csv events file
-    metadata = epoching_funcs.convert_csv_info_to_metadata(run_info_subject_dir)
+    metadata = convert_csv_info_to_metadata(run_info_subject_dir)
     metadata_pandas = pd.DataFrame.from_dict(metadata, orient='index')
     metadata_pandas = pd.DataFrame.transpose(metadata_pandas)
 

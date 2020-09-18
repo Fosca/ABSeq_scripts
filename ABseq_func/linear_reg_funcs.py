@@ -1,3 +1,4 @@
+# This module contains all the functions related to the linear regression analyses
 from __future__ import division
 import mne
 from ABseq_func import *
