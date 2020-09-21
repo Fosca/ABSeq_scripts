@@ -162,6 +162,7 @@ def GAT_SVM(subject,load_residuals_regression=False):
         SVM_sens = SVM_results[sens]['SVM']
 
         for k in range(1, 2):
+            print('The value of k is %i'%k)
             seqID = 'SeqID_%i' % k
             GAT_seq = np.zeros((4,n_times,n_times))
             for fold_number in range(4):
@@ -193,8 +194,12 @@ def GAT_SVM(subject,load_residuals_regression=False):
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
+    print('coucou6')
+
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
+
+    print('=========== job done ! =================')
 
 # ______________________________________________________________________________________________________________________
 def GAT_SVM_4pos(subject,load_residuals_regression=False):
