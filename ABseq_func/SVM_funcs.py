@@ -14,7 +14,7 @@ from ABseq_func import utils  # why do we need this now ?? (error otherwise)
 import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from mne.decoding import GeneralizingEstimator
+from mne.decoding import GeneralizingEstimator, cross_val_multiscore
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -31,6 +31,35 @@ def SVM_decoder():
     time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
 
     return time_gen
+
+# ______________________________________________________________________________________________________________________
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False):
+    """
+    Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
+    It is meant to generalize across time by construction.
+    :return:
+    """
+
+    SVM_dec = SVM_decoder()
+    epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+
+    suf = ''
+    if load_residuals_regression:
+        epochs = epoching_funcs.load_resid_epochs_items(subject)
+        suf = 'resid_'
+
+    epochs.events[:, 2] = epochs.metadata[feature_name].values
+    epochs.event_id = {'%i'%i:i for i in np.unique(epochs.events[:, 2])}
+    epochs.equalize_event_counts()
+
+    scores = cross_val_multiscore(SVM_dec, epochs._data,epochs.events[:, 2], cv=4)
+    score = np.mean(scores, axis=0)
+    times = epochs.times
+
+    # then use plot_GAT_SVM to plot the gat matrix
+
+    return score, times
+
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_all_sequences(subject,load_residuals_regression=False):
@@ -91,9 +120,8 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False):
         for train, test in StratifiedKFold(n_splits=4).split(X_data, y_tmp):
             # we split in training and testing sets using y_tmp because it allows us to balance with respect to all our constraints
             SVM_dec = SVM_decoder()
-            X_scaled = X_data / np.std(X_data[train])
             # Fit and store the spatial filters
-            SVM_dec.fit(X_scaled[train], y_violornot[train])
+            SVM_dec.fit(X_data[train], y_violornot[train])
             # Store filters for future plotting
             All_SVM.append(SVM_dec)
             training_inds.append(train)
@@ -123,7 +151,8 @@ def GAT_SVM(subject,load_residuals_regression=False):
 
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad','all_chans']:
+    # for sens in ['eeg', 'mag', 'grad','all_chans']:
+    for sens in ['eeg']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -132,7 +161,7 @@ def GAT_SVM(subject,load_residuals_regression=False):
         n_times = epochs_sens.get_data().shape[-1]
         SVM_sens = SVM_results[sens]['SVM']
 
-        for k in range(1, 8):
+        for k in range(1, 2):
             seqID = 'SeqID_%i' % k
             GAT_seq = np.zeros((4,n_times,n_times))
             for fold_number in range(4):
