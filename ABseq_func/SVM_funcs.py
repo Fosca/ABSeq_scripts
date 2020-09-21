@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mne
 import time
-from mne.decoding import EMS
 from sklearn.model_selection import StratifiedKFold
 from scipy.ndimage.filters import gaussian_filter1d
 from ABseq_func import *
@@ -34,7 +33,7 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def generate_SVM_all_sequences(subject):
+def generate_SVM_all_sequences(subject,load_residuals_regression=False):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -45,6 +44,12 @@ def generate_SVM_all_sequences(subject):
     """
 
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+
+    suf = ''
+    if load_residuals_regression:
+        epochs = epoching_funcs.load_resid_epochs_items(subject)
+        suf = 'resid_'
+
     saving_directory = op.join(config.SVM_path, subject)
     utils.create_folder(saving_directory)
 
@@ -59,6 +64,7 @@ def generate_SVM_all_sequences(subject):
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
     epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
+    epochs_balanced_all_chans = epochs_balanced.copy()
 
     # ============== create the temporary labels that will allow us to create the training and testing sets in a nicely balanced way =======================
 
@@ -68,11 +74,11 @@ def generate_SVM_all_sequences(subject):
                  metadata_epochs['ViolationOrNot'].values[i]) for i in range(len(epochs_balanced))]
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
 
-    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg]
-    sensor_types = ['mag', 'grad', 'eeg']
-    SVM_results = {'mag': [], 'grad': [], 'eeg': []}
+    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg,epochs_balanced_all_chans]
+    sensor_types = ['mag', 'grad', 'eeg','all_chans']
+    SVM_results = {'mag': [], 'grad': [], 'eeg': [],'all_chans':[]}
 
-    for l in range(3):
+    for l in range(4):
         senso = sensor_types[l]
         epochs_senso = epochs_all[l]
         X_data = epochs_senso.get_data()
@@ -95,11 +101,11 @@ def generate_SVM_all_sequences(subject):
 
         SVM_results[senso] = {'SVM': All_SVM, 'train_ind': training_inds, 'test_ind': testing_inds,
                               'epochs': epochs_all[l]}
-    np.save(op.join(saving_directory, 'SVM_results.npy'), SVM_results)
+    np.save(op.join(saving_directory, suf+'SVM_results.npy'), SVM_results)
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject):
+def GAT_SVM(subject,load_residuals_regression=False):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -108,11 +114,16 @@ def GAT_SVM(subject):
     """
 
     saving_directory = op.join(config.SVM_path, subject)
-    SVM_results = np.load(op.join(saving_directory, 'SVM_results.npy'), allow_pickle=True).item()
 
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad']}
+    suf = ''
+    if load_residuals_regression:
+        suf = 'resid_'
 
-    for sens in ['eeg', 'mag', 'grad']:
+    SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
+
+    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
+
+    for sens in ['eeg', 'mag', 'grad','all_chans']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -147,10 +158,10 @@ def GAT_SVM(subject):
         times = epochs_sens_test.times
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
-    np.save(op.join(saving_directory, 'GAT_results.npy'), GAT_results)
+    np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM_4pos(subject):
+def GAT_SVM_4pos(subject,load_residuals_regression=False):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately and for each violation position.
@@ -160,12 +171,16 @@ def GAT_SVM_4pos(subject):
     :return: GAT averaged over the 4 classification folds
     """
 
+    suf = ''
+    if load_residuals_regression:
+        suf = 'resid_'
+
     saving_directory = op.join(config.SVM_path, subject)
-    SVM_results = np.load(op.join(saving_directory, 'SVM_results.npy'), allow_pickle=True).item()
+    SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad']}
+    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad']:
+    for sens in ['eeg', 'mag', 'grad','all_chans']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -203,7 +218,7 @@ def GAT_SVM_4pos(subject):
         times = epochs_sens_test.times
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
-    np.save(op.join(saving_directory, 'GAT_results_4pos.npy'), GAT_results)
+    np.save(op.join(saving_directory, suf+'GAT_results_4pos.npy'), GAT_results)
 
 # ______________________________________________________________________________________________________________________
 def SVM_applied_to_epochs(SVM_results, sequenceID=None):
@@ -217,10 +232,10 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
     :return:
     """
 
-    y_violornot = {'eeg': [], 'grad': [], 'mag': []}
-    X_transform = {'eeg': [], 'grad': [], 'mag': []}
+    y_violornot = {'eeg': [], 'grad': [], 'mag': [],'all_chans':[]}
+    X_transform = {'eeg': [], 'grad': [], 'mag': [],'all_chans':[]}
 
-    for sens in {'eeg', 'grad', 'mag'}:
+    for sens in {'eeg', 'grad', 'mag','all_chans'}:
         print(sens)
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
@@ -325,10 +340,11 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     epochs_1st_element = epochs_1st_element["TrialNumber > 10"]
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False)}
+                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                  'all_chans':epochs_1st_element.copy()}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['mag', 'grad', 'eeg']:
+    for sens in ['mag', 'grad', 'eeg','all_chans']:
 
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
@@ -728,7 +744,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     return figure
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None,):
+def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None,vmin=None,vmax=None):
 
     # this provides us with the position of the violations and the times
     epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
@@ -744,18 +760,10 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
     ax[3].set_title('Trials with deviant pos %d' % violpos_list[2], loc='left', weight='bold')
     ax[4].set_title('Trials with deviant pos %d' % violpos_list[3], loc='left', weight='bold')
     ax[5].set_title('Trials with deviant pos %d' % violpos_list[4], loc='left', weight='bold')
-    if sensor_type == 'mag':
-        vmin = -5e-13
-        vmax = 5e-13
-    elif sensor_type == 'grad':
-        vmin = -1.8e-11
-        vmax = 1.8e-11
-    elif sensor_type == 'eeg':
-        vmin = -1e-5
-        vmax = 1e-5
+
     n = 0
     # First, plot habituation trials
-    mean_all_ems_times = np.empty((0, len(times)), int)
+    mean_all_SVM_times = np.empty((0, len(times)), int)
     for ii, point_of_interest in enumerate(SVM_filter_times):
         y_list = []
         for epochs in epochs_list['hab']:
@@ -764,11 +772,11 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
             y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean = np.mean(y_list, axis=0)
-        mean_all_ems_times = np.vstack([mean_all_ems_times, mean])
+        mean_all_SVM_times = np.vstack([mean_all_SVM_times, mean])
     width = 50
     for xx in range(16):
         ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
-    ax[n].imshow(mean_all_ems_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+    ax[n].imshow(mean_all_SVM_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
     ax[n].set_yticks(np.arange(width/2, len(SVM_filter_times)*width, len(SVM_filter_times)*width/len(SVM_filter_times)))
     ax[n].set_yticklabels(SVM_filter_times)
     ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
@@ -776,7 +784,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
 
     # Then, plot all other trials
     for viol_pos in violpos_list:
-        mean_all_ems_times = np.empty((0, len(times)), int)
+        mean_all_SVM_times = np.empty((0, len(times)), int)
         for ii, point_of_interest in enumerate(SVM_filter_times):
             y_list = []
             for epochs in epochs_list['test']:
@@ -786,12 +794,12 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
                 y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
-            mean_all_ems_times = np.vstack([mean_all_ems_times, mean])
+            mean_all_SVM_times = np.vstack([mean_all_SVM_times, mean])
 
         width = 50
         for xx in range(16):
             ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
-        ax[n].imshow(mean_all_ems_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+        ax[n].imshow(mean_all_SVM_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
         ax[n].set_yticks(np.arange(width/2, len(SVM_filter_times)*width, len(SVM_filter_times)*width/len(SVM_filter_times)))
