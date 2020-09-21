@@ -176,13 +176,20 @@ def GAT_SVM(subject,load_residuals_regression=False):
                 GAT_seq[fold_number, :, :] = np.mean(
                     GAT_each_epoch[inds_seq_noviol,:,:],axis=0) - np.mean(
                     GAT_each_epoch[inds_seq_viol,:,:],axis=0)
+                print('The shape of GAT_seq[fold_number, :, :] is')
+                print(GAT_seq[fold_number, :, :].shape)
 
             # now average across the 4 folds
+            print('coucou1')
             GAT_seq_avg = np.mean(GAT_seq, axis=0)
+            print('coucou2')
             GAT_per_sens_and_seq[seqID] = GAT_seq_avg
+            print('coucou3')
             GAT_all.append(GAT_seq_avg)
 
+        print('coucou4')
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
+        print('coucou5')
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
