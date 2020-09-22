@@ -230,18 +230,18 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
             GAT_seq = np.zeros((4, n_times, n_times, 4))
             for fold_number in range(4):
                 print("====== running for fold number %i =======\n"%fold_number)
+                test_indices = SVM_results[sens]['test_ind'][fold_number]
+                epochs_sens_test = epochs_sens[test_indices]
+                X = epochs_sens_test.get_data()
                 GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
                 for nn, pos_viol in enumerate(violpos_list):
                     print("===== RUNNING for SEQ %i and position violation %i"%(k,nn))
-                    test_indices = SVM_results[sens]['test_ind'][fold_number]
-                    epochs_sens_test = epochs_sens[test_indices]
                     inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
                             epochs_sens_test.metadata['ViolationOrNot'].values == 0) & (
                                                        epochs_sens_test.metadata['StimPosition'].values == pos_viol))[0]
                     inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
                             epochs_sens_test.metadata['ViolationOrNot'].values == 1) & (
                                                      epochs_sens_test.metadata['StimPosition'].values == pos_viol))[0]
-                    X = epochs_sens_test.get_data()
                     GAT_seq[fold_number, :, :,nn] = np.mean(
                         GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
                         GAT_each_epoch[inds_seq_viol, :, :], axis=0)
