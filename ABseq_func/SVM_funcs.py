@@ -151,8 +151,8 @@ def GAT_SVM(subject,load_residuals_regression=False):
 
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
 
-    # for sens in ['eeg', 'mag', 'grad','all_chans']:
-    for sens in ['eeg']:
+    for sens in ['eeg', 'mag', 'grad','all_chans']:
+    # for sens in ['eeg']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -161,7 +161,7 @@ def GAT_SVM(subject,load_residuals_regression=False):
         n_times = epochs_sens.get_data().shape[-1]
         SVM_sens = SVM_results[sens]['SVM']
 
-        for k in range(1, 2):
+        for k in range(1, 8):
             print('The value of k is %i'%k)
             seqID = 'SeqID_%i' % k
             GAT_seq = np.zeros((4,n_times,n_times))
@@ -181,25 +181,18 @@ def GAT_SVM(subject,load_residuals_regression=False):
                 print(GAT_seq[fold_number, :, :].shape)
 
             # now average across the 4 folds
-            print('coucou1')
             GAT_seq_avg = np.mean(GAT_seq, axis=0)
-            print('coucou2')
             GAT_per_sens_and_seq[seqID] = GAT_seq_avg
-            print('coucou3')
             GAT_all.append(GAT_seq_avg)
 
-        print('coucou4')
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
-        print('coucou5')
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
-    print('coucou6')
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
 
-    print('=========== job done ! =================')
 
 # ______________________________________________________________________________________________________________________
 def GAT_SVM_4pos(subject,load_residuals_regression=False):
@@ -221,7 +214,8 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
 
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad','all_chans']:
+    for sens in ['eeg']:
+    # for sens in ['eeg', 'mag', 'grad','all_chans']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -229,13 +223,15 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
         n_times = epochs_sens.get_data().shape[-1]
         SVM_sens = SVM_results[sens]['SVM']
 
-        for k in range(1, 8):
+        for k in range(1, 2):
             seqID = 'SeqID_%i' % k
             # extract the 4 positions of violation
             violpos_list = np.unique(epochs_sens['SequenceID == %i' % k].metadata['ViolationInSequence'])[1:]
             GAT_seq = np.zeros((4, n_times, n_times, 4))
             for fold_number in range(4):
+                print("====== running for fold number %i =======\n"%fold_number)
                 for nn, pos_viol in enumerate(violpos_list):
+                    print("===== RUNNING for SEQ %i and position violation %i"%(k,nn))
                     test_indices = SVM_results[sens]['test_ind'][fold_number]
                     epochs_sens_test = epochs_sens[test_indices]
                     inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
@@ -246,20 +242,25 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
                                                      epochs_sens_test.metadata['StimPosition'].values == pos_viol))[0]
                     X = epochs_sens_test.get_data()
                     GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
-                    GAT_seq[fold_number, :, :] = np.mean(
+                    GAT_seq[fold_number, :, :,nn] = np.mean(
                         GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
                         GAT_each_epoch[inds_seq_viol, :, :], axis=0)
+                    print("======== finished the loop ==========")
             # now average across the 4 folds
             GAT_seq_avg = np.mean(GAT_seq, axis=0)
             GAT_per_sens_and_seq[seqID] = GAT_seq_avg
             GAT_all.append(GAT_seq_avg)
 
+        print('coucou1')
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
+        print('coucou2')
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
+    print('coucou3')
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf+'GAT_results_4pos.npy'), GAT_results)
+    print(" ======== job done ============")
 
 # ______________________________________________________________________________________________________________________
 def SVM_applied_to_epochs(SVM_results, sequenceID=None):
