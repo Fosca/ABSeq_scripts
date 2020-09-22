@@ -214,8 +214,7 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
 
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
 
-    for sens in ['eeg']:
-    # for sens in ['eeg', 'mag', 'grad','all_chans']:
+    for sens in ['eeg', 'mag', 'grad','all_chans']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -223,7 +222,7 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
         n_times = epochs_sens.get_data().shape[-1]
         SVM_sens = SVM_results[sens]['SVM']
 
-        for k in range(1, 2):
+        for k in range(1, 8):
             seqID = 'SeqID_%i' % k
             # extract the 4 positions of violation
             violpos_list = np.unique(epochs_sens['SequenceID == %i' % k].metadata['ViolationInSequence'])[1:]

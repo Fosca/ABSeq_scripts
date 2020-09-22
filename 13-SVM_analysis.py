@@ -11,10 +11,10 @@ config.subjects_list = ['sub16-ma_190185']
 
 def SVM_analysis(subject):
     # creating the SVM results dictionnary
-    # SVM_funcs.generate_SVM_all_sequences(subject)
-    # SVM_funcs.GAT_SVM(subject)
+    SVM_funcs.generate_SVM_all_sequences(subject)
+    SVM_funcs.GAT_SVM(subject)
     SVM_funcs.GAT_SVM_4pos(subject)
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject)
+    # SVM_funcs.apply_SVM_filter_16_items_epochs(subject)
 
 
 def SVM_features(subject):

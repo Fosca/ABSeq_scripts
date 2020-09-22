@@ -115,6 +115,13 @@ def EMS(subject):
     EMS_funcs.apply_EMS_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
+def SVM_analysis(subject):
+    # creating the SVM results dictionnary
+    SVM_funcs.generate_SVM_all_sequences(subject)
+    SVM_funcs.GAT_SVM(subject)
+    SVM_funcs.GAT_SVM_4pos(subject)
+    # SVM_funcs.apply_SVM_filter_16_items_epochs(subject)
+
 def compute_evoked(subject):
     evoked_funcs.create_evoked(subject, cleaned=False)
     evoked_funcs.create_evoked(subject, cleaned=True)
