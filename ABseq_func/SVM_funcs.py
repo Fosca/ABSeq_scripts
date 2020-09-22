@@ -420,10 +420,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
                     SVM_to_data = SVM_sens[fold_number].decision_function(data_1st_el_m)
+                    print("The shape of SVM_to_data is ")
+                    print(SVM_to_data.shape)
                     if not window:
                         for mm, point_of_interest in enumerate(points):
                             print(" === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===" )
-                            epochs_1st_sens_m_filtered_data = SVM_to_data[point_of_interest,:]
+                            epochs_1st_sens_m_filtered_data = SVM_to_data[point_of_interest]
                             data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
                             metadata_m = epochs_1st_sens_m.metadata
                             metadata_m['SVM_filter_datapoint'] = int(point_of_interest)
@@ -433,8 +435,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     else:
                         print(
                             " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-
-                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=0)
+                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points)],axis=0)
                         data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
                         metadata_m = epochs_1st_sens_m.metadata
                         metadata_m['SVM_filter_min_datapoint'] = np.min(points)
