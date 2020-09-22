@@ -29,5 +29,5 @@ def SVM_features(subject):
 
 
 # Here we use fewer N_JOBS to prevent potential memory problems
-parallel, run_func, _ = parallel_func(SVM_analysis, n_jobs=N_JOBS)
+parallel, run_func, _ = parallel_func(SVM_features, n_jobs=N_JOBS)
 parallel(run_func(subject) for subject in config.subjects_list)
