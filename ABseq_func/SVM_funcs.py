@@ -519,11 +519,14 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         # ========== les 4 filtres peuvent etre appliquees aux sequences d habituation sans souci, selection en fonction des indices ========
         data_1st_el_m = epochs_1st_sens.get_data()
 
+
         if not window:
             for mm, point_of_interest in enumerate(points):
                 epochs_1st_sens_filtered_data_4folds = []
                 for fold_number in range(4):
-                    SVM_to_data = SVM_sens[fold_number].decision_function(data_1st_el_m)
+                    SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
+                    print("The shape of SVM_to_data is ")
+                    print(SVM_to_data.shape)
                     print(
                         " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                     epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
