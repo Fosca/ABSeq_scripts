@@ -2,7 +2,7 @@
 from __future__ import division
 import initialization_paths
 from ABseq_func import *
-from ABseq_func import TP_funcs
+from ABseq_func import TP_funcs, SVM_funcs
 import config
 import subprocess
 import MarkovModel_Python
@@ -68,7 +68,11 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
         # Customize your options here
         file_name = os.path.split(i)
         job_name = "%s" % file_name[1]
+
         walltime = "36:00:00"  # "24:00:00"
+        if 'short' in queue:
+            walltime = "2:00:00"  # "24:00:00"
+
         processors = "nodes=1:ppn=1"
         command = "python %s" % i
         standard_output = "/std_%s" % file_name[1]

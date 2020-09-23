@@ -14,7 +14,8 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_long')
 
-cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_short')
+cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Unicog_long')
+cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Unicog_long')
 
 # cluster_funcs.create_qsub('EMS', 'ems', 'ems', queue='Nspin_bigM', sublist_subjects=['sub16-ma_190185'])
 # cluster_funcs.create_qsub('linear_reg', 'lreg', 'lreg', queue='Nspin_bigM')

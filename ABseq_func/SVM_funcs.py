@@ -14,10 +14,12 @@ from ABseq_func import utils  # why do we need this now ?? (error otherwise)
 import matplotlib.ticker as ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from mne.decoding import GeneralizingEstimator, cross_val_multiscore
+from mne.decoding import GeneralizingEstimator
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.model_selection import KFold
+
 
 # ______________________________________________________________________________________________________________________
 def SVM_decoder():
@@ -33,26 +35,51 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, decim = 10):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
     :return:
     """
+    subject = config.subjects_list[0]
+    feature_name = 'Identity'
+    load_residuals_regression = False
+    decim = 20
 
     SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    epochs.metadata = metadata
+
 
     suf = ''
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
         suf = 'resid_'
 
+
+    print('-- The values of the metadata for the feature %s are : '%feature_name)
+    print(np.unique(epochs.metadata[feature_name].values))
     epochs.events[:, 2] = epochs.metadata[feature_name].values
     epochs.event_id = {'%i'%i:i for i in np.unique(epochs.events[:, 2])}
-    epochs.equalize_event_counts()
+    epochs.equalize_event_counts(epochs.event_id)
 
-    scores = cross_val_multiscore(SVM_dec, epochs._data,epochs.events[:, 2], cv=4)
+    if decim is not None:
+        epochs.decimate(decim)
+
+    kf = KFold(n_splits=4)
+
+    y = epochs.events[:, 2]
+    X = epochs._data
+    scores = []
+    for train_index, test_index in kf.split(X):
+        print("TRAIN:", train_index, "TEST:", test_index)
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        SVM_dec.fit(X_train,y_train)
+        scores.append(SVM_dec.score(X_test,y_test))
+
     score = np.mean(scores, axis=0)
     times = epochs.times
 
