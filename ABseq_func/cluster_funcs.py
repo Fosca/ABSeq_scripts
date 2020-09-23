@@ -123,6 +123,16 @@ def SVM_analysis(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
+
+def SVM_1(subject):
+    SVM_funcs.generate_SVM_all_sequences(subject)
+
+def SVM_2(subject):
+    SVM_funcs.GAT_SVM_4pos(subject)
+
+def SVM_3(subject):
+    SVM_funcs.GAT_SVM(subject)
+
 def compute_evoked(subject):
     evoked_funcs.create_evoked(subject, cleaned=False)
     evoked_funcs.create_evoked(subject, cleaned=True)
