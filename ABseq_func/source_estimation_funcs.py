@@ -58,11 +58,25 @@ def forward_solution(subject, fsMRI_dir):
 
 def compute_noise_cov(subject):
     meg_subject_dir = op.join(config.meg_dir, subject)
-    # Noise covariance
-    emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)  # is it correct to do this??
-    cov = mne.compute_raw_covariance(emptyroom)
-    return cov
 
+    # # Noise covariance
+    # emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)  # is it correct to do this??
+    # cov = mne.compute_raw_covariance(emptyroom, method=['empirical', 'shrunk'])
+    # return cov
+
+    # NEW VERSION WITH MAXFILT -- TEST
+    # Apply maxfilter on emptyroom data
+    emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)
+    emptyroom.fix_mag_coil_types()
+    emptyroom.info['bads'] = []  # /!\ bad channels are kept !! /!\
+    emptyroom_maxfilt = mne.preprocessing.maxwell_filter(emptyroom,
+        calibration=config.mf_cal_fname,
+        cross_talk=config.mf_ctc_fname,
+        st_duration=config.mf_st_duration,
+        origin=config.mf_head_origin,
+        coord_frame="meg")
+    cov = mne.compute_raw_covariance(emptyroom_maxfilt, method=['empirical', 'shrunk'])
+    return cov
 
 def inverse_operator(subject):
     print('Subject ' + subject + ': inverse_operator ======================')
@@ -90,7 +104,7 @@ def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None):
     meg_subject_dir = op.join(config.meg_dir, subject)
 
     # Load evoked
-    evoked = evoked_funcs.load_evoked(subject=subject, filter_name=evoked_filter_name, filter_not=evoked_filter_not, cleaned=True)
+    evoked, path_evo = evoked_funcs.load_evoked(subject=subject, filter_name=evoked_filter_name, filter_not=evoked_filter_not, cleaned=True)
     evoked = evoked[list(evoked.keys())[0]]  # first key
     # Load inverse operator
     extension = '_%s-inv' % (config.spacing)
@@ -101,4 +115,16 @@ def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None):
     snr = 3.0
     lambda2 = 1.0 / snr ** 2
     stc = mne.minimum_norm.apply_inverse(evoked[0], inverse_operator, lambda2, "dSPM", pick_ori=None)
-    stc.save(op.join(meg_subject_dir, subject + '_dSPM_inverse_' + evoked_filter_name))
+    # stc.save(op.join(meg_subject_dir, subject + '_dSPM_inverse_' + evoked_filter_name))
+    stc.save(op.join(path_evo, evoked_filter_name + '_dSPM_inverse'))
+
+def source_morph(subject, source_evoked_name):
+    print('Subject ' + subject + ': source_morph to fsaverage >> ' + source_evoked_name + ' ======================')
+
+    path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
+    stc = mne.read_source_estimate(op.join(path_evo, source_evoked_name + '_dSPM_inverse'))
+    morph = mne.compute_source_morph(stc, subject_from=subject,
+                                     subject_to='fsaverage',
+                                     subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'))
+    stc_fsaverage = morph.apply(stc)
+    stc_fsaverage.save(op.join(path_evo, source_evoked_name + '_dSPM_inverse_fsaverage'))
