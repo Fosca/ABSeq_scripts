@@ -20,13 +20,9 @@ import config
 from ABseq_func import *
 import mne
 import numpy as np
-from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
-from mne.viz import plot_topomap
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-from importlib import reload
+from mne.stats import linear_regression
 from sklearn.preprocessing import scale
 import copy
-import matplotlib.patches as patches
 import matplotlib.ticker as ticker
 
 # =========================================================== #

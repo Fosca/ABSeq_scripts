@@ -1,23 +1,15 @@
 from __future__ import division
-from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
-from mne.viz import plot_compare_evokeds
+from mne.stats import linear_regression, permutation_cluster_1samp_test
 import os.path as op
-import pandas as pd
 import mne
 from mne.viz import plot_topomap
-from mne.parallel import parallel_func
 import numpy as np
 import config
 from matplotlib import pyplot as plt
 from ABseq_func import *
 from scipy.io import loadmat
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import scale
-import pandas as pd
-import pickle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-# ======= updated on 01/05/2020 ============
 
 
 # ============================================

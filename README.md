@@ -1,84 +1,54 @@
-[![CircleCI](https://circleci.com/gh/brainthemind/CogBrainDyn_MEG_Pipeline.svg?style=svg)](https://circleci.com/gh/brainthemind/CogBrainDyn_MEG_Pipeline)
+# Analysis pipeline for the Human MEEG experiment
 
-# 0 Credits 
-
-This example pipeline for MEG/EEG data processing with MNE python was build jointly by the [Cognition and Brain Dynamics Team](https://brainthemind.com/) and the [MNE Python Team](https://martinos.org/mne/stable/index.html),
-based on scripts originally developed for this publication:
+The analyses are done with Python 3.7, based on the package MNE python. For a reference article on the package, see:
 
 	M. Jas, E. Larson, D. A. Engemann, J. Leppäkangas, S. Taulu, M. Hämäläinen, A. Gramfort (2018).
     A reproducible MEG/EEG group study with the MNE software: recommendations, quality assessments,
     and good practices. Frontiers in neuroscience, 12.
 
-# 1 Make sure MNE-python is installed
+Additionally, you will need to install the autoreject package that is a machine-learning based algorithm to identify outlier
+epochs and automatically interpolate or reject the bad epochs. All the information about the package is here:
+[link to package](https://autoreject.github.io/)
 
-First, you need to make sure you have mne-python installed and working on your system. See [installation instructions](http://martinos.org/mne/stable/install_mne_python.html). Once it is done, you should be able to run this in a terminal:
+and the corresponding article 
 
-	$ python -c "import mne; mne.sys_info()"
+    Mainak Jas, Denis Engemann, Yousra Bekhti, Federico Raimondo, and Alexandre Gramfort. 2017. “Autoreject: Automated artifact rejection for MEG and EEG data”. NeuroImage, 159, 417-429.
 
-Get the scripts through git:
+# MEEG preprocessing steps
 
-	$ git clone https://github.com/mne-tools/mne-study-template.git
-	
-If you do not know how to use git, download the scripts [here](https://github.com/mne-tools/mne-study-template/archive/master.zip). 
-
-For source analysis you'll also need freesurfer, follow the instructions on [their website](https://surfer.nmr.mgh.harvard.edu/).
-
-
-# 2 Set your data to a proper place
-
-For a complete example, we can use the .fif raw data you can find [here](https://osf.io/m9nwz/)
-
-The name of this study is "Localizer".
-
-You can create a folder called "ExampleData" wherever you want on your computer.
-
-In the ExampleData folder, you need to create three subfolders:  "MEG", "system_calibration_files" and "subjects" as follow:
-
-![xx](https://image.noelshack.com/fichiers/2019/15/4/1554998135-path.png)
-
-
-The "MEG" folder will contain a folder for each participant
-The "system_calibration_files" folder will contain the calibration files (download them from OSF)
-The "subjects" folder will contain participant MRI files.
-
-Here is an example of what the MEG folder should contain if you have 3 subjects called SB01, SB02 and SB03:
-
-![xx](https://image.noelshack.com/fichiers/2019/15/4/1554998137-path1.png)
-
-Then you can put the raw data for each subject in their own folder. You can name the raw data files as this:
-subjectID_StudyName_raw.fif
-
-or, if your data has multiple runs:
-subjectID_StudyName_run01_raw.fif
-
-
-![xx](https://image.noelshack.com/fichiers/2019/15/4/1554998137-path2.png)
-
-# 3 Adapt config.py
-
-All specific settings to be used in your analysis are defined in [config.py](config.py).
+[config.py](config.py) | The config file contains the paths to the data, the results folder, the scripts. It also contains all the parameters 
+related to the preprocessing: baselining, filtering, temporal windows for epoching. To adapt the config file, all specific settings to be used in your analysis are defined in [config.py](config.py).
 See the comments for explanations and recommendations. 
 
+The following preprocessing steps are specific to MEEG data analysis:
 
-# 4 Processing steps
+[00-review_raw_data_for_bad_channels.py](00-review_raw_data_for_bad_channels.py) | 
+[01-import_and_filter.py](01-import_and_filter.py) | 
+[02-apply_maxwell_filter.py](02-apply_maxwell_filter.py) | 
+[03-run_ica.py](03-run_ica.py) | 
+[04-identify_EOG_ECG_components_ica.py](04-identify_EOG_ECG_components_ica.py) | 
+[05-apply_ica.py](05-apply_ica.py) | 
 
-| Script | Description |
-|:-----------|:----------------------------------------------------------|
-| [config.py](config.py) | The only file you need to modify in principle. This file contain all your parameters. |
-| [01-frequency_filtering.py](01-frequency_filtering.py) | Read raw data and apply lowpass or/and highpass filtering. |
-| [02-maxwell_filtering.py](02-maxwell_filtering_sss.py) | Run maxfilter and do lowpass filter at 40 Hz. |
-| [03-extract_events.py](03-extract_events.py) | Extract events or annotations or markers from the data and save it to disk. Uses events from stimulus channel STI101. |
-| [04-make_epochs.py](04-make_epochs.py) | Extract epochs. |
-| [05a-run_ica.py](05a-run_ica.py) | Run Independant Component Analysis (ICA) for artifact correction. |
-| [05b-run_ssp.py](05a-run_ssp.py) | Run Signal Subspace Projections (SSP) for artifact correction. These are often also referred to as PCA vectors. |
-| [06a-apply_ica.py](06a-apply_ica.py) | As an alternative to ICA, you can use SSP projections to correct for eye blink and heart artifacts. Use either 5a/6a, or 5b/6b. |
-| [06b-apply_ssp.py](06b-apply_ssp.py) | Apply SSP projections and obtain the cleaned epochs.  |
-| [07-make_evoked.py](07-make_evoked.py) | Extract evoked data for each condition. |
-| [08-group_average_sensors.py](08-group_average_sensors.py) | Make a group average of the time domain data. |
-| [09-sliding_estimator.py](09-sliding_estimator.py) | Running a time-by-time decoder with sliding window. |
-| [10-time_frequency.py](10-time_frequency.py) | Running a time-frequency analysis. |
-| [11-make_forward.py](11-make_forward.py) | Compute forward operators. You will need to have computed the coregistration to obtain the `-trans.fif` files for each subject. |
-| [12-make_cov.py](12-make_cov.py) | Compute noise covariances for each subject. |
-| [13-make_inverse.py](13-make_inverse.py) | Compute inverse problem to obtain source estimates. |
-| [14-group_average_source.py](14-group_average_source.py) | Compute source estimates average over subjects. |
-| [99-make_reports.py](99-make_reports.py) | Compute HTML reports for each subject. |
+# Temporal segmentation of the data (epoching) and plotting the evoked responses
+
+MNE python is particularly suited for MEG and EEG data analysis but it is rather easy to build MNE-compatible data objects and then use all the
+functions provided by the package. For a tutorial, see:
+
+[Link to tutorial](https://mne.tools/stable/auto_examples/io/plot_objects_from_arrays.html#sphx-glr-auto-examples-io-plot-objects-from-arrays-py)
+
+[06-make_epochs.py](06-make_epochs.py) | Will build epochs objects without removing the bad ones or using autoreject to identify, interpolate or remove the bad epochs.
+[07-sanity_check_plots.py](07-sanity_check_plots.py) | Plots for every participant separately the evoked responses and the global field power (GFP).
+
+# Effect matched spatial filter
+
+	Aaron Schurger, Sebastien Marti, and Stanislas Dehaene, “Reducing multi-sensor data to a single time course that 
+	reveals experimental effects”, BMC Neuroscience 2013, 14:122.
+
+[Link to tutorial](https://mne.tools/dev/auto_examples/decoding/plot_ems_filtering.html)
+
+# Linear regressions and residual analyses
+
+To model the surprise from transition probabilities, we used an ideal observer from the package MarkovModel_Python
+
+[link to package](https://github.com/florentmeyniel/TransitionProbModel)
+

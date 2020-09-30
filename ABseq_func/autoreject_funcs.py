@@ -1,12 +1,3 @@
-"""
-====================
-xxx
-====================
-
-xxxx
-xxxx
-"""
-
 import os.path as op
 import mne
 import pandas as pd
@@ -18,12 +9,10 @@ from ABseq_func import *
 from autoreject import AutoReject
 import matplotlib.pyplot as plt
 
-# config.subjects_list = ['sub19-mg_190180']
-
-N_JOBS = 1  # for subjects
-N_JOBS_ar = 1  # for AutoReject function: "The number of thresholds to compute in parallel."
 
 def run_autoreject(subject, epoch_on_first_element):
+    N_JOBS_ar = 1  # "The number of thresholds to compute in parallel."
+
     print('#########################################################################################')
     print('########################## Processing subject: %s ##########################' % subject)
     print('#########################################################################################')
@@ -131,21 +120,3 @@ def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
     print(fig_name_save)
     plt.close('all')
     print('\n')
-
-# AutoReject function parallel
-parallel, run_func, _ = parallel_func(run_autoreject, n_jobs=N_JOBS)
-
-# Run the AutoReject function on "full_sequence" epochs
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
-
-# Run the AutoReject function on "items" epochs
-epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
-
-# AutoReject plot function parallel
-parallel, run_func, _ = parallel_func(ar_log_summary, n_jobs=config.N_JOBS)
-epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)

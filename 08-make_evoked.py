@@ -1,15 +1,11 @@
 import config
-import os
 import os.path as op
 import numpy as np
-import pandas as pd
 import mne
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
-from scipy.stats import sem
 from ABseq_func import *
 from mne.parallel import parallel_func
-from importlib import reload
 
 # # make less parallel runs to limit memory usage
 # N_JOBS = max(config.N_JOBS // 4, 1)
@@ -26,6 +22,11 @@ parallel(run_func(subject, cleaned=False) for subject in config.subjects_list)
 
 parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked_resid, n_jobs=N_JOBS)
 parallel(run_func(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity') for subject in config.subjects_list)
+
+
+
+
+
 
 def script_group_avg_and_plot_gfp():
 
@@ -301,16 +302,6 @@ def script_allsensors_heatmap_figures():
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
         plt.close(fig)
-
-
-
-
-
-
-
-
-
-
 
 
 

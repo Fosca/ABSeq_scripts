@@ -1,9 +1,8 @@
 import config
 from mne.parallel import parallel_func
 from ABseq_func import *
+import mne
 import os.path as op
-
-# config.subjects_list = ['sub18-eo_190576', 'sub19-mg_190180']
 
 def make_figures(subject):
 
