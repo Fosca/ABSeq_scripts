@@ -605,7 +605,7 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
             path_evo = op.join(config.meg_dir, subject, 'evoked')
         if root_path is not None:
             path_evo = op.join(root_path, subject)
-        evoked_names = glob.glob(path_evo + op.sep + filter_name + '*')
+        evoked_names = glob.glob(path_evo + op.sep + filter_name + '*.fif')
         file_names = []
         full_names = []
         for names in evoked_names:
@@ -621,7 +621,7 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
 
         evoked_dict = {file_names[k][:-7]: mne.read_evokeds(full_names[k]) for k in range(len(file_names))}
 
-    return evoked_dict
+    return evoked_dict, path_evo
 
 
 def load_evoked_resid(subject='all', filter_name='', filter_not=None,root_path=None):
