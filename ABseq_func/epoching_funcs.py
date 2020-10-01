@@ -356,7 +356,7 @@ def balance_epochs_violation_positions(epochs):
 
     epochs_balanced_allseq = []
     for seqID in range(1, 8):
-        epochs_seq = epochs['SequenceID == "' + str(seqID) + '"'].copy()
+        epochs_seq = epochs['SequenceID == "' + str(seqID) + '" and TrialNumber>10'].copy()
         tmp = epochs_seq['ViolationOrNot == "1"']  # Deviant trials
         devpos = np.unique(tmp.metadata.StimPosition)  # Position of deviants
         epochs_seq = epochs_seq['StimPosition == "' + str(devpos[0]) +
