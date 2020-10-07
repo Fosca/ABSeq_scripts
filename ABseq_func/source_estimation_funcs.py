@@ -3,6 +3,8 @@ import config
 import matplotlib.pyplot as plt
 import os.path as op
 from ABseq_func import *
+import glob
+
 
 # =========== DO THIS BEFORE LAUNCHING PYTHON =========== #
 # required for mne.bem.make_watershed_bem
@@ -14,17 +16,24 @@ from ABseq_func import *
 def prepare_bem(subject, fsMRI_dir):
     meg_subject_dir = op.join(config.meg_dir, subject)
 
-    # Create BEM surfaces from T1 MRI using freesurfer watershed
-    print('Subject ' + subject + ': make_watershed_bem ======================')
-    mne.bem.make_watershed_bem(subject=subject, subjects_dir=fsMRI_dir, overwrite=True)
+    dcm_subdir = op.join(config.root_path, 'data', 'MRI', 'orig_dicom', subject, 'organized')
+    flashfold = glob.glob(op.join(dcm_subdir, '*5°_PDW'))
+    if len(flashfold) > 0:
+        # Create BEM surfaces from 5°Flash MRI using freesurfer(6.0!) mri_make_bem_surfaces
+        print('Subject ' + subject + ': make_flash_bem ======================')
+        mne.bem.make_flash_bem(subject, overwrite=True, show=False, subjects_dir=fsMRI_dir)
+    else:
+        # Create BEM surfaces from T1 MRI using freesurfer watershed
+        print('Subject ' + subject + ': make_watershed_bem ======================')
+        mne.bem.make_watershed_bem(subject=subject, subjects_dir=fsMRI_dir, overwrite=True)
 
-    # BEM model meshes (alternative to freesurfer watershed?)
+    # BEM model meshes
     model = mne.make_bem_model(subject=subject, subjects_dir=fsMRI_dir)
-    mne.write_bem_surfaces(op.join(meg_subject_dir, subject + '-5120-5120-5120-bem.fif'), model)
+    mne.write_bem_surfaces(op.join(meg_subject_dir, subject + '-5120-5120-5120-bem.fif'), model, overwrite=True)
 
     # BEM solution
     bem_sol = mne.make_bem_solution(model)
-    mne.write_bem_solution(op.join(meg_subject_dir, subject + '-5120-5120-5120-bem-sol.fif'), bem_sol)
+    mne.write_bem_solution(op.join(meg_subject_dir, subject + '-5120-5120-5120-bem-sol.fif'), bem_sol, overwrite=True)
 
 
 def create_source_space(subject, fsMRI_dir):
@@ -33,7 +42,7 @@ def create_source_space(subject, fsMRI_dir):
     meg_subject_dir = op.join(config.meg_dir, subject)
     # Create source space
     src = mne.setup_source_space(subject, spacing=config.spacing, subjects_dir=fsMRI_dir)
-    mne.write_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'), src)
+    mne.write_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'), src, overwrite=True)
 
 
 def forward_solution(subject, fsMRI_dir):
@@ -57,26 +66,29 @@ def forward_solution(subject, fsMRI_dir):
 
 
 def compute_noise_cov(subject):
+    print('Subject ' + subject + ': noise covariance ======================')
+
     meg_subject_dir = op.join(config.meg_dir, subject)
 
-    # # Noise covariance
-    # emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)  # is it correct to do this??
-    # cov = mne.compute_raw_covariance(emptyroom, method=['empirical', 'shrunk'])
-    # return cov
-
-    # NEW VERSION WITH MAXFILT -- TEST
+    # EMPTYROOM WITH MAXFILT -- TEST
+    # /!\ BUT NO EEG /!\
+    # /!\ AND WE SHOULD ALSO APPLY ICA + EXCLUDE BAD CHANNELS /!\ (which are different across runs...)
     # Apply maxfilter on emptyroom data
-    emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)
-    emptyroom.fix_mag_coil_types()
-    emptyroom.info['bads'] = []  # /!\ bad channels are kept !! /!\
-    emptyroom_maxfilt = mne.preprocessing.maxwell_filter(emptyroom,
-        calibration=config.mf_cal_fname,
-        cross_talk=config.mf_ctc_fname,
-        st_duration=config.mf_st_duration,
-        origin=config.mf_head_origin,
-        coord_frame="meg")
-    cov = mne.compute_raw_covariance(emptyroom_maxfilt, method=['empirical', 'shrunk'])
+    # emptyroom = mne.io.read_raw_fif(op.join(config.meg_dir, subject, 'empty_room_raw.fif'), allow_maxshield=True)
+    # emptyroom.fix_mag_coil_types()
+    # emptyroom.info['bads'] = []  # /!\ bad channels are kept !! /!\
+    # emptyroom_maxfilt = mne.preprocessing.maxwell_filter(emptyroom, calibration=config.mf_cal_fname,cross_talk=config.mf_ctc_fname, st_duration=config.mf_st_duration, origin=config.mf_head_origin, coord_frame="meg")
+    # cov = mne.compute_raw_covariance(emptyroom_maxfilt, method=['empirical', 'shrunk'])
+
+    # NOISE COVARIANCE FROM BASELINE OF ALL THE (LONG) EPOCHS
+    epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True)
+    cov = mne.compute_covariance(epochs, tmax=0, method=['empirical', 'shrunk'], rank='info')
+    # To check:
+    # fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
+    # evoked = mne.read_evokeds(fname_evoked)
+    # evoked[0].plot_white(cov)
     return cov
+
 
 def inverse_operator(subject):
     print('Subject ' + subject + ': inverse_operator ======================')
@@ -118,6 +130,7 @@ def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None):
     # stc.save(op.join(meg_subject_dir, subject + '_dSPM_inverse_' + evoked_filter_name))
     stc.save(op.join(path_evo, evoked_filter_name + '_dSPM_inverse'))
 
+
 def source_morph(subject, source_evoked_name):
     print('Subject ' + subject + ': source_morph to fsaverage >> ' + source_evoked_name + ' ======================')
 
@@ -128,3 +141,5 @@ def source_morph(subject, source_evoked_name):
                                      subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'))
     stc_fsaverage = morph.apply(stc)
     stc_fsaverage.save(op.join(path_evo, source_evoked_name + '_dSPM_inverse_fsaverage'))
+
+    return stc_fsaverage
