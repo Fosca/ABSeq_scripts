@@ -24,15 +24,15 @@ import pickle
 # =========================================================== #
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
 resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
+use_balanced_epochs = True  # option to use only standard epochs with positions matched with the positions of deviants
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
 DoFirstLevel = True  # To compute the contrasts (delta 2 conditions) and evoked for each subject
-DoSecondLevel = True  # Run the group level statistics
+DoSecondLevel = False  # Run the group level statistics
 # analyses_to_do = ['OddEven', 'PairsOpen', 'PairsClose', 'QuadOpen', 'QuadClose',  'QuadOpenBis', 'QuadCloseBis',
 #                   'ChunkBeginning', 'ChunkBeginningBis', 'RepeatAlter']
-analyses_to_do = ['Viol_OddEven', 'Viol_PairsOpen', 'Viol_PairsClose', 'Viol_QuadOpen', 'Viol_QuadClose', 'Viol_QuadOpenBis', 'Viol_QuadCloseBis',
-                  'Viol_ChunkBeginning', 'Viol_ChunkBeginningBis', 'Viol_RepeatAlter']
+analyses_to_do = ['Viol_vs_Stand']
 
 # =========================================================== #
 # Define metadatafilters for different analyses
@@ -81,6 +81,9 @@ filters['Viol_ChunkBeginningBis'] = ['(ViolationOrNot == 1 and (ChunkBeginning==
                                      '(ViolationOrNot == 1 and (ChunkBeginning==1 and StimPosition!=1 and StimPosition!=16))']
 filters['Viol_RepeatAlter'] = ['(ViolationOrNot == 1 and (RepeatAlter==0))',
                                '(ViolationOrNot == 1 and (RepeatAlter==1))']
+filters['Viol_vs_Stand'] = ['(ViolationOrNot == 1)',
+                            '(ViolationOrNot == 0)']
+
 if DoFirstLevel:
     # =========================================================== #
     # Set contrast analysis with corresponding metadata filters
@@ -125,6 +128,8 @@ if DoFirstLevel:
                 else:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
+            if use_balanced_epochs:
+                epochs = epoching_funcs.balance_epochs_violation_positions(epochs)
 
             # ====== Generate list of evoked objects from conditions names
             # --- First allseq combined
