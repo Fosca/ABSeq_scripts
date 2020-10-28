@@ -24,27 +24,29 @@ from mne.stats import linear_regression
 from sklearn.preprocessing import scale
 import copy
 import matplotlib.ticker as ticker
+from importlib import reload
+
+print('############------- Running analysis with ' + str(len(config.subjects_list)) + ' subjects ! -------############')
 
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'ViolComplexity'
+analysis_name = 'StandComplexity'
 names = ["Complexity"]  # Factors included in the regression
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
 DoFirstLevel = True  # To compute the regression and evoked for each subject
 DoSecondLevel = True  # Run the group level statistics
 
-# Filter (for each analysis_name) to keep or exlude some epochs
+# Filter (for each analysis_name) to keep or exclude some epochs
 filters = dict()
 filters['StandComplexity'] = ['ViolationInSequence == 0 and StimPosition > 1']
 filters['ViolComplexity'] = ['ViolationOrNot == 1']
 
-print('\n#=====================================================================#\n                 Analysis: '
-      + analysis_name + '\n#=====================================================================#\n')
+print('\n#=====================================================================#\n                 Analysis: ' + analysis_name + '\n#=====================================================================#\n')
 # Results folder
 if resid_epochs:
     results_path = op.join(config.result_path, 'linear_models', resid_epochs_type, analysis_name)
@@ -58,8 +60,7 @@ if DoFirstLevel:
     for subject in config.subjects_list:
         # linear_reg_funcs.run_linear_regression_v2(analysis_name, names, subject, cleaned=True)
 
-        print('\n#------------------------------------------------------------------#\n          Linear regression: ' + subject +
-               '\n#------------------------------------------------------------------#\n')
+        print('\n#------------------------------------------------------------------#\n          Linear regression: ' + subject + '\n#------------------------------------------------------------------#\n')
         sub_results_path = op.join(results_path, subject)
         utils.create_folder(sub_results_path)
 
@@ -82,7 +83,7 @@ if DoFirstLevel:
         # ====== filter items ====== #
         before = len(epochs)
         epochs = epochs[filters[analysis_name]]
-        print('Keeping %.1f%% of epochs' % (len(epochs)/before*100))
+        print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
         # ====== normalization ? ====== #
         for name in names:
             epochs.metadata[name] = scale(epochs.metadata[name])
@@ -107,7 +108,7 @@ if DoFirstLevel:
                 if resid_epochs:
                     fname = op.join(path_evo, 'residepo_' + name + '_level' + str(x))
                 else:
-                    fname = op.join(path_evo,               name + '_level' + str(x))
+                    fname = op.join(path_evo, name + '_level' + str(x))
                 epochs[name + ' == "' + str(level) + '"'].average().save(fname + '-ave.fif')
 
     # # Create evoked with each (unique) level of the regressor / involves loading data again
@@ -120,7 +121,7 @@ if DoFirstLevel:
     # Load data from all subjects
     tmpdat = dict()
     for name in regressors_names:
-        tmpdat[name] = evoked_funcs.load_evoked('all', filter_name=name, root_path=results_path)
+        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name=name, root_path=results_path)
 
     # Store as epo objects
     for name in regressors_names:
@@ -134,6 +135,7 @@ if DoFirstLevel:
         exec(name + "_epo.save(op.join(out_path, '" + name + "_epo.fif'), overwrite=True)")
 
 if DoSecondLevel:
+
     # ============================ (RE)LOAD GROUP REGRESSION RESULTS =========================== #
     path = op.join(results_path, 'group')
     if names[0] != 'Intercept':
@@ -143,6 +145,7 @@ if DoSecondLevel:
     for name in names:
         exec(name + "_epo = mne.read_epochs(op.join(path, '" + name + "_epo.fif'))")
         betas[name] = globals()[name + '_epo']
+        print('There is ' + str(len(betas[name])) + ' betas for ' + name)
 
     # Results figures path
     if resid_epochs:
@@ -151,10 +154,57 @@ if DoSecondLevel:
         fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
     utils.create_folder(fig_path)
 
+    # ================= PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS /  ================ #
+    all_stsc = dict()
+    all_betasevoked = dict()
+    for x, regressor_name in enumerate(betas.keys()):
+        all_stsc[regressor_name] = []
+        all_betasevoked[regressor_name] = []
+        for nsub, subject in enumerate(config.subjects_list):
+            print(regressor_name + ' regressor: sources for subject ' + str(nsub))
+            data = betas[regressor_name][nsub].average()  # 'fake' average since evoked was stored as 1 epoch
+            stc = source_estimation_funcs.normalized_sources_from_evoked(subject, data)
+            all_stsc[regressor_name].append(stc)
+            all_betasevoked[regressor_name].append(data)
+
+        # Group mean stc + betas
+        n_subjects = len(all_stsc[regressor_name])
+        mean_stc = all_stsc[regressor_name][0].copy()  # get copy of first instance
+        for sub in range(1, n_subjects):
+            mean_stc._data += all_stsc[regressor_name][sub].data
+        mean_stc._data /= n_subjects
+        mean_betas = mne.grand_average(all_betasevoked[regressor_name])
+
+        # Create figure
+        output_file = op.join(fig_path, 'Sources_' + regressor_name + '.png')
+        figure_title = analysis_name + ' regression: ' + regressor_name
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto')
+        output_file = op.join(fig_path, 'Sources_' + regressor_name + '_at80ms.png')
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.080, ch_type='mag', colormap='viridis', colorlims='auto')
+        output_file = op.join(fig_path, 'Sources_' + regressor_name + '_at170ms.png')
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.170, ch_type='mag', colormap='viridis', colorlims='auto')
+
+        # Or explore sources activation
+        # maxvtx,  max_t_val = mean_stc.get_peak()
+        # brain = mean_stc.plot(views=['lat'], surface='pial', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
+        #                       subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), initial_time=max_t_val, smoothing_steps=5, time_viewer=True) # show_traces=True, (not available with MNE 0.19 ?)
+        # mni_max = mne.vertex_to_mni(maxvtx, 0,  subject='fsaverage', subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'))[0]
+        # print('Peak at {:.0f}'.format(mni_max[0]) + ',{:.0f}'.format(mni_max[1]) + ', {:.0f}'.format(mni_max[2]))
+        # plot the peak activation
+        # plt.figure()
+        # plt.axes([.1, .275, .85, .625])
+        # hl = plt.plot(stc.times, stc.data[maxvtx], 'b')[0]
+        # lt.xlabel('Time (s)')
+        # plt.ylabel('Source amplitude (dSPM)')
+        # plt.xlim(stc.times[0], stc.times[-1])
+        # plt.figlegend([hl], ['Peak at = %s' % mni_max.round(2)], 'lower center')
+        # plt.show()
+
+
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
     plt.close('all')
     for ch_type in ['eeg', 'grad', 'mag']:
-        fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys())*4, 6), sharex=False, sharey=False, constrained_layout=True)
+        fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
         ax = axes.ravel()[::1]
         # Loop over the different betas
@@ -170,14 +220,14 @@ if DoSecondLevel:
             minT = min(evokeds.times) * 1000
             maxT = max(evokeds.times) * 1000
             # ---- Plot
-            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0],0], aspect='auto', cmap='viridis') #cmap='RdBu_r'
+            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
             ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
             for xx in range(3):
                 ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
             ax[x].set_xlabel('Time (ms)')
             ax[x].set_ylabel('Channels')
             ax[x].set_title(regressor_name, loc='center', weight='normal')
-            fig.colorbar(im, ax = ax[x], shrink=1, location='bottom')
+            fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
         fig_name = fig_path + op.sep + ('betas_' + ch_type + '.png')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
@@ -202,7 +252,7 @@ if DoSecondLevel:
         plt.close(fig)
         # MAG
         fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name, topomap_args=topomap_args, picks='mag', times=times, show=False)
-        fig_name = fig_path + op.sep + ('MAG_' + regressor_name+'.png')
+        fig_name = fig_path + op.sep + ('MAG_' + regressor_name + '.png')
         print('Saving ' + fig_name)
         plt.savefig(fig_name)
         plt.close(fig)
@@ -216,18 +266,19 @@ if DoSecondLevel:
     # =========================================================== #
     # Group stats
     # =========================================================== #
-    nperm = 5000  # number of permutations
+    nperm = 1000  # number of permutations
     threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
     p_threshold = 0.05
     tmin = 0.000  # timewindow to test (crop data)
     tmax = 0.500  # timewindow to test (crop data)
-
     for ch_type in ['eeg', 'grad', 'mag']:
         for x, regressor_name in enumerate(betas.keys()):
             data_stat = copy.deepcopy(betas[regressor_name])
             data_stat.crop(tmin=tmin, tmax=tmax)  # crop
 
             print('\n\n' + regressor_name + ', ch_type ' + ch_type)
+            cluster_stats = []
+            data_array_chtype = []
             cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
             cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
 
@@ -241,6 +292,41 @@ if DoSecondLevel:
                 figname_initial = fig_path + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
                 stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=True)
 
+            # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
+            if len(good_cluster_inds) > 0:
+                # Group mean stc (all_stsc loaded before)
+                n_subjects = len(all_stsc[regressor_name])
+                mean_stc = all_stsc[regressor_name][0].copy()  # get copy of first instance
+                for sub in range(1, n_subjects):
+                    mean_stc._data += all_stsc[regressor_name][sub].data
+                mean_stc._data /= n_subjects
+
+                for i_clu in range(cluster_info['ncluster']):
+                    cinfo = cluster_info[i_clu]
+                    twin_min = cinfo['sig_times'][0] / 1000
+                    twin_max = cinfo['sig_times'][-1] / 1000
+                    stc_timewin = mean_stc.copy()
+                    stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+                    stc_timewin = stc_timewin.mean()
+                    # max_t_val = mean_stc.get_peak()[1]
+                    brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
+                                               subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
+                    screenshot = brain.screenshot()
+                    brain.close()
+                    nonwhite_pix = (screenshot != 255).any(-1)
+                    nonwhite_row = nonwhite_pix.any(1)
+                    nonwhite_col = nonwhite_pix.any(0)
+                    cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+                    plt.close('all')
+                    fig = plt.imshow(cropped_screenshot)
+                    plt.axis('off')
+                    info = analysis_name + '_' + regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
+                    figname_initial = fig_path + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
+                    plt.title(info)
+                    plt.savefig(op.join(fig_path, 'Sources_' + info + '.png'), bbox_inches='tight', dpi=600)
+                    plt.close('all')
+
+
             # =========================================================== #
             # ==========  cluster evoked data plot
             # =========================================================== #
@@ -250,12 +336,12 @@ if DoSecondLevel:
                 filter_name = regressor_name + '_level'
                 if resid_epochs:
                     filter_name = 'residepo_' + filter_name
-                evoked_reg = evoked_funcs.load_evoked(subject='all', filter_name=filter_name, filter_not=None, cleaned=True)
-
+                evoked_reg, path_evo = evoked_funcs.load_evoked(subject='all', filter_name=filter_name, filter_not=None, cleaned=True)
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     # ----------------- PLOT ----------------- #
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=True, legend=True, blackfig=True)
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=True, legend=True,
+                                                        blackfig=True)
                     fig_name = fig_path + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
@@ -316,94 +402,91 @@ if DoSecondLevel:
                 plt.close('all')
 
 
-
-
 def tmp_script_repeataltern_surprise_regression_figures():
+    analysis_name = 'reg_repeataltern_surpriseOmegainfinity'
+    regress_path = op.join(config.result_path, 'linear_models', analysis_name)
+    names = ["intercept", "RepeatAlter", "RepeatAlternp1", "surpriseN", "surpriseNp1"]
 
-        analysis_name = 'reg_repeataltern_surpriseOmegainfinity'
-        regress_path = op.join(config.result_path, 'linear_models', analysis_name)
-        names = ["intercept", "RepeatAlter", "RepeatAlternp1", "surpriseN", "surpriseNp1"]
+    # =========== LOAD INDIVIDUAL REGRESSION RESULTS =========== #
+    # Load data from all subjects
+    betas = dict()
+    for name in names:
+        import glob
+        evoked_dict = []
+        for subj in config.subjects_list:
+            path_evo = op.join(regress_path, subj)
+            mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif'))
+            evoked_dict.append(mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif')))
 
-        # =========== LOAD INDIVIDUAL REGRESSION RESULTS =========== #
-        # Load data from all subjects
-        betas = dict()
-        for name in names:
-            import glob
-            evoked_dict = []
-            for subj in config.subjects_list:
-                path_evo = op.join(regress_path, subj)
-                mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif'))
-                evoked_dict.append(mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif')))
+        betas[name] = mne.combine_evoked([evoked_dict[i][0] for i in range(len(config.subjects_list))], weights='equal')
 
-            betas[name] = mne.combine_evoked([evoked_dict[i][0] for i in range(len(config.subjects_list))], weights='equal')
+    # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
+    fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
+    utils.create_folder(fig_path)
 
-        # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
-        fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
-        utils.create_folder(fig_path)
-
-        # Loop over the 3 ch_types
-        plt.close('all')
-        ch_types = ['eeg', 'grad', 'mag']
-        for ch_type in ch_types:
-            fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
-            fig.suptitle(ch_type, fontsize=12, weight='bold')
-            ax = axes.ravel()[::1]
-            # Loop over the different betas
-            for x, regressor_name in enumerate(betas.keys()):
-                # ---- Data
-                evokeds = betas[regressor_name]
-                if ch_type == 'eeg':
-                    betadata = evokeds.copy().pick_types(eeg=True, meg=False).data
-                elif ch_type == 'mag':
-                    betadata = evokeds.copy().pick_types(eeg=False, meg='mag').data
-                elif ch_type == 'grad':
-                    betadata = evokeds.copy().pick_types(eeg=False, meg='grad').data
-                minT = min(evokeds.times) * 1000
-                maxT = max(evokeds.times) * 1000
-                # ---- Plot
-                im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
-                ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
-                for xx in range(3):
-                    ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-                ax[x].set_xlabel('Time (ms)')
-                ax[x].set_ylabel('Channels')
-                ax[x].set_title(regressor_name, loc='center', weight='normal')
-                fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
-            fig_name = fig_path + op.sep + ('betas_' + ch_type + '.png')
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name, dpi=300)
-            plt.close(fig)
-
-        # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
-        ylim_eeg = 20
-        ylim_mag = 600
-        ylim_grad = 200
-
-        # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
-        ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
-        ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
-        topomap_args = dict(time_unit='s')
-        times = 'peaks'
+    # Loop over the 3 ch_types
+    plt.close('all')
+    ch_types = ['eeg', 'grad', 'mag']
+    for ch_type in ch_types:
+        fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
+        fig.suptitle(ch_type, fontsize=12, weight='bold')
+        ax = axes.ravel()[::1]
+        # Loop over the different betas
         for x, regressor_name in enumerate(betas.keys()):
+            # ---- Data
             evokeds = betas[regressor_name]
-            # EEG
-            fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name,
-                                     topomap_args=topomap_args, picks='eeg', times=times, show=False)
-            fig_name = fig_path + op.sep + ('EEG_' + regressor_name + '.png')
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name)
-            plt.close(fig)
-            # MAG
-            fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name,
-                                     topomap_args=topomap_args, picks='mag', times=times, show=False)
-            fig_name = fig_path + op.sep + ('MAG_' + regressor_name + '.png')
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name)
-            plt.close(fig)
-            # #GRAD
-            fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name,
-                                     topomap_args=topomap_args, picks='grad', times=times, show=False)
-            fig_name = fig_path + op.sep + ('GRAD_' + regressor_name + '.png')
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name)
-            plt.close(fig)
+            if ch_type == 'eeg':
+                betadata = evokeds.copy().pick_types(eeg=True, meg=False).data
+            elif ch_type == 'mag':
+                betadata = evokeds.copy().pick_types(eeg=False, meg='mag').data
+            elif ch_type == 'grad':
+                betadata = evokeds.copy().pick_types(eeg=False, meg='grad').data
+            minT = min(evokeds.times) * 1000
+            maxT = max(evokeds.times) * 1000
+            # ---- Plot
+            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
+            ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
+            for xx in range(3):
+                ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+            ax[x].set_xlabel('Time (ms)')
+            ax[x].set_ylabel('Channels')
+            ax[x].set_title(regressor_name, loc='center', weight='normal')
+            fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
+        fig_name = fig_path + op.sep + ('betas_' + ch_type + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name, dpi=300)
+        plt.close(fig)
+
+    # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
+    ylim_eeg = 20
+    ylim_mag = 600
+    ylim_grad = 200
+
+    # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
+    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
+    ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
+    topomap_args = dict(time_unit='s')
+    times = 'peaks'
+    for x, regressor_name in enumerate(betas.keys()):
+        evokeds = betas[regressor_name]
+        # EEG
+        fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name,
+                                 topomap_args=topomap_args, picks='eeg', times=times, show=False)
+        fig_name = fig_path + op.sep + ('EEG_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
+        # MAG
+        fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name,
+                                 topomap_args=topomap_args, picks='mag', times=times, show=False)
+        fig_name = fig_path + op.sep + ('MAG_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
+        # #GRAD
+        fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name,
+                                 topomap_args=topomap_args, picks='grad', times=times, show=False)
+        fig_name = fig_path + op.sep + ('GRAD_' + regressor_name + '.png')
+        print('Saving ' + fig_name)
+        plt.savefig(fig_name)
+        plt.close(fig)
