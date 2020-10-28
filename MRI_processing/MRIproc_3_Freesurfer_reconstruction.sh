@@ -2,7 +2,6 @@
 
 # ==============================
 # /!\ TO DO:
-# Get dicom files in "orig_dicom/organized" instead of NIfTI files
 # Set up parallelization, perhaps see https://github.com/dfsp-spirit/shell-tools/tree/master/gnu_parallel_reconall_minimal
 # ==============================
  
@@ -33,15 +32,22 @@ declare -a sublist=('sub01-pa_190002'
 for sub in ${sublist[@]}
 do
   export SUBJECT=$sub
-	export \MRI_FILE=/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MRI/orig_nifti/$SUBJECT/*.nii
-	nohup recon-all -s $SUBJECT -i $MRI_FILE -all
+	# If NIFTI 
+	# export \MRI_FILE=/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MRI/orig_nifti/$SUBJECT/*.nii
+
+	# If DICOM 
+	all_dcm_files=(/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MRI/orig_dicom/$SUBJECT/organized/*T1*/*/*.dcm)
+	export \MRI_FILE=${all_dcm_files[1]}
+
+	# nohup recon-all -s $SUBJECT -i $MRI_FILE -all
+	recon-all -s $SUBJECT -i $MRI_FILE -all
 done
 
 ### Make higher resolution surface ?
 for sub in ${sublist[@]}
 do
   export SUBJECT=$sub
-  mkheadsurf -subjid $SUBJECT  # was not necessary before?...
+  # mkheadsurf -subjid $SUBJECT  # not necessary?... same thing in the next command?
   mne make_scalp_surfaces -s $SUBJECT -d $SUBJECTS_DIR --force --overwrite
 done
 
