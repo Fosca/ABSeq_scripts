@@ -16,8 +16,8 @@ w.niftidir       = fullfile(w.datadir, 'orig_nifti', filesep);   % to convert di
 
 % Subject info (to find dicom folders, and add subjectID in output folders)
 w.date      = {'20190716' '20190528' '20191002' '20191001' '20180601'...
-               '20181009' '20170516' '20151207' 'missing.' '20191010'...
-               'missing.' '20180130' '20191016' 'missing.' 'missing.'...
+               '20181009' '20170516' '20151207' '20191218' '20191010'...
+               '20200130' '20180130' '20191016' '20191217' '20171130'...
                '20190704' '20180515' '20191112' '20191113'};
 w.nip       = {'pa190002' 'ch180036' 'mr190273' 'rf190499' 'cr170417'...
                'kc160388' 'jm100109' 'cc150418' 'ag170045' 'gp190568'...
@@ -35,14 +35,14 @@ w.subjects  = { 'sub01'    'sub02'    'sub03'    'sub04'    'sub05'...
 %%% ================================= %%%
 
 % Subjects to process:
-subs_to_do = [9 10 11 14 15]%1:numel(w.subjects); %
+subs_to_do = 1:numel(w.subjects); %
 % Subjects loop
 for iS=subs_to_do
    
     %=======================================%
     %+++++++++++++++++++++++++++++++++++++++%
     Do_1_ImportNeurospinDicom(w,iS)
-%     Do_2_ConvertDicomToNifti(w,iS)    
+%     Do_2_ConvertDicomToNifti(w,iS)    // TO DO
     %+++++++++++++++++++++++++++++++++++++++%
     %=======================================%
 end
