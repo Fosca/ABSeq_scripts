@@ -423,6 +423,8 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
             data_for_epoch_object = np.zeros(
                 (SVM_results[sens]['epochs'].get_data().shape[0], epochs_1st_sens.get_data().shape[2]))
 
+        print("The shape of data_for_epoch_object is ")
+        print(data_for_epoch_object.shape)
         # ===============================
         counter = 0
         for fold_number in range(4):
