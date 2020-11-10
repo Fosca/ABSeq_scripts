@@ -53,7 +53,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ABseq_func import *
 
-config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036','sub03-mr_190273', 'sub04-rf_190499', 'sub05-cr_170417', 'sub06-kc_160388',
+config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub04-rf_190499', 'sub05-cr_170417', 'sub06-kc_160388',
                         'sub07-jm_100109', 'sub08-cc_150418', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
                         'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185','sub17-mt_170249', 'sub18-eo_190576',
                         'sub19-mg_190180']
