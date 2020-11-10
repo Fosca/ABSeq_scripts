@@ -467,7 +467,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                         print(
                             " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                         print(SVM_to_data.shape)
-                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=-1)
+                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=0)
+                        print(epochs_1st_sens_m_filtered_data.shape)
+                        print('This was the shape of epochs_1st_sens_m_filtered_data')
+
                         data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
                         metadata_m = epochs_1st_sens_m.metadata
                         metadata_m['SVM_filter_min_datapoint'] = np.min(points)
