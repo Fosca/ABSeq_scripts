@@ -121,9 +121,9 @@ def EMS(subject):
 
 def SVM_analysis(subject):
     # creating the SVM results dictionnary
-    SVM_funcs.generate_SVM_all_sequences(subject)
-    SVM_funcs.GAT_SVM(subject)
-    SVM_funcs.GAT_SVM_4pos(subject)
+    # SVM_funcs.generate_SVM_all_sequences(subject)
+    # SVM_funcs.GAT_SVM(subject)
+    # SVM_funcs.GAT_SVM_4pos(subject)
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 

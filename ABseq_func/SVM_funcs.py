@@ -41,10 +41,6 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, dec
     It is meant to generalize across time by construction.
     :return:
     """
-    subject = config.subjects_list[0]
-    feature_name = 'Identity'
-    load_residuals_regression = False
-    decim = 20
 
     SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
