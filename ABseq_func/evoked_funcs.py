@@ -558,16 +558,19 @@ def create_evoked_for_regression_factors(regressor_names, subject, cleaned=True)
     del epochs_items
 
 
-def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, cleaned = True):
+def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, cleaned=True, evoked_resid=False):
     """
     Cette fonction charge tous les evoques ayant un nom qui commence par filter_name et n'ayant pas filter_not dans leur nom.
     Elle cree un dictionnaire ayant pour champs les differentes conditions
-
-    :param subject: 'all' si on veut charger les evoques de tous les participants de config.subject_list sinon mettre le nom du participant d'intereet
-    :param filter_name:
-    :param filter_not:
-    :return:
+    :param subject: 'all' si on veut charger les evoques de tous les participants de config.subject_list sinon mettre le nom du participant d'interet
+    :param filter_name: element du nom de fichier à inclure
+    :param filter_not: element du nom de fichier à exclure
+    :param root_path: dossier source (défaut data/MEG/sujet)
+    :param cleaned: chercher dans le dossier evoked_cleaned (evoked à partir d'epochs après autocorrect)
+    :param evoked_resid: chercher dans le dossier evoked_resid (evoked à partir d'epochs après regression surprise) !! surpasse argument "cleaned" !!
+    :return: 
     """
+
     import glob
     evoked_dict = {}
     if subject == 'all':
@@ -576,9 +579,11 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
                 path_evo = op.join(config.meg_dir, subj, 'evoked_cleaned')
             else:
                 path_evo = op.join(config.meg_dir, subj, 'evoked')
+            if evoked_resid:
+                path_evo = op.join(config.meg_dir, subj, 'evoked_resid')
             if root_path is not None:
                 path_evo = op.join(root_path, subj)
-            evoked_names = sorted(glob.glob(path_evo + op.sep + filter_name + '*'))
+            evoked_names = sorted(glob.glob(path_evo + op.sep + filter_name + '*.fif'))
             file_names = []
             full_names = []
             for names in evoked_names:
@@ -592,8 +597,9 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
                         file_names.append(file)
                         full_names.append(names)
 
+            print(path_evo)
+            print(file_names)
             for k in range(len(file_names)):
-                print(file_names)
                 if file_names[k][:-7] in evoked_dict.keys():
                     evoked_dict[file_names[k][:-7]].append(mne.read_evokeds(full_names[k]))
                 else:
@@ -603,6 +609,8 @@ def load_evoked(subject='all', filter_name='', filter_not=None,root_path=None, c
             path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
         else:
             path_evo = op.join(config.meg_dir, subject, 'evoked')
+        if evoked_resid:
+            path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
         if root_path is not None:
             path_evo = op.join(root_path, subject)
         evoked_names = glob.glob(path_evo + op.sep + filter_name + '*.fif')

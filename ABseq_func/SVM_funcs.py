@@ -321,11 +321,11 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
     return X_transform, y_violornot, times
 
 # ______________________________________________________________________________________________________________________
-def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=-1.5, vmax=1.5):
+def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=None, vmax=None):
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
-    plt.imshow(GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
     # -----# ADD LINES ?
     plt.axvline(0, linestyle='-', color='black', linewidth=1)
     plt.axhline(0, linestyle='-', color='black', linewidth=1)

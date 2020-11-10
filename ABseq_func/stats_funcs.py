@@ -177,18 +177,11 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
         mask[cinfo['channels_cluster'], :] = True
 
-        # plt.close('all')
-        # plt.figure()
-        # plot_topomap(T_obs_map, cluster_info['pos'])
-
-        # plot_topomap(T_obs_map, cluster_info['data_info'], mask=mask)
-        # pos = mne.find_layout(data_stat.info, ch_type=ch_type).pos
-        # npos= pos[:, [0, 1]]
-        # plt.figure()
-        # plot_topomap(T_obs_map, pos=data_stat.info, mask=mask)
-
         fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+        # image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head',  mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask,  axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+
+
         divider = make_axes_locatable(ax_topo)
         # add axes for colorbar
         ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
@@ -199,7 +192,7 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         # signal average & sem (over subjects)
         ax_signals = divider.append_axes('right', size='300%', pad=1.2)
         # for signal, name, col, ls in zip(cinfo['signal'], [fname], colors, linestyles):
-        #     ax_signals.plot(cluster_info['times'], signal * 1e6, color=col, linestyle=ls, label=name)  # why  signal*1e6 ??
+        #     ax_signals.plot(cluster_info['times'], signal * 1e6, color=col, linestyle=ls, label=name)
         mean = np.mean(cinfo['signal'], axis=0)
         ub = mean + sem(cinfo['signal'], axis=0)
         lb = mean - sem(cinfo['signal'], axis=0)
@@ -219,6 +212,10 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         ymin, ymax = ax_signals.get_ylim()
         ax_signals.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.3)
         # ax_signals.legend(loc='lower right')
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        ax_signals.get_yaxis().set_major_formatter(fmt)
+        ax_signals.get_yaxis().get_offset_text().set_position((-0.07, 0))  # move 'x10-x', does not work with y
         title = 'Cluster #{0} (p < {1:0.3f})'.format(i_clu + 1, cinfo['p_values'])
         ax_signals.set(ylim=[ymin, ymax], title=title)
 
@@ -274,10 +271,10 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     fmt = ticker.ScalarFormatter(useMathText=True)
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
-    ax.get_yaxis().get_offset_text().set_position((-0.07, 0))  # move 'x10-x', does not work with y
-    ax.set_xlim([-100, 750])
+    ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
+    ax.set_xlim([-100, 600])
     ax.set_ylim([ymin, ymax])
-    ax.set_ylabel(units[ch_type], color =textcolor)
+    ax.set_ylabel(units[ch_type], color=textcolor)
     ax.spines['bottom'].set_color(linecolor)
     ax.spines['left'].set_color(linecolor)
     ax.tick_params(axis='x', colors=textcolor)
