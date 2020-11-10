@@ -6,7 +6,7 @@ from ABseq_func import TP_funcs, SVM_funcs
 import config
 import subprocess
 import MarkovModel_Python
-
+import numpy as np
 def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, queue='Unicog_long'):
     import subprocess
     import os, sys, glob
@@ -136,6 +136,19 @@ def SVM_2(subject):
 
 def SVM_3(subject):
     SVM_funcs.GAT_SVM(subject)
+
+
+def SVM_features(subject):
+    list_features = ['Identity', 'RepeatAlter','WithinChunkPosition']
+    list_seq = [[2,3,4,5,6,7],[3,4,5,6,7],[4,5,6]]
+
+    for ii,feature_name in enumerate(list_features):
+        score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
+        save_path = config.SVM_path + subject + '/feature_decoding/'
+        utils.create_folder(save_path)
+        save_name = save_path + feature_name + '_score_dict.npy'
+        np.save(save_name, {'score': score, 'times': times})
+
 
 def compute_evoked(subject):
     evoked_funcs.create_evoked(subject, cleaned=False)
