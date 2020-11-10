@@ -468,6 +468,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     else:
                         print(
                             " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
+                        print(SVM_to_data.shape)
                         epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=-1)
                         data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
                         metadata_m = epochs_1st_sens_m.metadata
