@@ -323,7 +323,7 @@ def load_epochs_items(subject, cleaned=True):
     return epochs
 
 
-def load_resid_epochs_items(subject, type='residual_model_constant'):
+def load_resid_epochs_items(subject, type='reg_repeataltern_surpriseOmegainfinity'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     extension = subject + type + '-epo'
