@@ -178,7 +178,7 @@ def compute_sources_from_evoked(subject, evoked, morph_sources=True):
     return stc
 
 
-def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=False, morph_sources=True):
+def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=False, lowpass_evoked=True, morph_sources=True):
     """
 
     :param subject: subject name
@@ -201,10 +201,15 @@ def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not
 
     print('Subject ' + subject + ': evoked and sources from ' + path_evo)
 
+    # Low-pass filter
+    if lowpass_evoked:
+        print('     Low pass filtering 30Hz')
+        evoked = evoked.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
+
     # Apply baseline
     if apply_baseline:
         print('     Applying baseline to evoked')
-        evoked.apply_baseline((None, 0))
+        evoked.apply_baseline(baseline=(-0.050, 0.000))
 
     # Load inverse operator
     print('     Computing sources')
@@ -227,8 +232,11 @@ def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not
 
     # Sanity check (high peak value)
     m = np.round(np.max(abs(stc.data)), 0)
-    if m > 100:
-        raise ValueError('/!\ Probable issue with sources cond2 for subject ' + subject + ': max value = ' + str(m))
+    if m > 200:
+        raise ValueError('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
+    if m > 80:
+        import warnings
+        warnings.warn('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
 
     return evoked, stc
 
@@ -259,7 +267,7 @@ def normalized_sources_from_evoked(subject, evoked):
     return stc_fsaverage
 
 
-def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto'):
+def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims='fixed'):
     """
     Generates a figure showing butterfly of evoked signal (one ch_type) and corresponding sources at a given timepoint
     Uses fsaverage
@@ -273,12 +281,16 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     :param ch_type: sensor type to show for evoked
     :param colormap: for the sources figures
     :param colorlims: for the sources figures, can be 'auto' or [min-mid-max]
+    :param signallims: set to 'fixed' to used predefined ylims for signals plot
     """
-    plt.close('all')
+    # Issue when the function is called when RUNNING a script: waits until figure is manually closed...
+    # Turn interactive plotting off ?
+    plt.ioff()
+
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     if timepoint == 'max':
         # timeval = stc.get_peak()[1]
-        timeval = evoked.get_peak(ch_type='grad')[1]
+        timeval = evoked.get_peak(ch_type=ch_type)[1]
     else:
         timeval = timepoint
     if colorlims == 'auto':
@@ -314,7 +326,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     brain_idx = 1
 
     # plot the evoked in the desired subplot, and add a line at peak activation
-    evoked.pick_types('mag').plot(axes=axes[evoked_idx])
+    evoked.pick_types(ch_type).plot(axes=axes[evoked_idx])
     peak_line = axes[evoked_idx].axvline(timeval, color='#66CCEE', ls='--')
     # custom legend
     axes[evoked_idx].legend(
@@ -329,8 +341,13 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     for key in ('top', 'right'):
         axes[evoked_idx].spines[key].set(visible=False)
     # Tweak the ticks and limits
-    axes[evoked_idx].set(yticks=np.arange(-150, 151, 100), xticks=np.arange(-0.1, 0.751, 0.1))
-    axes[evoked_idx].set(ylim=[-175, 175], xlim=[-0.1, 0.750])
+    if signallims == 'fixed':
+        if ch_type == 'mag':
+            axes[evoked_idx].set(yticks=np.arange(-100, 101, 50), xticks=np.arange(-0.1, 0.751, 0.1))
+            axes[evoked_idx].set(ylim=[-100, 100], xlim=[-0.1, 0.750])
+        elif ch_type == 'grad':
+            axes[evoked_idx].set(yticks=np.arange(-50, 51, 25), xticks=np.arange(-0.1, 0.751, 0.1))
+            axes[evoked_idx].set(ylim=[-50, 50], xlim=[-0.1, 0.750])
 
     # now add the brain to the lower axes
     axes[brain_idx].imshow(cropped_screenshot)
