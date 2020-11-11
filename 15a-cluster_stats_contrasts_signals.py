@@ -26,6 +26,7 @@ cleaned = True  # epochs cleaned with autoreject or not, only when using origina
 resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
 use_balanced_epochs = True  # option to use only standard epochs with positions matched with the positions of deviants
 use_baseline = True  # option to apply a baseline to the evokeds before running the contrast
+lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
@@ -89,6 +90,7 @@ print('cleaned = ' + str(cleaned))
 print('resid_epochs = ' + str(resid_epochs))
 print('use_balanced_epochs = ' + str(use_balanced_epochs))
 print('use_baseline = ' + str(use_baseline))
+print('lowpass_epochs = ' + str(lowpass_epochs))
 print('DoFirstLevel = ' + str(DoFirstLevel))
 print('DoSecondLevel = ' + str(DoSecondLevel))
 
@@ -102,9 +104,9 @@ if DoFirstLevel:
               + analysis_name + '\n' + cond_filters[0])
         print('vs.\n' + cond_filters[1] + '\n#=====================================================================#\n')
         if resid_epochs:
-            results_path = op.join(config.result_path, 'Contrasts_tests', resid_epochs_type, analysis_name, 'Signals')
+            results_path = op.join(config.result_path, 'Paired_contrasts', analysis_name, 'TP_corrected_data', 'Signals')
         else:
-            results_path = op.join(config.result_path, 'Contrasts_tests', analysis_name, 'Signals')
+            results_path = op.join(config.result_path, 'Paired_contrasts', analysis_name, 'Original_data', 'Signals')
         if use_baseline:
             results_path = results_path + op.sep + 'With_baseline_correction'
         utils.create_folder(results_path)
@@ -140,13 +142,17 @@ if DoFirstLevel:
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             if use_balanced_epochs:
                 epochs = epoching_funcs.balance_epochs_violation_positions(epochs)
+            if lowpass_epochs:
+                print('Low pass filtering...')
+                epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
 
             # ====== Generate list of evoked objects from conditions names
             # --- First allseq combined
             # Compute evoked
             cond_filters_seq = [cond_filters[0], cond_filters[1]]
             if use_baseline:
-                evokeds = [epochs[name].average().apply_baseline() for name in cond_filters_seq]
+                print('Baseline correction...')
+                evokeds = [epochs[name].average().apply_baseline(baseline=(-0.050, 0.000)) for name in cond_filters_seq]
             else:
                 evokeds = [epochs[name].average() for name in cond_filters_seq]
 
@@ -170,7 +176,8 @@ if DoFirstLevel:
                                     cond_filters[1] + ' and SequenceID == "' + str(seqID) + '"']
                 # Compute evoked
                 if use_baseline:
-                    evokeds = [epochs[name].average().apply_baseline() for name in cond_filters_seq]
+                    print('Baseline correction...')
+                    evokeds = [epochs[name].average().apply_baseline(baseline=(-0.050, 0.000)) for name in cond_filters_seq]
                 else:
                     evokeds = [epochs[name].average() for name in cond_filters_seq]
                 # Save evoked per condition (used later for plots)
@@ -179,7 +186,9 @@ if DoFirstLevel:
                     path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
                 if resid_epochs:
                     path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
+                print('Saving: ' + op.join(path_evo, analysis_name + '_seqID' + str(seqID) + '_cond' + str(1) + '-ave.fif'))
                 evokeds[0].save(op.join(path_evo, analysis_name + '_seqID' + str(seqID) + '_cond' + str(1) + '-ave.fif'))
+                print('Saving: ' + op.join(path_evo, analysis_name + '_seqID' + str(seqID) + '_cond' + str(2) + '-ave.fif'))
                 evokeds[1].save(op.join(path_evo, analysis_name + '_seqID' + str(seqID) + '_cond' + str(2) + '-ave.fif'))
                 # Store contrast for the subject & seqID (cond1 - cond2)
                 allsubs_contrast_data['Seq' + str(seqID)].append(mne.combine_evoked([evokeds[0], -evokeds[1]], 'equal'))
@@ -198,9 +207,9 @@ if DoSecondLevel:
               + analysis_name + '\n' + cond_filters[0])
         print('vs.\n' + cond_filters[1] + '\n#=====================================================================#\n')
         if resid_epochs:
-            results_path = op.join(config.result_path, 'Contrasts_tests', resid_epochs_type, analysis_name, 'Signals')
+            results_path = op.join(config.result_path, 'Paired_contrasts', analysis_name, 'TP_corrected_data', 'Signals')
         else:
-            results_path = op.join(config.result_path, 'Contrasts_tests', analysis_name, 'Signals')
+            results_path = op.join(config.result_path, 'Paired_contrasts', analysis_name, 'Original_data', 'Signals')
         if use_baseline:
             results_path = results_path + op.sep + 'With_baseline_correction'
         utils.create_folder(results_path)
@@ -216,7 +225,7 @@ if DoSecondLevel:
         threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
         p_threshold = 0.05
         tmin = 0.000  # timewindow to test (crop data)
-        tmax = 0.600  # timewindow to test (crop data)
+        tmax = 0.500  # timewindow to test (crop data)
 
         # ==== For each seqID === #
         for seqID in range(1, 8):
@@ -242,7 +251,7 @@ if DoSecondLevel:
                 # PLOT CLUSTERS
                 if len(good_cluster_inds) > 0:
                     figname_initial = results_path + op.sep + analysis_name + '_seq' + str(seqID) + '_stats_' + ch_type
-                    stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial, filter_smooth=True)
+                    stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial, filter_smooth=False)
 
                 # =========================================================== #
                 # ==========  cluster evoked data plot
@@ -255,52 +264,52 @@ if DoSecondLevel:
                     else:
                         evoked_reg, path_evo = evoked_funcs.load_evoked(subject='all', filter_name=analysis_name + '_seqID' + str(seqID), filter_not='delta', cleaned=True, evoked_resid=False)
 
-                    # ---------------------------------------------------------- #
-                    # TMP SANITY CHECK: COND1/COND2/DELTA
-                    cinfo = cluster_info[0]
-                    ch_inds = cinfo['channels_cluster']
-                    k = list(evoked_reg.keys())
-                    k1 = list(evoked_reg[k[0]])
-                    k2 = list(evoked_reg[k[1]])
-                    group_data_seq = []
-                    for nn in range(len(k1)):
-                        sub_data = k1[nn][0].copy()
-                        if ch_type == 'eeg':
-                            sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
-                        elif ch_type == 'mag':
-                            sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
-                        elif ch_type == 'grad':
-                            sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
-                        group_data_seq.append(sub_data[ch_inds].mean(axis=0))
-                    meank1 = np.mean(group_data_seq, axis=0)
-                    # meank1 = savgol_filter(meank1, 11, 3)
-                    group_data_seq = []
-                    for nn in range(len(k2)):
-                        sub_data = k2[nn][0].copy()
-                        if ch_type == 'eeg':
-                            sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
-                        elif ch_type == 'mag':
-                            sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
-                        elif ch_type == 'grad':
-                            sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
-                        group_data_seq.append(sub_data[ch_inds].mean(axis=0))
-                    meank2 = np.mean(group_data_seq, axis=0)
-                    # meank2 = savgol_filter(meank2, 11, 3)
-                    fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-                    plt.plot(k1[0][0].times, meank1)
-                    plt.plot(k1[0][0].times, meank2)
-                    plt.savefig('tmpfig1')
-                    fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-                    plt.plot(k1[0][0].times, meank1-meank2)
-                    plt.xlim([0.0, 0.50])
-                    plt.savefig('tmpfig2')
-                    plt.close('all')
-                    # ---------------------------------------------------------- #
+                    # # ---------------------------------------------------------- #
+                    # # TMP SANITY CHECK: COND1/COND2/DELTA
+                    # cinfo = cluster_info[0]
+                    # ch_inds = cinfo['channels_cluster']
+                    # k = list(evoked_reg.keys())
+                    # k1 = list(evoked_reg[k[0]])
+                    # k2 = list(evoked_reg[k[1]])
+                    # group_data_seq = []
+                    # for nn in range(len(k1)):
+                    #     sub_data = k1[nn][0].copy()
+                    #     if ch_type == 'eeg':
+                    #         sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
+                    #     elif ch_type == 'mag':
+                    #         sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
+                    #     elif ch_type == 'grad':
+                    #         sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
+                    #     group_data_seq.append(sub_data[ch_inds].mean(axis=0))
+                    # meank1 = np.mean(group_data_seq, axis=0)
+                    # # meank1 = savgol_filter(meank1, 11, 3)
+                    # group_data_seq = []
+                    # for nn in range(len(k2)):
+                    #     sub_data = k2[nn][0].copy()
+                    #     if ch_type == 'eeg':
+                    #         sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
+                    #     elif ch_type == 'mag':
+                    #         sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
+                    #     elif ch_type == 'grad':
+                    #         sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
+                    #     group_data_seq.append(sub_data[ch_inds].mean(axis=0))
+                    # meank2 = np.mean(group_data_seq, axis=0)
+                    # # meank2 = savgol_filter(meank2, 11, 3)
+                    # fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
+                    # plt.plot(k1[0][0].times, meank1)
+                    # plt.plot(k1[0][0].times, meank2)
+                    # plt.savefig('tmpfig1')
+                    # fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
+                    # plt.plot(k1[0][0].times, meank1-meank2)
+                    # plt.xlim([0.0, 0.50])
+                    # plt.savefig('tmpfig2')
+                    # plt.close('all')
+                    # # ---------------------------------------------------------- #
 
                     for i_clu, clu_idx in enumerate(good_cluster_inds):
                         cinfo = cluster_info[i_clu]
                         # ----------------- PLOT ----------------- #
-                        stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_seq' + str(seqID), filter_smooth=True)
+                        stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_seq' + str(seqID), filter_smooth=False)
                         fig_name = results_path + op.sep + analysis_name + '_seq' + str(seqID) + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.png'
                         print('Saving ' + fig_name)
                         plt.savefig(fig_name, dpi=300)
@@ -328,7 +337,7 @@ if DoSecondLevel:
             # PLOT CLUSTERS
             if len(good_cluster_inds) > 0:
                 figname_initial = results_path + op.sep + analysis_name + '_allseq_stats_' + ch_type
-                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial, filter_smooth=True)
+                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=analysis_name, figname_initial=figname_initial, filter_smooth=False)
 
             # =========================================================== #
             # ==========  cluster evoked data plot
@@ -344,7 +353,7 @@ if DoSecondLevel:
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     # ----------------- PLOT ----------------- #
-                    stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_allseq', filter_smooth=True)
+                    stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_allseq', filter_smooth=False)
                     fig_name = results_path + op.sep + analysis_name + '_allseq' + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.png'
                     print('Saving ' + fig_name)
                     plt.savefig(fig_name, dpi=300)

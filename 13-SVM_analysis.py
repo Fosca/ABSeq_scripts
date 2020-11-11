@@ -18,8 +18,10 @@ def SVM_analysis(subject):
 SVM_analysis('sub16-ma_190185')
 
 def SVM_features(subject):
+
     list_features = ['Identity','RepeatAlter','ChunkNumber','WithinChunkPosition','WithinChunkPositionReverse',
                      'ChunkDepth','OpenedChunks','ChunkSize','ChunkBeginning','ChunkEnd']
+    
     for feature_name in list_features:
         score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, load_residuals_regression=False)
         save_path = config.SVM_path+subject + '/feature_decoding/'

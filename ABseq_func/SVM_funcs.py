@@ -35,7 +35,7 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, decim = 10):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 4):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -44,7 +44,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, dec
 
     SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-
+    epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
     epochs.metadata = metadata
 
@@ -57,9 +57,25 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, dec
 
     print('-- The values of the metadata for the feature %s are : '%feature_name)
     print(np.unique(epochs.metadata[feature_name].values))
-    epochs.events[:, 2] = epochs.metadata[feature_name].values
-    epochs.event_id = {'%i'%i:i for i in np.unique(epochs.events[:, 2])}
-    epochs.equalize_event_counts(epochs.event_id)
+
+    if list_sequences is not None:
+        epochs = []
+        for seqID in list_sequences:
+            epo = epochs['SequenceID == "' + str(seqID)]
+            epo.events[:, 2] = epo.metadata[feature_name].values
+            epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
+            epo.equalize_event_counts(epo.event_id)
+            #epo.events[:,2] = seqID
+            #epo.event_id = {str(seqID): seqID}
+            epochs.append(epo)
+        epochs = mne.concatenate_epochs(epochs)
+        # to make sure that the same number of events come from each sequence
+        #epochs.equalize_event_counts(epochs.event_id)
+
+    else:
+        epochs.events[:, 2] = epochs.metadata[feature_name].values
+        epochs.event_id = {'%i'%i:i for i in np.unique(epochs.events[:, 2])}
+        epochs.equalize_event_counts(epochs.event_id)
 
     if decim is not None:
         epochs.decimate(decim)
@@ -156,7 +172,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False):
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject,load_residuals_regression=False):
+def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score'):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -196,7 +212,10 @@ def GAT_SVM(subject,load_residuals_regression=False):
                 inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
                         epochs_sens_test.metadata['ViolationOrNot'].values == 1))[0]
                 X = epochs_sens_test.get_data()
-                GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
+                if score_or_decisionfunc == 'score':
+                    GAT_each_epoch = SVM_sens[fold_number].predict(X)
+                else:
+                    GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
                 GAT_seq[fold_number, :, :] = np.mean(
                     GAT_each_epoch[inds_seq_noviol,:,:],axis=0) - np.mean(
                     GAT_each_epoch[inds_seq_viol,:,:],axis=0)
@@ -214,11 +233,14 @@ def GAT_SVM(subject,load_residuals_regression=False):
 
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
-    np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
+    if score_or_decisionfunc== 'score':
+        np.save(op.join(saving_directory, suf+'GAT_results_score.npy'), GAT_results)
+    else:
+        np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM_4pos(subject,load_residuals_regression=False):
+def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc = 'score'):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately and for each violation position.
@@ -255,7 +277,10 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
                 X = epochs_sens_test.get_data()
-                GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
+                if score_or_decisionfunc =='score':
+                    GAT_each_epoch = SVM_sens[fold_number].predict(X)
+                else:
+                    GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
                 for nn, pos_viol in enumerate(violpos_list):
                     print("===== RUNNING for SEQ %i and position violation %i"%(k,nn))
                     inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
@@ -281,7 +306,10 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False):
 
     print('coucou3')
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
-    np.save(op.join(saving_directory, suf+'GAT_results_4pos.npy'), GAT_results)
+    if score_or_decisionfunc == 'score':
+        np.save(op.join(saving_directory, suf+'GAT_results_4pos_score.npy'), GAT_results)
+    else:
+        np.save(op.join(saving_directory, suf+'GAT_results_4pos.npy'), GAT_results)
     print(" ======== job done ============")
 
 # ______________________________________________________________________________________________________________________
@@ -321,7 +349,7 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
     return X_transform, y_violornot, times
 
 # ______________________________________________________________________________________________________________________
-def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=None, vmax=None):
+def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=-0.7, vmax=0.7):
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
@@ -423,6 +451,8 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
             data_for_epoch_object = np.zeros(
                 (SVM_results[sens]['epochs'].get_data().shape[0], epochs_1st_sens.get_data().shape[2]))
 
+        print("The shape of data_for_epoch_object is ")
+        print(data_for_epoch_object.shape)
         # ===============================
         counter = 0
         for fold_number in range(4):
@@ -464,7 +494,11 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     else:
                         print(
                             " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=-1)
+                        print(SVM_to_data.shape)
+                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=0)
+                        print(epochs_1st_sens_m_filtered_data.shape)
+                        print('This was the shape of epochs_1st_sens_m_filtered_data')
+
                         data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
                         metadata_m = epochs_1st_sens_m.metadata
                         metadata_m['SVM_filter_min_datapoint'] = np.min(points)
@@ -473,7 +507,6 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                         metadata_m['SVM_filter_tmax_window'] = times[-1]
                         data_frame_meta = data_frame_meta.append(metadata_m)
                         counter += 1
-
 
                 else:
                     print('========================================================================================================================================')
