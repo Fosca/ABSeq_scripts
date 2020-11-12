@@ -4,6 +4,9 @@ from mne.parallel import parallel_func
 import numpy as np
 # make less parallel runs to limit memory usage
 # N_JOBS = max(config.N_JOBS // 4, 1)
+
+
+
 N_JOBS = 2  # config.N_JOBS
 #
 config.subjects_list = ['sub16-ma_190185']

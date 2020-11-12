@@ -127,19 +127,21 @@ def SVM_analysis(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
+def fosca():
+    print('joli poulpe')
 
 def SVM_1(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject)
+    SVM_funcs.generate_SVM_all_sequences(subject,load_residuals_regression=True)
 
 def SVM_2(subject):
-    SVM_funcs.GAT_SVM_4pos(subject)
+    SVM_funcs.GAT_SVM_4pos(subject,load_residuals_regression=True)
 
 def SVM_3(subject):
-    SVM_funcs.GAT_SVM(subject)
+    SVM_funcs.GAT_SVM(subject,load_residuals_regression=True)
 
 
 def SVM_features(subject):
-    list_features = ['Identity', 'RepeatAlter','WithinChunkPosition']
+    list_features = ['StimID', 'RepeatAlter','WithinChunkPosition']
     list_seq = [[2,3,4,5,6,7],[3,4,5,6,7],[4,5,6]]
 
     for ii,feature_name in enumerate(list_features):

@@ -39,7 +39,7 @@ elif os.name == 'posix':
     if platform == "linux" or platform == "linux2":
         root_path = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/'
     elif platform == "darwin":
-        root_path = '/Volumes/COUCOU_CFC/ABSeq/'
+        root_path = '//neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/'
 
 study_path = os.path.join(root_path, 'data') + os.path.sep
 result_path = os.path.join(root_path, 'results') + os.path.sep
@@ -58,7 +58,7 @@ linear_models_path = os.path.join(result_path, 'linear_models') + os.path.sep
 
 subjects_dir = os.path.join(study_path, 'subjects')
 fig_path = os.path.join(root_path, 'figures')
-
+local_fig_path = os.path.join("/Users/fosca/Desktop/coucou/")
 # ``meg_dir`` : str
 #   The ``meg_dir`` contains the MEG data in subfolders
 #   named my_study_path/MEG/my_subject/

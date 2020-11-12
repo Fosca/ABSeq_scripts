@@ -42,43 +42,54 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     :return:
     """
 
-    SVM_dec = SVM_decoder()
+    SVM_dec = SVM_funcs.SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-    epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
+    if decim is not None:
+        epochs.decimate(decim)
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
     epochs.metadata = metadata
-
+    epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
 
     suf = ''
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
         suf = 'resid_'
 
-
-    print('-- The values of the metadata for the feature %s are : '%feature_name)
+    print('-- The values of the metadata for the feature %s are : ' % feature_name)
     print(np.unique(epochs.metadata[feature_name].values))
 
     if list_sequences is not None:
-        epochs = []
+        # concatenate the epochs belonging to the different sequences from the list_sequences
+        epochs_concat1 = []
+        # count the number of epochs that contribute per sequence in order later to balance this
+        n_epochs = []
         for seqID in list_sequences:
-            epo = epochs['SequenceID == "' + str(seqID)]
+            print(seqID)
+            epo = epochs["SequenceID == " + str(seqID)]
             epo.events[:, 2] = epo.metadata[feature_name].values
             epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
             epo.equalize_event_counts(epo.event_id)
-            #epo.events[:,2] = seqID
-            #epo.event_id = {str(seqID): seqID}
-            epochs.append(epo)
-        epochs = mne.concatenate_epochs(epochs)
-        # to make sure that the same number of events come from each sequence
-        #epochs.equalize_event_counts(epochs.event_id)
+            n_epochs.append(len(epo))
+            print("---- there are %i epochs that contribute from sequence %i -----" % (len(epo), seqID))
+            epochs_concat1.append(epo)
+        # now determine the minimum number of epochs that come from a sequence
+        epochs_concat2 = []
+        n_min = np.min(n_epochs)
+        n_max = np.max(n_epochs)
+        if n_min != n_max:
+            for k in range(len(list_sequences)):
+                n_epo_seq = len(epochs_concat1[k])
+                inds = np.random.permutation(n_epo_seq)
+                inds = inds[:n_min]
+                epochs_concat2.append(mne.concatenate_epochs([epochs_concat1[k][i] for i in inds]))
+        else:
+            epochs_concat2 = epochs_concat1
 
+        epochs = mne.concatenate_epochs(epochs_concat2)
     else:
         epochs.events[:, 2] = epochs.metadata[feature_name].values
-        epochs.event_id = {'%i'%i:i for i in np.unique(epochs.events[:, 2])}
+        epochs.event_id = {'%i' % i: i for i in np.unique(epochs.events[:, 2])}
         epochs.equalize_event_counts(epochs.event_id)
-
-    if decim is not None:
-        epochs.decimate(decim)
 
     kf = KFold(n_splits=4)
 
@@ -89,12 +100,11 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
         print("TRAIN:", train_index, "TEST:", test_index)
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        SVM_dec.fit(X_train,y_train)
-        scores.append(SVM_dec.score(X_test,y_test))
+        SVM_dec.fit(X_train, y_train)
+        scores.append(SVM_dec.score(X_test, y_test))
 
     score = np.mean(scores, axis=0)
     times = epochs.times
-
     # then use plot_GAT_SVM to plot the gat matrix
 
     return score, times

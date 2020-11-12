@@ -154,13 +154,13 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
             metadata = epochs_items_cleaned.metadata
     else:
         metadata_path = os.path.join(meg_subject_dir,'metadata_item.pkl')
-        if op.exists(metadata_path):
-            with open(metadata_path,'rb') as fid:
-                metadata = pickle.load(fid)
-        else:
-            metadata = convert_csv_info_to_metadata(run_info_subject_dir)
-            metadata = pd.DataFrame.from_dict(metadata, orient='index')
-            metadata = pd.DataFrame.transpose(metadata)
+        # if op.exists(metadata_path):
+        #     with open(metadata_path,'rb') as fid:
+        #         metadata = pickle.load(fid)
+        # else:
+        metadata = convert_csv_info_to_metadata(run_info_subject_dir)
+        metadata = pd.DataFrame.from_dict(metadata, orient='index')
+        metadata = pd.DataFrame.transpose(metadata)
 
     if new_field_name is not None:
         metadata[new_field_name] = new_field_values
