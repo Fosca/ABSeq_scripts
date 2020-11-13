@@ -42,7 +42,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     :return:
     """
 
-    SVM_dec = SVM_funcs.SVM_decoder()
+    SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
     if decim is not None:
         epochs.decimate(decim)
