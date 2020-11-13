@@ -323,13 +323,13 @@ def load_epochs_items(subject, cleaned=True):
     return epochs
 
 
-def load_resid_epochs_items(subject, type='reg_repeataltern_surpriseOmegainfinity'):
-    print("Processing subject: %s" % subject)
-    meg_subject_dir = op.join(config.meg_dir, subject)
-    extension = subject + type + '-epo'
-    fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+def load_resid_epochs_items(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity'):
+
+    resid_path = op.join(config.result_path, 'linear_models', resid_epochs_type, subject)
+    fname_in = op.join(resid_path, 'residuals-epo.fif')
     print("Input: ", fname_in)
     epochs = mne.read_epochs(fname_in, preload=True)
+
     return epochs
 
 

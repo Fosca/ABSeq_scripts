@@ -243,7 +243,7 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
 
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
-    if score_or_decisionfunc== 'score':
+    if score_or_decisionfunc == 'score':
         np.save(op.join(saving_directory, suf+'GAT_results_score.npy'), GAT_results)
     else:
         np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
