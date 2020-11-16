@@ -64,10 +64,9 @@ for sens in ['eeg', 'mag', 'grad','all_chans']:
 # ___________________________________________________________________________
 
 # ===== LOAD DATA ===== #
-epochs_16_items_mag_test = []; epochs_16_items_grad_test = []; epochs_16_items_eeg_test = []
-epochs_16_items_mag_habituation = []; epochs_16_items_grad_habituation = []; epochs_16_items_eeg_habituation = []
-epochs_16_items_mag_test_window = []; epochs_16_items_grad_test_window = []; epochs_16_items_eeg_test_window = []
-epochs_16_items_mag_habituation_window = []; epochs_16_items_grad_habituation_window = []; epochs_16_items_eeg_habituation_window = []
+
+epochs_16_items_mag_test_window = []; epochs_16_items_grad_test_window = []; epochs_16_items_eeg_test_window = [];
+epochs_16_items_mag_habituation_window = []; epochs_16_items_grad_habituation_window = []; epochs_16_items_eeg_habituation_window = [];
 for subject in config.subjects_list:
     epochs_16_items_mag_test_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'mag_SVM_on_16_items_test_window-epo.fif')))
     epochs_16_items_grad_test_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'grad_SVM_on_16_items_test_window-epo.fif')))
@@ -79,32 +78,6 @@ for subject in config.subjects_list:
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')
 utils.create_folder(save_folder)
-
-# Figure with multiple EMS projected (different times)
-SVM_filter_times = [x / 1000 for x in range(100, 601, 100)]
-# NUM_COLORS = len(SVM_filter_times)
-# cm = plt.get_cmap('viridis')
-# colorslist = ([cm(1. * i / (NUM_COLORS-1)) for i in range(NUM_COLORS)])
-# epochs_list = {}
-# for sens in ['mag', 'grad', 'eeg']:
-#     if sens == 'mag':
-#         epochs_list['hab'] = epochs_16_items_mag_habituation
-#         epochs_list['test'] = epochs_16_items_mag_test
-#     elif sens == 'grad':
-#         epochs_list['hab'] = epochs_16_items_grad_habituation
-#         epochs_list['test'] = epochs_16_items_grad_test
-#     elif sens == 'eeg':
-#         epochs_list['hab'] = epochs_16_items_eeg_habituation
-#         epochs_list['test'] = epochs_16_items_eeg_test
-#     for seq_ID in range(1, 8):
-#         # "curve" figure  # UNCOMPLETE, TO DO WITH HAB TRIALS AND epochs_list NOW AS A DICT
-#         # EMS_filter_times = [x / 1000 for x in range(100, 601, 100)]
-#         # EMS_funcs.plot_EMS_projection_for_seqID(epochs_list, sensor_type=sens, seqID=seq_ID, EMS_filter_times=EMS_filter_times, color_mean=colorslist,
-#         #                                         save_path=op.join(save_folder,'Seq%i_%s_%i_%i_test.png' % (seq_ID, sens, min(EMS_filter_times) * 1000, max(EMS_filter_times) * 1000)))
-#         # "heatmap" figure
-#         SVM_filter_times = [x / 1000 for x in range(0, 701, 100)]
-#         SVM_funcs.plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type=sens, seqID=seq_ID, SVM_filter_times=SVM_filter_times,
-#                                                         save_path=op.join(save_folder, 'hm_Seq%i_%s_%i_%i.png' % (seq_ID, sens, min(SVM_filter_times)*1000, max(SVM_filter_times)*1000)))
 
 # Figure with only one EMS projected (average window)
 epochs_list = {}
