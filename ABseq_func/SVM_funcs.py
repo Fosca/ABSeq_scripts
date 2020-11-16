@@ -785,8 +785,8 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xYxxxYYYYxYYxxxY']
 
     if sensor_type == 'mag':
-        vmin = -5e-13
-        vmax = 5e-13
+        vmin = -1
+        vmax = 1
     elif sensor_type == 'grad':
         vmin = -1.8e-11
         vmax = 1.8e-11
@@ -805,13 +805,13 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         # Average data from habituation trials
         y_list = []
         data_mean = []
-        # for epochs in epochs_list['hab']:
-        #     epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-        #     y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
-        #     # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
-        #     # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
-        # mean_hab = np.mean(y_list, axis=0)
-        # data_mean.append(mean_hab)
+        for epochs in epochs_list['hab']:
+            epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
+            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
+            # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
+            # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
+        mean_hab = np.mean(y_list, axis=0)
+        data_mean.append(mean_hab)
 
         # Average data from other trials
         for viol_pos in violpos_list:
