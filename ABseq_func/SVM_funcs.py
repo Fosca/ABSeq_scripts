@@ -807,7 +807,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         data_mean = []
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).get_data()))
+            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
             # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean_hab = np.mean(y_list, axis=0)
@@ -819,7 +819,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
                     'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).get_data()))
+                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
             data_mean.append(mean)
@@ -831,7 +831,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             txt = seqtxtXY[n][xx]
             ax[n].text(250*(xx+1)-125, width*6+(width/3), txt, horizontalalignment='center', fontsize=16)
 
-        return data_mean
+        # return data_mean
         im = ax[n].imshow(data_mean, extent=[min(times)*1000, max(times)*1000, 0, 6*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
@@ -890,7 +890,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID)
                                    + '" and SVM_filter_time == "' + str(point_of_interest) + '"']
-            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).get_data()))
+            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
             # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean = np.mean(y_list, axis=0)
@@ -913,7 +913,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
                 epochs_subset = epochs['SequenceID == "' + str(seqID)
                                        + '" and SVM_filter_time == "' + str(point_of_interest)
                                        + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).get_data()))
+                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
                 # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
