@@ -787,12 +787,16 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     if sensor_type == 'mag':
         vmin = -1
         vmax = 1
+        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
     elif sensor_type == 'grad':
         vmin = -1.8e-11
         vmax = 1.8e-11
+        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
     elif sensor_type == 'eeg':
         vmin = -1e-5
         vmax = 1e-5
+        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
+
     n = 0
 
     for seqID in range(1, 8):
