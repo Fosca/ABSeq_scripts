@@ -530,6 +530,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         info = mne.create_info(['SVM'], epochs_1st_sens.info['sfreq'])
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
         epochs_proj_sens.metadata = data_frame_meta
+
         if window:
             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_test_window-epo.fif',overwrite=True)
         else:
@@ -626,9 +627,9 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
         epochs_proj_sens.metadata = data_frame_meta
         if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_filter_on_16_items_habituation_window-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
         else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_filter_on_16_items_habituation-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
 
     return True
 
@@ -733,7 +734,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
         y_list = []
         for epochs in epochs_list['test']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='EMS').data))
+            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
         mean = np.mean(y_list, axis=0)
         ub = mean + sem(y_list, axis=0)
         lb = mean - sem(y_list, axis=0)
@@ -806,7 +807,8 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         data_mean = []
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
+            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).data))
+            # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean_hab = np.mean(y_list, axis=0)
         data_mean.append(mean_hab)
@@ -817,7 +819,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
                     'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
+                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).data))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
             data_mean.append(mean)
@@ -886,7 +888,8 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID)
                                    + '" and SVM_filter_time == "' + str(point_of_interest) + '"']
-            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
+            y_list.append(np.squeeze(epochs_subset.savgol_filter(20).data))
+            # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean = np.mean(y_list, axis=0)
         mean_all_SVM_times = np.vstack([mean_all_SVM_times, mean])
@@ -908,7 +911,8 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
                 epochs_subset = epochs['SequenceID == "' + str(seqID)
                                        + '" and SVM_filter_time == "' + str(point_of_interest)
                                        + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
+                y_list.append(np.squeeze(epochs_subset.savgol_filter(20).data))
+                # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
             mean_all_SVM_times = np.vstack([mean_all_SVM_times, mean])
