@@ -141,8 +141,8 @@ def SVM_3(subject):
 
 
 def SVM_features(subject):
-    list_features = ['StimID', 'RepeatAlter','WithinChunkPosition']
-    list_seq = [[2,3,4,5,6,7],[3,4,5,6,7],[4,5,6]]
+    list_features = ['RepeatAlter','StimID','WithinChunkPosition']
+    list_seq = [[3,4,5,6,7],[2,3,4,5,6,7],[4,5,6]]
 
     for ii,feature_name in enumerate(list_features):
         score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)

@@ -35,7 +35,7 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 4):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 10):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
