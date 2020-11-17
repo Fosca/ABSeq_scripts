@@ -589,8 +589,12 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
             for mm, point_of_interest in enumerate(points):
                 epochs_1st_sens_filtered_data_4folds = []
                 for fold_number in range(4):
-                    epochs_1st_sens_filtered_data_4folds.append(np.dot(SVM_sens[fold_number].filters_[:, point_of_interest],data_1st_el_m.T))
-                # ==== now that we projected the 4 filters, we can average over the 4 folds ================
+                    SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
+                    print("The shape of SVM_to_data is ")
+                    print(SVM_to_data.shape)
+                    epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
+
+                    # ==== now that we projected the 4 filters, we can average over the 4 folds ================
                 epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds,axis=0).T
                 data_for_epoch_object[n_habituation*mm:n_habituation*(mm+1),:] = epochs_1st_sens_filtered_data
                 metadata_m = epochs_1st_sens.metadata
@@ -600,13 +604,19 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         else:
             epochs_1st_sens_filtered_data_4folds = []
             for fold_number in range(4):
-                filter_fold = np.mean(SVM_sens[fold_number].filters_[:, np.min(points):np.max(points)],axis=-1)
+                SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
+                print("The shape of SVM_to_data is ")
+                print(SVM_to_data.shape)
+                print(
+                    " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                 epochs_1st_sens_filtered_data_4folds.append(
-                    np.dot(filter_fold, data_1st_el_m.T))
+                    np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0))
+
             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
             data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
 
             metadata = epochs_1st_sens.metadata
+            print("==== the length of the epochs_1st_sens.metadata to append is %i ===="%len(metadata))
             metadata['SVM_filter_min_datapoint'] = np.min(points)
             metadata['SVM_filter_max_datapoint'] = np.max(points)
             metadata['SVM_filter_tmin_window'] = times[0]
@@ -616,6 +626,10 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         dat = np.expand_dims(data_for_epoch_object, axis=1)
         info = mne.create_info(['SVM'], epochs_1st_sens.info['sfreq'])
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
+        print("==== the total number of epochs is %i ====" % len(epochs_proj_sens))
+        print("==== the total number of metadata fields is %i ====" % len(data_frame_meta))
+
+
         epochs_proj_sens.metadata = data_frame_meta
         if window:
             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
