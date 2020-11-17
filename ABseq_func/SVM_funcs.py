@@ -49,7 +49,8 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
     epochs.metadata = metadata
     epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
-
+    # remove the stim channel from decoding
+    epochs.pick_types(meg=True,eeg=True,stim=False)
     suf = ''
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
@@ -64,8 +65,9 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
         # count the number of epochs that contribute per sequence in order later to balance this
         n_epochs = []
         for seqID in list_sequences:
-            print(seqID)
-            epo = epochs["SequenceID == " + str(seqID)]
+            epo = epochs["SequenceID == " + str(seqID)].copy()
+            filter_epochs = np.where(1-np.isnan(epo.metadata[feature_name].values))[0]
+            epo = epo[filter_epochs]
             epo.events[:, 2] = epo.metadata[feature_name].values
             epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
             epo.equalize_event_counts(epo.event_id)
@@ -122,6 +124,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False):
     """
 
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+    epochs.pick_types(meg=True,eeg=True,stim=False)
 
     suf = ''
     if load_residuals_regression:
