@@ -610,10 +610,10 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                 print(
                     " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                 epochs_1st_sens_filtered_data_4folds.append(
-                    np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0))
+                    np.mean(SVM_to_data[:,np.min(points):np.max(points), :], axis=1))
 
             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
-            data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
+            data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0)
 
             metadata = epochs_1st_sens.metadata
             print("==== the length of the epochs_1st_sens.metadata to append is %i ===="%len(metadata))
