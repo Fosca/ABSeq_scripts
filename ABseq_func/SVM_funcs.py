@@ -363,7 +363,7 @@ def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmi
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
-    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+    plt.imshow(GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
     # -----# ADD LINES ?
     plt.axvline(0, linestyle='-', color='black', linewidth=1)
     plt.axhline(0, linestyle='-', color='black', linewidth=1)
