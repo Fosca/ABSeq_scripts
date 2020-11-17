@@ -538,7 +538,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     return True
 
-# ______________________________________________________________________________________________________________________
+
 def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
@@ -585,19 +585,11 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
         # ========== les 4 filtres peuvent etre appliquees aux sequences d habituation sans souci, selection en fonction des indices ========
         data_1st_el_m = epochs_1st_sens.get_data()
-
-
         if not window:
             for mm, point_of_interest in enumerate(points):
                 epochs_1st_sens_filtered_data_4folds = []
                 for fold_number in range(4):
-                    SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
-                    print("The shape of SVM_to_data is ")
-                    print(SVM_to_data.shape)
-                    print(
-                        " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-                    epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
-                    # epochs_1st_sens_filtered_data_4folds.append(np.dot(SVM_sens[fold_number].filters_[:, point_of_interest],data_1st_el_m.T))
+                    epochs_1st_sens_filtered_data_4folds.append(np.dot(SVM_sens[fold_number].filters_[:, point_of_interest],data_1st_el_m.T))
                 # ==== now that we projected the 4 filters, we can average over the 4 folds ================
                 epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds,axis=0).T
                 data_for_epoch_object[n_habituation*mm:n_habituation*(mm+1),:] = epochs_1st_sens_filtered_data
@@ -608,10 +600,9 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         else:
             epochs_1st_sens_filtered_data_4folds = []
             for fold_number in range(4):
-                SVM_to_data = SVM_sens[fold_number].decision_function(data_1st_el_m)
-                print(
-                    " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points), :] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-                epochs_1st_sens_filtered_data_4folds.append(np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0))
+                filter_fold = np.mean(SVM_sens[fold_number].filters_[:, np.min(points):np.max(points)],axis=-1)
+                epochs_1st_sens_filtered_data_4folds.append(
+                    np.dot(filter_fold, data_1st_el_m.T))
             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
             data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
 
@@ -632,6 +623,106 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
 
     return True
+
+
+#
+# # ______________________________________________________________________________________________________________________
+# def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False):
+#     """
+#     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
+#     trials according to the folds.
+#     :param subject:
+#     :param times:
+#     :return:
+#     """
+#
+#     # ==== load the ems results ==============
+#     SVM_results_path = op.join(config.SVM_path, subject)
+#     SVM_results = np.load(op.join(SVM_results_path, 'SVM_results.npy'), allow_pickle=True).item()
+#
+#     # ==== define the paths ==============
+#     meg_subject_dir = op.join(config.meg_dir, subject)
+#     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
+#     extension = subject + '_1st_element_epo'
+#     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+#     print("Input: ", fname_in)
+#
+#     # ====== loading the 16 items sequences epoched on the first element ===================
+#     epochs_1st_element = mne.read_epochs(fname_in, preload=True)
+#
+#     # select the habituation trials (i.e. the 10 first ones)
+#
+#     epochs_1st_element= epochs_1st_element["TrialNumber < 11"]
+#     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+#                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+#                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False)}
+#
+#     # ====== compute the projections for each of the 3 types of sensors ===================
+#     for sens in ['mag', 'grad', 'eeg']:
+#
+#         SVM_sens = SVM_results[sens]['SVM']
+#         points = SVM_results[sens]['epochs'][0].time_as_index(times)
+#
+#         epochs_1st_sens = epochs_1st[sens]
+#
+#         # = we initialize the metadata
+#         data_frame_meta = pd.DataFrame([])
+#         n_habituation = epochs_1st_element.get_data().shape[0]
+#         data_for_epoch_object = np.zeros(
+#             (n_habituation* len(times), epochs_1st_sens.get_data().shape[2]))
+#         if window:
+#             data_for_epoch_object = np.zeros(
+#                 (n_habituation, epochs_1st_sens.get_data().shape[2]))
+#
+#         # ========== les 4 filtres peuvent etre appliquees aux sequences d habituation sans souci, selection en fonction des indices ========
+#         data_1st_el_m = epochs_1st_sens.get_data()
+#
+#
+#         if not window:
+#             for mm, point_of_interest in enumerate(points):
+#                 epochs_1st_sens_filtered_data_4folds = []
+#                 for fold_number in range(4):
+#                     SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
+#                     print("The shape of SVM_to_data is ")
+#                     print(SVM_to_data.shape)
+#                     print(
+#                         " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
+#                     epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
+#                     # epochs_1st_sens_filtered_data_4folds.append(np.dot(SVM_sens[fold_number].filters_[:, point_of_interest],data_1st_el_m.T))
+#                 # ==== now that we projected the 4 filters, we can average over the 4 folds ================
+#                 epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds,axis=0).T
+#                 data_for_epoch_object[n_habituation*mm:n_habituation*(mm+1),:] = epochs_1st_sens_filtered_data
+#                 metadata_m = epochs_1st_sens.metadata
+#                 metadata_m['SVM_filter_datapoint'] = int(point_of_interest)
+#                 metadata_m['SVM_filter_time'] = times[mm]
+#                 data_frame_meta = data_frame_meta.append(metadata_m)
+#         else:
+#             epochs_1st_sens_filtered_data_4folds = []
+#             for fold_number in range(4):
+#                 SVM_to_data = SVM_sens[fold_number].decision_function(data_1st_el_m)
+#                 print(
+#                     " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points), :] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
+#                 epochs_1st_sens_filtered_data_4folds.append(np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0))
+#             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
+#             data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
+#
+#             metadata = epochs_1st_sens.metadata
+#             metadata['SVM_filter_min_datapoint'] = np.min(points)
+#             metadata['SVM_filter_max_datapoint'] = np.max(points)
+#             metadata['SVM_filter_tmin_window'] = times[0]
+#             metadata['SVM_filter_tmax_window'] = times[-1]
+#             data_frame_meta = data_frame_meta.append(metadata)
+#
+#         dat = np.expand_dims(data_for_epoch_object, axis=1)
+#         info = mne.create_info(['SVM'], epochs_1st_sens.info['sfreq'])
+#         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
+#         epochs_proj_sens.metadata = data_frame_meta
+#         if window:
+#             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
+#         else:
+#             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
+#
+#     return True
 
 # ______________________________________________________________________________________________________________________
 def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None, color_mean=None, plot_noviolation=True):
