@@ -7,8 +7,6 @@ import config
 import subprocess
 import MarkovModel_Python
 import numpy as np
-
-
 def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, queue='Unicog_long'):
     import subprocess
     import os, sys, glob
@@ -126,7 +124,7 @@ def SVM_analysis(subject):
     # SVM_funcs.generate_SVM_all_sequences(subject)
     # SVM_funcs.GAT_SVM(subject)
     # SVM_funcs.GAT_SVM_4pos(subject)
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
+    # SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
@@ -147,8 +145,8 @@ def SVM_3(subject):
 
 
 def SVM_features(subject):
-    list_features = ['StimID', 'RepeatAlter', 'WithinChunkPosition']
-    list_seq = [[2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7], [4, 5, 6]]
+    list_features = ['RepeatAlter','StimID','WithinChunkPosition']
+    list_seq = [[3,4,5,6,7],[2,3,4,5,6,7],[4,5,6]]
 
     for ii, feature_name in enumerate(list_features):
         score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
