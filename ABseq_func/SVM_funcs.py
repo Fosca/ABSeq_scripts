@@ -567,10 +567,12 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     epochs_1st_element= epochs_1st_element["TrialNumber < 11"]
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False)}
+                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['mag', 'grad', 'eeg']:
+    for sens in ['all_chans']:
+    # for sens in ['all_chans','mag', 'grad', 'eeg']:
 
         SVM_sens = SVM_results[sens]['SVM']
         points = SVM_results[sens]['epochs'][0].time_as_index(times)

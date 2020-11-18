@@ -5,41 +5,9 @@ import matplotlib.pyplot as plt
 from ABseq_func import *
 import mne
 import os.path as op
-import os
-config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
-                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-                        'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110','sub17-mt_170249', 'sub18-eo_190576',
-                        'sub19-mg_190180']
 
-# ___________________________________________________________________________
-# ======= plot the GAT for all the sequences apart and together =============
-# ___________________________________________________________________________
 
-scores_on = True
-residual_analysis = True
-for scores in [True,False]:
-    for residual_analysis in [True,False]=
-        suf = ''
-        score_suff = ''
-        if residual_analysis:
-                suf = 'resid_'
-        if scores_on:
-            score_suff = '_score'
-        plot_all_subjects_results_SVM(suf+'GAT_results'+score_suff+'.npy',config.subjects_list,suf+'GAT_results'+score_suff+'.npy',plot_per_sequence=True,vmin=-0.7,vmax=0.7)
 
-# ___________________________________________________________________________
-# ======= plot the GAT for the different features =============
-# ___________________________________________________________________________
-vmin = [0.4,0.4,0.15]
-vmax = [0.6,0.6,0.35]
-config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
-                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-                        'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
-                        'sub19-mg_190180']
-
-for ii,name in enumerate(['RepeatAlter_score_dict','StimID_score_dict','WithinChunkPosition_score_dict']):
-    anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=0,vmax=1):
@@ -82,6 +50,45 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                     plt.close('all')
 
         SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+
+
+
+
+
+config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
+                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+                        'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110','sub17-mt_170249', 'sub18-eo_190576',
+                        'sub19-mg_190180']
+
+# ___________________________________________________________________________
+# ======= plot the GAT for all the sequences apart and together =============
+# ___________________________________________________________________________
+
+scores_on = True
+residual_analysis = True
+for scores in [True,False]:
+    for residual_analysis in [True,False]=
+        suf = ''
+        score_suff = ''
+        if residual_analysis:
+                suf = 'resid_'
+        if scores_on:
+            score_suff = '_score'
+        plot_all_subjects_results_SVM(suf+'GAT_results'+score_suff+'.npy',config.subjects_list,suf+'GAT_results'+score_suff+'.npy',plot_per_sequence=True,vmin=-0.7,vmax=0.7)
+
+# ___________________________________________________________________________
+# ======= plot the GAT for the different features =============
+# ___________________________________________________________________________
+vmin = [0.4,0.4,0.15]
+vmax = [0.6,0.6,0.35]
+config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
+                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+                        'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
+                        'sub19-mg_190180']
+
+for ii,name in enumerate(['RepeatAlter_score_dict','StimID_score_dict','WithinChunkPosition_score_dict']):
+    anal_name = 'feature_decoding/'+name
+    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 
