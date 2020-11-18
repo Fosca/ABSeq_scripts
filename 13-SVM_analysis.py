@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from ABseq_func import *
 import mne
 import os.path as op
+from importlib import reload
 
 
 
@@ -16,49 +17,64 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 
     for sens in sensors:
         print("==== running the plotting for sensor type %s"%sens)
+        count = 0
         for subject in subjects_list:
             SVM_path = op.join(config.SVM_path, subject)
-            GAT_results = np.load(op.join(SVM_path,analysis_name+'.npy'), allow_pickle=True).item()
-            print(op.join(SVM_path, analysis_name+'.npy'))
-            times = GAT_results['times']
-            GAT_results = GAT_results[score_field]
-            fig_path = op.join(config.fig_path, 'SVM', folder_name)
-            sub_fig_path = op.join(fig_path,subject)
-            utils.create_folder(sub_fig_path)
-            if plot_per_sequence:
+            GAT_path = op.join(SVM_path,analysis_name+'.npy')
+            if op.exists(GAT_path):
+                count +=1
 
-                if not GAT_sens_all[sens]:  # initialize the keys and empty lists only the first time
-                    GAT_sens_all[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
-                    GAT_sens_all[sens]['average_all_sequences'] = []
-                for key in ['SeqID_%i' % i for i in range(1, 8)]:
-                    GAT_sens_all[sens][key].append(GAT_results[sens][key])
-                    # ================ Plot & save each subject / each sequence figures ???
-                    if plot_individual_subjects:
-                            SVM_funcs.plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=analysis_name); plt.close('all')
-                # ================ Plot & save each subject / average of all sequences figures ???
-                GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
-                SVM_funcs.plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=suf+'GAT_all_seq'+score_suff+'_',vmin=vmin,vmax=vmax)
-                plt.close('all')
-
-            else:
-                GAT_sens_all[sens].append(GAT_results)
-                if plot_individual_subjects:
-                    print('plotting for subject:%s'%subject)
-                    print(sub_fig_path)
-                    SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
-                                           figname=fig_name,vmin=vmin,vmax=vmax)
+                GAT_results = np.load(GAT_path, allow_pickle=True).item()
+                print(op.join(SVM_path, analysis_name+'.npy'))
+                times = GAT_results['times']
+                GAT_results = GAT_results[score_field]
+                fig_path = op.join(config.fig_path, 'SVM', folder_name)
+                sub_fig_path = op.join(fig_path,subject)
+                utils.create_folder(sub_fig_path)
+                if plot_per_sequence:
+                    if not GAT_sens_all[sens]:  # initialize the keys and empty lists only the first time
+                        GAT_sens_all[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
+                        GAT_sens_all[sens]['average_all_sequences'] = []
+                    for key in ['SeqID_%i' % i for i in range(1, 8)]:
+                        GAT_sens_all[sens][key].append(GAT_results[sens][key])
+                        # ================ Plot & save each subject / each sequence figures ???
+                        if plot_individual_subjects:
+                                SVM_funcs.plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                    # ================ Plot & save each subject / average of all sequences figures ???
+                    GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
+                    SVM_funcs.plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
                     plt.close('all')
+                else:
+                    GAT_sens_all[sens].append(GAT_results)
+                    if plot_individual_subjects:
+                        print('plotting for subject:%s'%subject)
+                        print(sub_fig_path)
+                        SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                                               figname=fig_name,vmin=vmin,vmax=vmax)
+                        plt.close('all')
+        # return GAT_sens_all
 
-        SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+        print("plotting in %s"%fig_path)
+        if plot_per_sequence:
+            for key in ['SeqID_%i' % i for i in range(1, 8)]:
+                SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                                       figname=fig_name+key)
+                plt.close('all')
+            SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
+                                   save_path=fig_path, figname=fig_name + '_all_seq' + score_suff + '_',
+                                   vmin=vmin, vmax=vmax)
+            plt.close('all')
+        else:
+            SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
 
 
-
-
-config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
-                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-                        'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110','sub17-mt_170249', 'sub18-eo_190576',
-                        'sub19-mg_190180']
+# config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
+#                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+#                         'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110','sub17-mt_170249', 'sub18-eo_190576',
+#                         'sub19-mg_190180']
 
 # ___________________________________________________________________________
 # ======= plot the GAT for all the sequences apart and together =============
@@ -66,29 +82,29 @@ config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417',
 
 scores_on = True
 residual_analysis = True
-for scores in [True,False]:
-    for residual_analysis in [True,False]=
+for scores_on in [True,False]:
+    for residual_analysis in [True,False]:
         suf = ''
         score_suff = ''
         if residual_analysis:
                 suf = 'resid_'
         if scores_on:
             score_suff = '_score'
-        plot_all_subjects_results_SVM(suf+'GAT_results'+score_suff+'.npy',config.subjects_list,suf+'GAT_results'+score_suff+'.npy',plot_per_sequence=True,vmin=-0.7,vmax=0.7)
+        plot_all_subjects_results_SVM(suf+'GAT_results'+score_suff,config.subjects_list,suf+'GAT_results'+score_suff+'_9parts',plot_per_sequence=True,vmin=-0.1,vmax=0.1)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
 # ___________________________________________________________________________
 vmin = [0.4,0.4,0.15]
 vmax = [0.6,0.6,0.35]
-config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
-                        'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-                        'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
-                        'sub19-mg_190180']
+# config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
+#                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+#                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
+#                         'sub19-mg_190180']
 
 for ii,name in enumerate(['RepeatAlter_score_dict','StimID_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
+    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
 
