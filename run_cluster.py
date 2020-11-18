@@ -4,8 +4,8 @@ import numpy as np
 
 print('jaime les tomates')
 
-# cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
+cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
+cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
@@ -13,8 +13,8 @@ print('jaime les tomates')
 # rerun this once autoreject has cleaned the epochs
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features', 'svm_f', 'svm_coucou', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features', 'svm_f', 'svm_coucou', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 
