@@ -12,8 +12,8 @@ import warnings
 from autoreject import AutoReject
 import pickle
 
-def read_info_csv(filename):
 
+def read_info_csv(filename):
     presented_seq = []
     violation_position = []
 
@@ -80,6 +80,7 @@ def get_seqID(presented_sequences):
 
     return seqID, complexity, sequence_entropy, violation_positions
 
+
 def get_seqInfo(seqID):
     if seqID == 1:
         seqname = 'Repeat'
@@ -114,6 +115,7 @@ def get_seqInfo(seqID):
 
     return seqname, seqtxtXY, violation_positions
 
+
 def update_metadata_rejected(subject, epochs_items):
     run_info_subject_dir = op.join(config.run_info_dir, subject)
 
@@ -130,7 +132,7 @@ def update_metadata_rejected(subject, epochs_items):
 
 # ====================== change 31/3/2020 ========================
 
-def update_metadata(subject, clean = False, new_field_name = None, new_field_values = None):
+def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None):
     """
     This function appends data to the metadata
     :param subject:
@@ -143,9 +145,9 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
     meg_subject_dir = op.join(config.meg_dir, subject)
 
     if clean:
-        metadata_path = os.path.join(meg_subject_dir,'metadata_item_clean.pkl')
+        metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
         if op.exists(metadata_path):
-            with open(metadata_path,'rb') as fid:
+            with open(metadata_path, 'rb') as fid:
                 metadata = pickle.load(fid)
         else:
             epochs_items = load_epochs_items(subject, cleaned=True)
@@ -153,7 +155,7 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
             metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
             metadata = epochs_items_cleaned.metadata
     else:
-        metadata_path = os.path.join(meg_subject_dir,'metadata_item.pkl')
+        metadata_path = os.path.join(meg_subject_dir, 'metadata_item.pkl')
         # if op.exists(metadata_path):
         #     with open(metadata_path,'rb') as fid:
         #         metadata = pickle.load(fid)
@@ -165,8 +167,8 @@ def update_metadata(subject, clean = False, new_field_name = None, new_field_val
     if new_field_name is not None:
         metadata[new_field_name] = new_field_values
 
-    with open(metadata_path,"wb") as fid:
-        pickle.dump(metadata,fid)
+    with open(metadata_path, "wb") as fid:
+        pickle.dump(metadata, fid)
 
     return metadata
 
@@ -250,14 +252,14 @@ def convert_csv_info_to_metadata(csv_path):
             complexity += [this_run_complexity] * 736
             seq_entropy += [this_seq_entropy] * 736
 
-            Identity += np.transpose(IdentityAllRuns['Identity'][i-1, :]).tolist()
-            RepeatAlter += np.transpose(RepeatAlterAllRuns['RepeatAlter'][i-1, :]).tolist()
-            ChunkNumber += np.transpose(ChunkNumberAllRuns['ChunkNumber'][i-1, :]).tolist()
-            WithinChunkPosition += np.transpose(WithinChunkPositionAllRuns['WithinChunkPosition'][i-1, :]).tolist()
-            WithinChunkPositionReverse += np.transpose(WithinChunkPositionReverseAllRuns['WithinChunkPositionReverse'][i-1, :]).tolist()
-            ChunkDepth += np.transpose(ChunkDepthAllRuns['ChunkDepth'][i-1, :]).tolist()
-            OpenedChunks += np.transpose(OpenedChunksAllRuns['OpenedChunks'][i-1, :]).tolist()
-            ChunkSize += np.transpose(ChunkSizeAllRuns['ChunkSize'][i-1, :]).tolist()
+            Identity += np.transpose(IdentityAllRuns['Identity'][i - 1, :]).tolist()
+            RepeatAlter += np.transpose(RepeatAlterAllRuns['RepeatAlter'][i - 1, :]).tolist()
+            ChunkNumber += np.transpose(ChunkNumberAllRuns['ChunkNumber'][i - 1, :]).tolist()
+            WithinChunkPosition += np.transpose(WithinChunkPositionAllRuns['WithinChunkPosition'][i - 1, :]).tolist()
+            WithinChunkPositionReverse += np.transpose(WithinChunkPositionReverseAllRuns['WithinChunkPositionReverse'][i - 1, :]).tolist()
+            ChunkDepth += np.transpose(ChunkDepthAllRuns['ChunkDepth'][i - 1, :]).tolist()
+            OpenedChunks += np.transpose(OpenedChunksAllRuns['OpenedChunks'][i - 1, :]).tolist()
+            ChunkSize += np.transpose(ChunkSizeAllRuns['ChunkSize'][i - 1, :]).tolist()
 
             for k in range(46):
                 ntrial += [k + 1] * 16
@@ -280,8 +282,8 @@ def convert_csv_info_to_metadata(csv_path):
                 viol += viol_to_append
                 Violation_position_1234 += viol_1234
 
-    ChunkBeginning = (np.asarray(WithinChunkPosition) == 1)*1
-    ChunkEnd = (np.asarray(WithinChunkPositionReverse) == 1)*1
+    ChunkBeginning = (np.asarray(WithinChunkPosition) == 1) * 1
+    ChunkEnd = (np.asarray(WithinChunkPositionReverse) == 1) * 1
 
     metadata = {'SequenceID': np.asarray(seqID),
                 'Complexity': np.asarray(complexity),
@@ -324,7 +326,6 @@ def load_epochs_items(subject, cleaned=True):
 
 
 def load_resid_epochs_items(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity'):
-
     resid_path = op.join(config.result_path, 'linear_models', resid_epochs_type, subject)
     fname_in = op.join(resid_path, 'residuals-epo.fif')
     print("Input: ", fname_in)
@@ -374,16 +375,11 @@ def balance_epochs_violation_positions(epochs):
 
     return epochs_balanced
 
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # ---------------------------------------------------------------------------------------------------------------- #
 
 
-
-
-        # ---------------------------------------------------------------------------------------------------------------- #
-        # ---------------------------------------------------------------------------------------------------------------- #
-
-
-def run_epochs(subject,epoch_on_first_element,baseline=True):
-
+def run_epochs(subject, epoch_on_first_element, baseline=True):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     run_info_subject_dir = op.join(config.run_info_dir, subject)
@@ -398,7 +394,7 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         raw = mne.io.read_raw_fif(raw_fname_in, preload=True)
 
         # ---------------------------------------------------------------------------------------------------------------- #
-        # RESAMPLING EACH RUN BEFORE CONCAT
+        # RESAMPLING EACH RUN BEFORE CONCAT & EPOCHING
         # Resampling the raw data while keeping events from original raw data, to avoid potential loss of
         # events when downsampling: https://www.nmr.mgh.harvard.edu/mne/dev/auto_examples/preprocessing/plot_resample.html
         # Find events
@@ -456,13 +452,13 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
 
     if epoch_on_first_element:
         # fosca 06012020
-        config.tmin = -0.500
-        config.tmax = 0.25*17
+        config.tmin = -0.200
+        config.tmax = 0.25 * 17
         config.baseline = (config.tmin, 0)
         if baseline is None:
             config.baseline = None
         for k in range(len(events)):
-            events[k, 2] = k % 16+1
+            events[k, 2] = k % 16 + 1
         epochs = mne.Epochs(raw, events, {'sequence_starts': 1}, config.tmin, config.tmax,
                             proj=True, picks=picks, baseline=config.baseline,
                             preload=False, decim=config.decim,
@@ -470,7 +466,7 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         epochs.metadata = metadata_pandas[metadata_pandas['StimPosition'] == 1.0]
     else:
         config.tmin = -0.100
-        config.tmax = 0.750
+        config.tmax = 0.600
         config.baseline = (config.tmin, 0)
         if baseline is None:
             config.baseline = None
@@ -485,9 +481,9 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
     # Save epochs (before AutoReject)
     print('  Writing epochs to disk')
     if epoch_on_first_element:
-        extension = subject+'_1st_element_epo'
+        extension = subject + '_1st_element_epo'
     else:
-        extension = subject+'_epo'
+        extension = subject + '_epo'
     epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
 
     print("Output: ", epochs_fname)
@@ -498,8 +494,9 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         # Running AutoReject (https://autoreject.github.io)
         epochs.load_data()
         ar = AutoReject()
-        epochs = ar.fit_transform(epochs)
-        reject_log = ar.get_reject_log(epochs)
+        # epochs = ar.fit_transform(epochs)
+        # reject_log = ar.get_reject_log(epochs)
+        epochs, reject_log = ar.fit_transform(epochs, return_log=True)
 
         # Save epochs (after AutoReject)
         print('  Writing cleaned epochs to disk')
@@ -514,6 +511,5 @@ def run_epochs(subject,epoch_on_first_element,baseline=True):
         # epochs.save(epochs_fname)
 
         # Save autoreject reject_log
-        pickle.dump(reject_log, open(epochs_fname[:-4]+'_reject_log.obj', 'wb'))
+        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))
         # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
-
