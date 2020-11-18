@@ -58,9 +58,22 @@ def ar_log_summary(subject, epoch_on_first_element):
     # Plots
     reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
 
+    # reject_log content ===>
+    # bad_epochs : array-like, shape (n_epochs,)
+    #     The boolean array with entries True for epochs that
+    #     are marked as bad.
+    # labels : array, shape (n_epochs, n_channels)
+    #     It contains integers that encode if a channel in a given
+    #     epoch is good (value 0), bad (1), or bad and interpolated (2).
+    # ch_names : list of str
+    #     The list of channels corresponding to the rows of the labels.
+
 
 def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
     utils.create_folder(save_path)
+
+    N_channels = 366  # since reject_log.labels.shape[1] includes STI channels (which were not processed)
+    N_epochs = reject_log.labels.shape[0]
 
     # --- Fig1
     fig = plt.figure(figsize=(10, 10))
@@ -75,48 +88,50 @@ def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
     plt.setp(ax.get_xticklabels(), rotation=90)
     ax.tick_params(axis=u'both', which=u'both', length=0)
     plt.tight_layout(rect=[None, None, None, 1.1])
-    fig_name_save = op.join(save_path, fig_name+'_fig1.png')
+    fig_name_save = op.join(save_path, fig_name + '_fig1.png')
     fig.savefig(fig_name_save, bbox_inches='tight')
     print(fig_name_save)
 
     # --- Fig2
     fig = plt.figure(figsize=(18, 6))
-    plt.bar(range(reject_log.labels.shape[1]), sum(reject_log.labels == 1))
+    plt.bar(range(reject_log.labels.shape[1]), sum(reject_log.labels == 1) / N_epochs * 100)
     ch_names_ = reject_log.ch_names[7::8]
     ax = plt.gca()
     ax.grid(False)
     ax.set_xlabel('Channels')
-    ax.set_ylabel('N epochs')
-    plt.title('N bads')
+    ax.set_ylabel('% epochs')
+    meanbads = sum((sum(reject_log.labels == 1)) / N_channels / N_epochs) * 100
+    Nrej = sum(reject_log.bad_epochs == True)
+    plt.title('Bads (%.2f%% epochs per channel) [%d on %d epochs entirely rejected]' % (meanbads, Nrej, N_epochs))
     plt.setp(ax, xticks=range(7, reject_log.labels.shape[1], 8), xticklabels=ch_names_)
     plt.setp(ax.get_yticklabels(), rotation=0)
     plt.setp(ax.get_xticklabels(), rotation=90)
     ax.tick_params(axis=u'both', which=u'both', length=0)
     plt.tight_layout(rect=[None, None, None, 1.1])
-    fig_name_save = op.join(save_path, fig_name+'_fig2.png')
+    fig_name_save = op.join(save_path, fig_name + '_fig2.png')
     fig.savefig(fig_name_save, bbox_inches='tight')
-    print('# >>>>>>>>>>>>> Subject %s, bad epochs per channel: %.1f%%' % (subject, np.mean(
-        sum(reject_log.labels == 1) / reject_log.labels.shape[0]) * 100))
+    print('# >>>>>>>>>>>>> Subject %s, bad epochs per channel: %.1f%%' % (subject, meanbads))
     print(fig_name_save)
 
     # --- Fig3
     fig = plt.figure(figsize=(18, 6))
-    plt.bar(range(reject_log.labels.shape[1]), sum(reject_log.labels == 2))
+    plt.bar(range(reject_log.labels.shape[1]), sum(reject_log.labels == 2) / N_epochs * 100)
     ch_names_ = reject_log.ch_names[7::8]
     ax = plt.gca()
     ax.grid(False)
     ax.set_xlabel('Channels')
-    ax.set_ylabel('N epochs')
-    plt.title('N bads and interpolated')
+    ax.set_ylabel('% epochs')
+    meanbads = sum((sum(reject_log.labels == 2)) / N_channels / N_epochs) * 100
+    Nrej = sum(reject_log.bad_epochs == True)
+    plt.title('Bads and interpolated (%.2f%% epochs per channel) [%d on %d epochs entirely rejected]' % (meanbads, Nrej, N_epochs))
     plt.setp(ax, xticks=range(7, reject_log.labels.shape[1], 8), xticklabels=ch_names_)
     plt.setp(ax.get_yticklabels(), rotation=0)
     plt.setp(ax.get_xticklabels(), rotation=90)
     ax.tick_params(axis=u'both', which=u'both', length=0)
     plt.tight_layout(rect=[None, None, None, 1.1])
-    fig_name_save = op.join(save_path, fig_name+'_fig3.png')
+    fig_name_save = op.join(save_path, fig_name + '_fig3.png')
     fig.savefig(fig_name_save, bbox_inches='tight')
-    print('# >>>>>>>>>>>>> Subject %s, bad and interpolated epochs per channel: %.1f%%' % (subject, np.mean(
-        sum(reject_log.labels == 2) / reject_log.labels.shape[0]) * 100))
+    print('# >>>>>>>>>>>>> Subject %s, bad and interpolated epochs per channel: %.1f%%' % (subject, meanbads))
     print(fig_name_save)
     plt.close('all')
     print('\n')
