@@ -46,7 +46,6 @@ result_path = os.path.join(root_path, 'results') + os.path.sep
 cluster_path = os.path.join(root_path, 'scripts', 'ABSeq_scripts', 'cluster') + os.path.sep
 scripts_path = os.path.join(root_path, 'scripts', 'ABSeq_scripts') + os.path.sep
 
-
 EMS_path = os.path.join(result_path, 'EMS') + os.path.sep
 SVM_path = os.path.join(result_path, 'SVM') + os.path.sep
 decoding_path = os.path.join(result_path, 'decoding') + os.path.sep
@@ -84,8 +83,8 @@ study_name = 'ABseq'
 #   needs to be set up as a list with a single element, as in the 'example'
 #   subjects_list = ['SB01']
 
-subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273',                    'sub05-cr_170417', 'sub06-kc_160388',
-                 'sub07-jm_100109',                    'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04-rf_190499', 'sub05-cr_170417', 'sub06-kc_160388',
+                 'sub07-jm_100109', 'sub08-cc_150418', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
                  'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185', 'sub17-mt_170249', 'sub18-eo_190576',
                  'sub19-mg_190180']
 
@@ -101,7 +100,6 @@ subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273',       
 exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
 # sub04 & sub08: very bad EEG data
 # /!\ not sure if "exclude_subjects" is used so they were simply removed from subjects_list /!\
-
 
 
 # ``runs`` : list of str
@@ -120,11 +118,10 @@ runs = ['run01', 'run02', 'run03', 'run04', 'run05', 'run06', 'run07',
 
 runs_dict = {subject: runs for subject in subjects_list}
 
-
-runs_dict['sub03-mr_190273'] = ['run01', 'run02', 'run03', 'run04','run05', 'run06', 'run07',
-                                'run08', 'run09', 'run10', 'run11', 'run12'] # importation error from MEG machine (unreadable files)
-runs_dict['sub07-jm_100109'] = ['run01', 'run02', 'run03', 'run04',          'run06', 'run07',
-                                'run08', 'run09', 'run10', 'run11', 'run12', 'run13', 'run14'] # skipped a run during acquisition
+runs_dict['sub03-mr_190273'] = ['run01', 'run02', 'run03', 'run04', 'run05', 'run06', 'run07',
+                                'run08', 'run09', 'run10', 'run11', 'run12']  # importation error from MEG machine (unreadable files)
+runs_dict['sub07-jm_100109'] = ['run01', 'run02', 'run03', 'run04', 'run06', 'run07',
+                                'run08', 'run09', 'run10', 'run11', 'run12', 'run13', 'run14']  # skipped a run during acquisition
 # runs_dict['sub14-js_180232'] = [         'run02', 'run03', 'run04', 'run05', 'run06', 'run07',
 #                                 'run08', 'run09', 'run10', 'run11', 'run12', 'run13', 'run14'] # (audio)triggers too much amplified (too many detected) /// CORRECTED
 
@@ -186,7 +183,8 @@ base_fname = '{extension}.fif'
 # bads['SB06'] = ['MEG2632', 'MEG2033']
 
 def default_bads():
-    return {name : [] for name in runs}
+    return {name: [] for name in runs}
+
 
 bads = defaultdict(default_bads)
 
@@ -235,8 +233,8 @@ bads['sub03-mr_190273'] = dict(
     run10=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523', 'EEG035', 'EEG041', 'EEG007'],
     run11=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523', 'MEG1831', 'EEG035', 'EEG034', 'EEG041', 'EEG007'],
     run12=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523', 'MEG1831', 'EEG035', 'EEG034', 'EEG041', 'EEG007'])
-    # run13=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523'],
-    # run14=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523'])
+# run13=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523'],
+# run14=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1523'])
 
 bads['sub04-rf_190499'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2243', 'EEG017', 'EEG041', 'EEG024', 'EEG014', 'EEG006'],  #
@@ -252,7 +250,7 @@ bads['sub04-rf_190499'] = dict(
     run11=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1941', 'EEG017', 'EEG041', 'EEG024'],  #
     run12=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2321', 'EEG017', 'EEG041', 'EEG024', 'EEG039', 'EEG047', 'EEG045'],  #
     run13=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1942', 'MEG2311', 'EEG017', 'EEG041', 'EEG024', 'EEG039', 'EEG029'],  #
-    run14=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1942', 'MEG1941', 'EEG017', 'EEG041', 'EEG024', 'EEG019'])   #
+    run14=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1443', 'MEG1942', 'MEG1941', 'EEG017', 'EEG041', 'EEG024', 'EEG019'])  #
 
 bads['sub05-cr_170417'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643', 'MEG0131', 'EEG025', 'EEG043', 'EEG041', 'EEG035', 'EEG017', 'EEG036', 'EEG003', 'EEG007', 'EEG001'],
@@ -453,7 +451,6 @@ bads['sub16-ma_190185'] = dict(
     run13=['MEG0213', 'MEG0311', 'MEG2643', 'EEG041', 'EEG001', 'EEG034', 'EEG004'],
     run14=['MEG0213', 'MEG0311', 'MEG2643', 'EEG041', 'EEG001', 'EEG034', 'EEG004'])
 
-
 bads['sub17-mt_170249'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643', 'MEG0513', 'EEG001', 'EEG002', 'EEG041', 'EEG035'],
     run02=['MEG0213', 'MEG0311', 'MEG2643', 'MEG2642', 'EEG001', 'EEG002', 'EEG053', 'EEG024', 'EEG025', 'EEG041', 'EEG035'],
@@ -469,7 +466,6 @@ bads['sub17-mt_170249'] = dict(
     run12=['MEG0213', 'MEG0311', 'MEG2643', 'EEG001', 'EEG035', 'EEG025', 'EEG041'],
     run13=['MEG0213', 'MEG0311', 'MEG2643', 'EEG001', 'EEG035', 'EEG025', 'EEG041'],
     run14=['MEG0213', 'MEG0311', 'MEG2643', 'EEG001', 'EEG035', 'EEG025', 'EEG041', 'EEG053', 'EEG024'])
-
 
 bads['sub18-eo_190576'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643', 'MEG0113', 'MEG0143', 'MEG0111', 'MEG0141', 'EEG035', 'EEG034', 'EEG036', 'EEG043', 'EEG041'],
@@ -501,8 +497,7 @@ bads['sub19-mg_190180'] = dict(
     run11=['MEG0213', 'MEG0311', 'MEG2643', 'EEG049', 'EEG002', 'EEG003', 'EEG029', 'EEG030', 'EEG031', 'EEG032', 'EEG049', 'EEG057', 'EEG041'],
     run12=['MEG0213', 'MEG0311', 'MEG2643', 'MEG1133', 'EEG049', 'EEG002', 'EEG003', 'EEG029', 'EEG030', 'EEG031', 'EEG032', 'EEG049', 'EEG057', 'EEG041'],
     run13=['MEG0213', 'MEG0311', 'MEG2643', 'EEG049', 'EEG002', 'EEG003', 'EEG029', 'EEG030', 'EEG031', 'EEG032', 'EEG049', 'EEG057', 'EEG041'],
-    run14=['MEG0213', 'MEG0311', 'MEG2643', 'EEG049', 'EEG002', 'EEG003', 'EEG029', 'EEG030', 'EEG031', 'EEG032', 'EEG049', 'EEG057', 'EEG041'],)
-
+    run14=['MEG0213', 'MEG0311', 'MEG2643', 'EEG049', 'EEG002', 'EEG003', 'EEG029', 'EEG030', 'EEG031', 'EEG032', 'EEG049', 'EEG057', 'EEG041'], )
 
 bads['subXXXX'] = dict(
     run01=['MEG0213', 'MEG0311', 'MEG2643'],
@@ -911,8 +906,6 @@ rejcomps_man['sub17-mt_170249'] = dict(eeg=[18, 0, 10], meg=[32, 39, 8, 37])
 rejcomps_man['sub18-eo_190576'] = dict(eeg=[3, 1], meg=[24, 23, 4])
 rejcomps_man['sub19-mg_190180'] = dict(eeg=[1], meg=[29, 12, 6])
 
-
-
 # 'sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04-rf_190499', 'sub05-cr_170417', 'sub06-kc_160388'
 # 'sub07-jm_100109', 'sub08-cc_150418', 'sub09-ag_170045'
 
@@ -1006,7 +999,6 @@ method = 'dSPM'
 #    with non-zero values. The default is spacing=None.
 
 smooth = 10
-
 
 # ``base_fname_trans`` : str
 #   The path to the trans files obtained with coregistration.
