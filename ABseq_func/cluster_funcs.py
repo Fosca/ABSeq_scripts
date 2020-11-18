@@ -7,6 +7,8 @@ import config
 import subprocess
 import MarkovModel_Python
 import numpy as np
+
+
 def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, queue='Unicog_long'):
     import subprocess
     import os, sys, glob
@@ -106,7 +108,7 @@ def epoch_items(subject):
 
 
 def epoch_full_trial(subject):
-    epoching_funcs.run_epochs(subject, epoch_on_first_element=True)
+    epoching_funcs.run_epochs(subject, epoch_on_first_element=True, baseline=None)
 
 
 def EMS(subject):
@@ -127,24 +129,28 @@ def SVM_analysis(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
+
 def fosca():
     print('joli poulpe')
 
+
 def SVM_1(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject,load_residuals_regression=True)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True)
+
 
 def SVM_2(subject):
-    SVM_funcs.GAT_SVM_4pos(subject,load_residuals_regression=True)
+    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=True)
+
 
 def SVM_3(subject):
-    SVM_funcs.GAT_SVM(subject,load_residuals_regression=True)
+    SVM_funcs.GAT_SVM(subject, load_residuals_regression=True)
 
 
 def SVM_features(subject):
-    list_features = ['StimID', 'RepeatAlter','WithinChunkPosition']
-    list_seq = [[2,3,4,5,6,7],[3,4,5,6,7],[4,5,6]]
+    list_features = ['StimID', 'RepeatAlter', 'WithinChunkPosition']
+    list_seq = [[2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7], [4, 5, 6]]
 
-    for ii,feature_name in enumerate(list_features):
+    for ii, feature_name in enumerate(list_features):
         score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
         save_path = config.SVM_path + subject + '/feature_decoding/'
         utils.create_folder(save_path)
@@ -161,23 +167,25 @@ def linear_reg(subject):
     from ABseq_func import linear_reg_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
     linear_reg_funcs.run_linear_regression(subject, cleaned=True)
 
+
 def surprise_omegas_analysis(subject):
     import numpy as np
     from ABseq_func import TP_funcs
 
-    list_omegas = np.logspace(-1,2,50)
+    list_omegas = np.logspace(-1, 2, 50)
 
-    TP_funcs.from_epochs_to_surprise(subject,list_omegas)
+    TP_funcs.from_epochs_to_surprise(subject, list_omegas)
     TP_funcs.append_surprise_to_metadata_clean(subject)
     from importlib import reload
     reload(TP_funcs)
     # TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=50,hfilter=None)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None,hfilter=10)
+    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None, hfilter=10)
 
     # ----------- then we have to compute the optimal omega for each time and channel -------------
     # TP_funcs.regress_out_optimal_omega(subject, clean=True)
     # TP_funcs.compute_posterior_probability(subject)
     # TP_funcs.regress_out_optimal_omega_per_channel(subject)
+
 
 def simplified_linear_regression(subject):
     from ABseq_func import linear_reg_funcs
@@ -186,4 +194,4 @@ def simplified_linear_regression(subject):
 
 def simplified_with_complexity(subject):
     from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject,with_complexity=True)
+    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject, with_complexity=True)
