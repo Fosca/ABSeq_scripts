@@ -113,7 +113,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
 
 
 # ______________________________________________________________________________________________________________________
-def generate_SVM_all_sequences(subject,load_residuals_regression=False):
+def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_test_different_blocks=True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -135,26 +135,13 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False):
     utils.create_folder(saving_directory)
 
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs)
-
-    # ===== to train the filter do not consider the habituation trials to later test on them separately ================
-
-    epochs_balanced = epochs_balanced["TrialNumber > 10"]
-
-    # ==================================================================================================================
-
+    # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
     epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
     epochs_balanced_all_chans = epochs_balanced.copy()
-
-    # ============== create the temporary labels that will allow us to create the training and testing sets in a nicely balanced way =======================
-
-    metadata_epochs = epochs_balanced.metadata
-
-    y_tmp = [int(metadata_epochs['SequenceID'].values[i] * 1000 + metadata_epochs['StimPosition'].values[i] * 10 +
-                 metadata_epochs['ViolationOrNot'].values[i]) for i in range(len(epochs_balanced))]
+    # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
-
     epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg,epochs_balanced_all_chans]
     sensor_types = ['mag', 'grad', 'eeg','all_chans']
     SVM_results = {'mag': [], 'grad': [], 'eeg': [],'all_chans':[]}
@@ -163,21 +150,33 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False):
         senso = sensor_types[l]
         epochs_senso = epochs_all[l]
         X_data = epochs_senso.get_data()
-
         # ======= create the 4 SVM spatial filters ========
         All_SVM = []
-        training_inds = []
-        testing_inds = []
 
-        for train, test in StratifiedKFold(n_splits=4).split(X_data, y_tmp):
-            # we split in training and testing sets using y_tmp because it allows us to balance with respect to all our constraints
-            SVM_dec = SVM_decoder()
-            # Fit and store the spatial filters
-            SVM_dec.fit(X_data[train], y_violornot[train])
-            # Store filters for future plotting
-            All_SVM.append(SVM_dec)
-            training_inds.append(train)
-            testing_inds.append(test)
+        if train_test_different_blocks:
+            suf +='train_test_different_blocks'
+            run_numbers = epochs_senso.metadata['RunNumber'].values
+            training_inds = [np.where(run_numbers < 8)[0], np.where(run_numbers >= 8)[0]]
+            testing_inds = [np.where(run_numbers >= 8)[0], np.where(run_numbers < 8)[0]]
+            for k in range(2):
+                SVM_dec = SVM_decoder()
+                SVM_dec.fit(X_data[training_inds[k]], y_violornot[training_inds[k]])
+        else:
+            training_inds = []
+            testing_inds = []
+            metadata_epochs = epochs_balanced.metadata
+            y_tmp = [
+                int(metadata_epochs['SequenceID'].values[i] * 1000 + metadata_epochs['StimPosition'].values[i] * 10 +
+                    metadata_epochs['ViolationOrNot'].values[i]) for i in range(len(epochs_balanced))]
+            for train, test in StratifiedKFold(n_splits=4).split(X_data, y_tmp):
+                # we split in training and testing sets using y_tmp because it allows us to balance with respect to all our constraints
+                SVM_dec = SVM_decoder()
+                # Fit and store the spatial filters
+                SVM_dec.fit(X_data[train], y_violornot[train])
+                # Store filters for future plotting
+                All_SVM.append(SVM_dec)
+                training_inds.append(train)
+                testing_inds.append(test)
 
         SVM_results[senso] = {'SVM': All_SVM, 'train_ind': training_inds, 'test_ind': testing_inds,
                               'epochs': epochs_all[l]}
