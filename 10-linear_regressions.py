@@ -24,19 +24,41 @@ from mne.stats import linear_regression
 from sklearn.preprocessing import scale
 import copy
 import matplotlib.ticker as ticker
+<<<<<<< Updated upstream
 import pandas as pd
 import glob
 import os
 from importlib import reload
 
 print('############------- Running analysis with ' + str(len(config.subjects_list)) + ' subjects ! -------############')
+=======
+from mne.parallel import parallel_func
+>>>>>>> Stashed changes
 
 # =========================================================== #
-# Options
+# compute the regression as a function of the surprise for n & n+1
+# and for the presence of a repetition or alternation for n & n+1
 # =========================================================== #
+<<<<<<< Updated upstream
 analysis_name = 'StandMultiStructure'
 names = ['StimID', 'StimPosition', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkSize', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
 exclude_Repeat_and_Alternate = True
+=======
+
+N_JOBS = config.N_JOBS
+
+# Here we use fewer N_JOBS to prevent potential memory problems
+parallel, run_func, _ = parallel_func(linear_reg_funcs.run_linear_reg_surprise_repeat_alt, n_jobs=N_JOBS)
+parallel(run_func(subject, baseline=True) for subject in config.subjects_list)
+
+# =========================================================== #
+# =========================================================== #
+
+
+
+analysis_name = 'ViolComplexity'
+names = ["Complexity"]  # Factors included in the regression
+>>>>>>> Stashed changes
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
 resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 use_baseline = True  # apply baseline to the epochs before running the regression
