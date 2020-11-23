@@ -64,9 +64,9 @@ else:
 print('\n#=====================================================================#\n                 Analysis: ' + analysis_name + '\n#=====================================================================#\n')
 # Results folder
 if resid_epochs:
-    results_path = op.join(config.result_path, 'Linear_models', analysis_name, 'TP_corrected_data', 'Signals')
+    results_path = op.join(config.result_path, 'linear_models', analysis_name, 'TP_corrected_data', 'Signals')
 else:
-    results_path = op.join(config.result_path, 'Linear_models', analysis_name, 'Original_data', 'Signals')
+    results_path = op.join(config.result_path, 'linear_models', analysis_name, 'Original_data', 'Signals')
 if use_baseline:
     results_path = results_path + op.sep + 'With_baseline_correction'
 utils.create_folder(results_path)
