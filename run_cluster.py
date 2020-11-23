@@ -34,6 +34,4 @@ cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
 # cluster_funcs.create_qsub('simplified_linear_regression', 'reg', 'reg', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('simplified_with_complexity', 'reg_comp', 'reg_comp', queue='Nspin_bigM')
 
-
-
 print('Tomaste')
