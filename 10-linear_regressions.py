@@ -514,7 +514,7 @@ if DoSecondLevel:
             # =========================================================== #
             # ==========  cluster evoked data plot --> per sequence
             # =========================================================== #
-            if len(good_cluster_inds) > 0
+            if len(good_cluster_inds) > 0:
                 # ------------------ LOAD THE EVOKED FOR EACH SEQUENCE ------------ #
                 filter_name = analysis_name + '_analysis_SequenceID_'
                 if resid_epochs:
