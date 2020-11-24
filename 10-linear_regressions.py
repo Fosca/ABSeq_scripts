@@ -34,18 +34,20 @@ print('############------- Running analysis with ' + str(len(config.subjects_lis
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'StandMultiStructure'
-names = ['StimID', 'StimPosition', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkSize', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
-exclude_Repeat_and_Alternate = True
+analysis_name = 'StandComplexity'
+# names = ['StimID', 'StimPosition', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkSize', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+exclude_Repeat_and_Alternate = False
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
 resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 use_baseline = True  # apply baseline to the epochs before running the regression
-Do3Dplot = False
+lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
+Do3Dplot = True
 RunStats = True
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
-DoFirstLevel = True  # To compute the regression and evoked for each subject
+DoFirstLevel = False  # To compute the regression and evoked for each subject
 DoSecondLevel = True  # Run the group level statistics
 
 # Filter (for each analysis_name) to keep or exclude some epochs
@@ -64,9 +66,9 @@ else:
 print('\n#=====================================================================#\n                 Analysis: ' + analysis_name + '\n#=====================================================================#\n')
 # Results folder
 if resid_epochs:
-    results_path = op.join(config.result_path, 'Linear_models', analysis_name, 'TP_corrected_data', 'Signals')
+    results_path = op.join(config.result_path, 'linear_models', analysis_name, 'TP_corrected_data', 'Signals')
 else:
-    results_path = op.join(config.result_path, 'Linear_models', analysis_name, 'Original_data', 'Signals')
+    results_path = op.join(config.result_path, 'linear_models', analysis_name, 'Original_data', 'Signals')
 if use_baseline:
     results_path = results_path + op.sep + 'With_baseline_correction'
 utils.create_folder(results_path)
@@ -96,6 +98,9 @@ if DoFirstLevel:
             else:
                 epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                 epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
+        if lowpass_epochs:
+            print('Low pass filtering...')
+            epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
 
         # ====== display regressors on original sequences - note: StimID will always be 1 ===== #
         if not resid_epochs and subject == config.subjects_list[0]:  # do it only once (first subject):
@@ -148,11 +153,9 @@ if DoFirstLevel:
                         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
                     ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
                     metadata = metadata_all[nseq][name]
-                    # Normalize between 0 and 1 based on possible values accross sequences, in order to set the color
+                    # Normalize between 0 and 1 based on possible values across sequences, in order to set the color
                     metadata = (metadata - minvalue)/(maxvalue-minvalue)
                     # stimID is always 1, so we use seqtxtXY instead...
-                    minvalue = 0.0
-                    maxvalue = 1.0
                     if name == 'StimID':
                         for ii in range(len(seqtxtXY)):
                             if seqtxtXY[ii] == 'x':
@@ -226,6 +229,11 @@ if DoFirstLevel:
                 fname = op.join(path_evo, name + '_level%02.0f' % x)
                 epochs[name + ' == "' + str(level) + '"'].average().save(fname + '-ave.fif')
 
+        # ===== also create evoked for each sequence (i.e. only with epochs used in the regression) ===== #
+        for nseq in range(number_of_sequences):
+            fname = op.join(path_evo, analysis_name + '_analysis_SequenceID_%02.0f' % (nseq+1))
+            epochs['SequenceID == "' + str(nseq+1) + '"'].average().save(fname + '-ave.fif')
+
     # =========== LOAD INDIVIDUAL REGRESSION RESULTS AND SAVE THEM AS GROUP FIF FILES =========== #
     # ============================= (necessary only the first time) ============================= #
     regressors_names = ["Intercept"] + names  # intercept was added when running the regression
@@ -295,6 +303,47 @@ if DoSecondLevel:
             output_file = op.join(savepath, 'Sources_' + regressor_name + '_at170ms.png')
             source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.170, ch_type='grad', colormap='viridis', colorlims='auto', signallims=None)
 
+            # Timecourse source figure
+            output_file = op.join(savepath, 'Sources_' + regressor_name + '_timecourse.png')
+            times_to_plot = [.0, .100, .200, .300, .400, .500]
+            win_size = .100
+            stc = mean_stc
+            maxval = np.max(stc._data)
+            colorlims = [maxval*.20, maxval*.30, maxval*.70]
+            # plot and screenshot for each timewindow
+            stc_screenshots = []
+            for t in times_to_plot:
+                twin_min = t
+                twin_max = t + win_size
+                stc_timewin = stc.copy()
+                stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+                stc_timewin = stc_timewin.mean()
+                brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
+                                         subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
+                                         colormap='hot', colorbar=False, time_viewer=False)
+                screenshot = brain.screenshot()
+                brain.close()
+                nonwhite_pix = (screenshot != 255).any(-1)
+                nonwhite_row = nonwhite_pix.any(1)
+                nonwhite_col = nonwhite_pix.any(0)
+                cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+                plt.close('all')
+                stc_screenshots.append(cropped_screenshot)
+            # main figure
+            fig, axes = plt.subplots(len(times_to_plot), 1, figsize=(len(times_to_plot)*1.1, 4))
+            fig.suptitle(regressor_name, fontsize=8, fontweight='bold')
+            for idx in range(len(times_to_plot)):
+                axes[idx].imshow(stc_screenshots[idx])
+                axes[idx].axis('off')
+                twin_min = times_to_plot[idx]
+                twin_max = times_to_plot[idx] + win_size
+                axes[idx].set_title('[%d - %d ms]' % (twin_min * 1000, twin_max * 1000), fontsize=6)
+            # tweak margins and spacing
+            fig.subplots_adjust(left=0.1, right=0.9, bottom=0.01, top=0.9, wspace=1, hspace=0.5)
+            fig.savefig(output_file, bbox_inches='tight', dpi=600)
+            print('========> ' + output_file + " saved !")
+            plt.close(fig)
+
             # Or explore sources activation
             # maxvtx,  max_t_val = mean_stc.get_peak()
             # brain = mean_stc.plot(views=['lat'], surface='pial', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
@@ -310,7 +359,6 @@ if DoSecondLevel:
             # plt.xlim(stc.times[0], stc.times[-1])
             # plt.figlegend([hl], ['Peak at = %s' % mni_max.round(2)], 'lower center')
             # plt.show()
-
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
     savepath = op.join(fig_path, 'Signals')
@@ -405,7 +453,7 @@ if DoSecondLevel:
             # PLOT CLUSTERS
             if len(good_cluster_inds) > 0:
                 figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type)
-                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=True)
+                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False)
 
             if Do3Dplot:
                 # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
@@ -457,8 +505,31 @@ if DoSecondLevel:
                 # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=True, legend=True, blackfig=False)
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=False, legend=True, blackfig=False)
                     fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
+                    print('Saving ' + fig_name)
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    plt.close('all')
+
+            # =========================================================== #
+            # ==========  cluster evoked data plot --> per sequence
+            # =========================================================== #
+            if len(good_cluster_inds) > 0
+                # ------------------ LOAD THE EVOKED FOR EACH SEQUENCE ------------ #
+                filter_name = analysis_name + '_analysis_SequenceID_'
+                if resid_epochs:
+                    evoked_reg, _ = evoked_funcs.load_evoked(subject='all', filter_name=filter_name, filter_not=None, cleaned=True, evoked_resid=True)
+                else:
+                    evoked_reg, _ = evoked_funcs.load_evoked(subject='all', filter_name=filter_name, filter_not=None, cleaned=True, evoked_resid=False)
+                # ----------------- PLOTS ----------------- #
+                for i_clu, clu_idx in enumerate(good_cluster_inds):
+                    cinfo = cluster_info[i_clu]
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
+                    print('Saving ' + fig_name)
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo_bars.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
