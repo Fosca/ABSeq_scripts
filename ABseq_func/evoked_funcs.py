@@ -11,7 +11,7 @@ from scipy.stats import sem
 import matplotlib.ticker as ticker
 import copy
 
-def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1):
+def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False):
     # Figures folder
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', subject)
@@ -28,8 +28,10 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
     # Make evoked - deviants OR standards for each sequence
     evokeds_per_seq = []
     for x in range(7):
-        evokeds_per_seq.append(epochs_items['SequenceID == "' + str(x + 1) +
-                                            '" and ViolationOrNot == "%i"' % violation_or_not].average())
+        if apply_baseline:
+            evokeds_per_seq.append(epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == "%i"' % violation_or_not].apply_baseline().average())
+        else:
+            evokeds_per_seq.append(epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == "%i"' % violation_or_not].average())
 
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
@@ -62,7 +64,7 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
         plt.close(fig)
 
 
-def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, residevoked=False):
+def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, residevoked=False, apply_baseline=False):
 
     # Figures folder
     if violation_or_not:
@@ -92,7 +94,10 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x+1)
 
         evokeds_seq = evoked[seq]
-        grand_avg_seq = mne.grand_average([evokeds_seq[i][0] for i in range(len(evokeds_seq))])
+        if apply_baseline:
+            grand_avg_seq = mne.grand_average([evokeds_seq[i][0].apply_baseline() for i in range(len(evokeds_seq))])
+        else:
+            grand_avg_seq = mne.grand_average([evokeds_seq[i][0] for i in range(len(evokeds_seq))])
 
         # EEG
         fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(5, 3))
@@ -164,31 +169,6 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         print('Saving ' + fig_name)
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
-
-        # Previous version
-        # # EEG
-        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-        #                                     topomap_args=topomap_args, picks='eeg', times=times, show=False)
-        # fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
-        # print('Saving ' + fig_name)
-        # plt.savefig(fig_name)
-        # plt.close(fig)
-        #
-        # # MAG
-        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-        #                                     topomap_args=topomap_args, picks='mag', times=times, show=False)
-        # fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
-        # print('Saving ' + fig_name)
-        # plt.savefig(fig_name)
-        # plt.close(fig)
-        #
-        # # #GRAD
-        # fig = grand_avg_seq.plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-        #                                     topomap_args=topomap_args, picks='grad', times=times, show=False)
-        # fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
-        # print('Saving ' + fig_name)
-        # plt.savefig(fig_name)
-        # plt.close(fig)
 
 
 def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=1, residevoked=False):
@@ -331,7 +311,7 @@ def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=
         plt.close(fig)
 
 
-def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks"):
+def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", apply_baseline=False):
     # Figures folder
     fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_FullSequence', subject)
     if not os.path.exists(fig_path):
@@ -340,9 +320,10 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
     # Make evoked - not-violated - for each sequence
     evokeds_per_seq = []
     for x in range(7):
-        evokeds_per_seq.append(epochs_first_item['SequenceID == "' + str(x + 1) +
-                                                 '" and ViolationInSequence == "0"'].average())
-
+        if apply_baseline:
+            evokeds_per_seq.append(epochs_first_item['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].apply_baseline().average())
+        else:
+            evokeds_per_seq.append(epochs_first_item['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].average())
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
     ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
