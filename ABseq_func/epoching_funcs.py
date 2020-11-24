@@ -348,7 +348,7 @@ def load_epochs_full_sequence(subject, cleaned=True):
     return epochs
 
 
-def balance_epochs_violation_positions(epochs):
+def balance_epochs_violation_positions(epochs,balance_violation_standards=True):
     """
     This function balances violations and standards by position for each sequence
     :param epochs:
@@ -372,6 +372,14 @@ def balance_epochs_violation_positions(epochs):
         print('We appended the balanced epochs for SeqID%i' % seqID)
 
     epochs_balanced = mne.concatenate_epochs(list(np.hstack(epochs_balanced_allseq)))
+
+    if balance_violation_standards:
+        metadata_epochs = epochs_balanced.metadata
+        events = [int(metadata_epochs['SequenceID'].values[i] * 1000 + metadata_epochs['StimPosition'].values[i] * 10 +
+                     metadata_epochs['ViolationOrNot'].values[i]) for i in range(len(epochs_balanced))]
+        epochs_balanced.events[:, 2] = events
+        epochs_balanced.event_id = {'%i'%i:i for i in np.unique(events)}
+        epochs_balanced.equalize_event_counts(epochs_balanced.event_id)    # ===== to train the filter do not consider the habituation trials to later test on them separately ================
 
     return epochs_balanced
 
