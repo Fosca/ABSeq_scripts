@@ -420,7 +420,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
     return fig
 
 # ______________________________________________________________________________________________________________________
-def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],window=False):
+def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],window=False,train_test_different_blocks=True ):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
     :param subject:
@@ -432,7 +432,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ==== load the ems results ==============
     SVM_results_path = op.join(config.SVM_path, subject)
-    SVM_results = np.load(op.join(SVM_results_path, 'SVM_results.npy'),allow_pickle=True).item()
+
+    suf = ''
+    if train_test_different_blocks:
+        suf += 'train_test_different_blocks'
+
+    SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -536,14 +541,14 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         epochs_proj_sens.metadata = data_frame_meta
 
         if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_test_window-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',overwrite=True)
         else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_test-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test-epo.fif',overwrite=True)
 
     return True
 
 
-def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False):
+def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False,train_test_different_blocks=True ):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -554,7 +559,11 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
     # ==== load the ems results ==============
     SVM_results_path = op.join(config.SVM_path, subject)
-    SVM_results = np.load(op.join(SVM_results_path, 'SVM_results.npy'), allow_pickle=True).item()
+    suf = ''
+    if train_test_different_blocks:
+        suf += 'train_test_different_blocks'
+
+    SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -635,12 +644,11 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         print("==== the total number of epochs is %i ====" % len(epochs_proj_sens))
         print("==== the total number of metadata fields is %i ====" % len(data_frame_meta))
 
-
         epochs_proj_sens.metadata = data_frame_meta
         if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens +suf+ '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
         else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens +suf+ '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
 
     return True
 

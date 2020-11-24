@@ -1,13 +1,36 @@
 import os.path as op
 import config
 import numpy as np
-<<<<<<< Updated upstream
 import matplotlib.pyplot as plt
 from ABseq_func import *
 import mne
 import os.path as op
 from importlib import reload
+from mne.parallel import parallel_func
 
+
+def svm_features(subject):
+
+    list_features = ['RepeatAlter','StimID','WithinChunkPosition']
+    list_seq = [[3,4,5,6,7],[2,3,4,5,6,7],[4,5,6]]
+
+    for ii, feature_name in enumerate(list_features):
+        score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
+        save_path = config.SVM_path + subject + '/feature_decoding/'
+        utils.create_folder(save_path)
+        save_name = save_path + feature_name + '_score_dict.npy'
+        np.save(save_name, {'score': score, 'times': times})
+
+
+# make less parallel runs to limit memory usage
+N_JOBS = max(config.N_JOBS // 4, 1)
+print('N_JOBS=' + str(N_JOBS))
+
+parallel, run_func, _ = parallel_func(SVM_funcs.generate_SVM_all_sequences, n_jobs=N_JOBS)
+parallel(run_func(subject) for subject in config.subjects_list[14:])
+
+parallel, run_func, _ = parallel_func(svm_features, n_jobs=N_JOBS)
+parallel(run_func(subject) for subject in config.subjects_list)
 
 
 
