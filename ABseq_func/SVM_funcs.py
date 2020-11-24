@@ -154,7 +154,6 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
         All_SVM = []
 
         if train_test_different_blocks:
-            suf +='train_test_different_blocks'
             run_numbers = epochs_senso.metadata['RunNumber'].values
             training_inds = [np.where(run_numbers < 8)[0], np.where(run_numbers >= 8)[0]]
             testing_inds = [np.where(run_numbers >= 8)[0], np.where(run_numbers < 8)[0]]
@@ -180,6 +179,9 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
 
         SVM_results[senso] = {'SVM': All_SVM, 'train_ind': training_inds, 'test_ind': testing_inds,
                               'epochs': epochs_all[l]}
+
+    if train_test_different_blocks:
+        suf += 'train_test_different_blocks'
     np.save(op.join(saving_directory, suf+'SVM_results.npy'), SVM_results)
 
 

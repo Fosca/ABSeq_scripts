@@ -13,7 +13,7 @@ print('jaime les tomates')
 # rerun this once autoreject has cleaned the epochs
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_analysis', 'hab', 'hab', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
 cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')

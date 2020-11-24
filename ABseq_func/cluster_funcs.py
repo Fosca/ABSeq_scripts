@@ -133,7 +133,7 @@ def fosca():
 
 
 def SVM_1(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False)
 
 
 def SVM_2(subject):
@@ -169,12 +169,7 @@ def linear_reg(subject):
 def surprise_omegas_analysis(subject):
     import numpy as np
     from ABseq_func import TP_funcs
-<<<<<<< Updated upstream
-
-    list_omegas = np.logspace(-1, 2, 50)
-=======
     list_omegas = np.logspace(-1,2,50)
->>>>>>> Stashed changes
 
     TP_funcs.from_epochs_to_surprise(subject, list_omegas)
     TP_funcs.append_surprise_to_metadata_clean(subject)
