@@ -195,13 +195,14 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
     """
 
     saving_directory = op.join(config.SVM_path, subject)
-
+    n_folds = 4
     suf = ''
     if load_residuals_regression:
         suf = 'resid_'
 
     if train_test_different_blocks:
         suf += 'train_test_different_blocks'
+        n_folds = 2
 
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
@@ -221,7 +222,7 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
             print('The value of k is %i'%k)
             seqID = 'SeqID_%i' % k
             GAT_seq = np.zeros((4,n_times,n_times))
-            for fold_number in range(4):
+            for fold_number in range(n_folds):
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
                 inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
@@ -267,11 +268,13 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
     :return: GAT averaged over the 4 classification folds
     """
 
+    n_folds = 4
     suf = ''
     if load_residuals_regression:
         suf = 'resid_'
 
     if train_test_different_blocks:
+        n_folds = 2
         suf += 'train_test_different_blocks'
 
     saving_directory = op.join(config.SVM_path, subject)
@@ -292,7 +295,7 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
             # extract the 4 positions of violation
             violpos_list = np.unique(epochs_sens['SequenceID == %i' % k].metadata['ViolationInSequence'])[1:]
             GAT_seq = np.zeros((4, n_times, n_times, 4))
-            for fold_number in range(4):
+            for fold_number in range(n_folds):
                 print("====== running for fold number %i =======\n"%fold_number)
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
@@ -440,7 +443,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     SVM_results_path = op.join(config.SVM_path, subject)
 
     suf = ''
+    n_folds = 4
     if train_test_different_blocks:
+        n_folds = 2
         suf += 'train_test_different_blocks'
 
     SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
@@ -480,7 +485,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         print(data_for_epoch_object.shape)
         # ===============================
         counter = 0
-        for fold_number in range(4):
+        for fold_number in range(n_folds):
 
             print('Fold ' + str(fold_number + 1) + ' on 4...')
             start = time.time()
@@ -566,7 +571,9 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     # ==== load the ems results ==============
     SVM_results_path = op.join(config.SVM_path, subject)
     suf = ''
+    n_folds = 4
     if train_test_different_blocks:
+        n_folds = 2
         suf += 'train_test_different_blocks'
 
     SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
@@ -609,7 +616,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         if not window:
             for mm, point_of_interest in enumerate(points):
                 epochs_1st_sens_filtered_data_4folds = []
-                for fold_number in range(4):
+                for fold_number in range(n_folds):
                     SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
                     print("The shape of SVM_to_data is ")
                     print(SVM_to_data.shape)
