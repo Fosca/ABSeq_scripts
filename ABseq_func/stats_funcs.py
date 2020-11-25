@@ -257,7 +257,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
     for ncond, condname in enumerate(condnames):
         data = evoked_dict[condname].copy()
-        evoked_funcs.plot_evoked_with_sem_1cond(data, condname, ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
+        evoked_funcs.plot_evoked_with_sem_1cond(data, condname[:-1], ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
     ymin, ymax = ax.get_ylim()
     ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
     if legend:
@@ -284,6 +284,87 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
 
     return fig
 
+
+def plot_clusters_evo_bars(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', filter_smooth=False, legend=False, blackfig=False):
+    units = dict(eeg='uV', grad='fT/cm', mag='fT')
+
+    if legend:
+        fig, ax = plt.subplots(1, 1, figsize=(3, 4))
+    else:
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    if blackfig:
+        textcolor = 'white'
+        linecolor = 'white'
+        ax.set_facecolor((.2, .2, .2))
+        fig.patch.set_facecolor((.2, .2, .2))
+    else:
+        textcolor = 'black'
+        linecolor = 'black'
+
+    plt.axhline(0, linestyle='-', color=linecolor, linewidth=1)
+    # for xx in range(3):
+    #     plt.axvline(250 * xx, linestyle='--', color=linecolor, linewidth=1)
+    # ax.set_xlabel('Time (ms)', color=textcolor)
+
+    ch_inds = cinfo['channels_cluster']  # channel indices from 366 (mag+grad+eeg) ???
+    t_inds = cinfo['time_inds']
+    condnames = list(evoked_dict.keys())
+    if len(condnames) == 2:
+        colorslist = ['r', 'b']
+    else:
+        NUM_COLORS = len(condnames)
+        cm = plt.get_cmap('viridis')
+        colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    for ncond, condname in enumerate(condnames):
+        data = evoked_dict[condname].copy()
+        times = data[0][0].times * 1000
+        group_data_seq = []
+        for nn in range(len(data)):
+            sub_data = data[nn][0].copy()
+            if ch_type == 'eeg':
+                sub_data = np.array(sub_data.pick_types(meg=False, eeg=True)._data)
+            elif ch_type == 'mag':
+                sub_data = np.array(sub_data.pick_types(meg='mag', eeg=False)._data)
+            elif ch_type == 'grad':
+                sub_data = np.array(sub_data.pick_types(meg='grad', eeg=False)._data)
+            if np.size(ch_inds) > 1:
+                sub_data = sub_data[:, t_inds].mean(axis=1)  # average times indices
+                sub_data = sub_data[ch_inds].mean(axis=0)  # average channel indices
+                group_data_seq.append(sub_data)
+            else:
+                sub_data = sub_data[:, t_inds].mean(axis=1)  # average times indices
+                group_data_seq.append(sub_data)
+        mean = np.mean(group_data_seq, axis=0)
+        ub = mean + sem(group_data_seq, axis=0)
+        lb = mean - sem(group_data_seq, axis=0)
+        plt.bar(ncond, mean, color=colorslist[ncond])
+        plt.errorbar(ncond, mean, yerr=sem(group_data_seq, axis=0), ecolor='black', capsize=5)
+
+    ymin, ymax = ax.get_ylim()
+    if legend:
+        # plt.legend(loc='best', fontsize=6)
+        l = plt.legend(fontsize=7, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
+        for text in l.get_texts():
+            text.set_color(textcolor)
+    for key in ('top', 'right', 'bottom'):  # Remove spines
+        ax.spines[key].set(visible=False)
+    # ax.spines['bottom'].set_position('zero')
+    fmt = ticker.ScalarFormatter(useMathText=True)
+    fmt.set_powerlimits((0, 0))
+    ax.get_yaxis().set_major_formatter(fmt)
+    ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
+    # ax.set_xlim([-100, 600])
+    # ax.set_ylim([ymin, ymax])
+    plt.xticks(np.arange(len(condnames)), condnames, rotation=45)
+    ax.set_ylabel(units[ch_type], color=textcolor)
+    ax.spines['bottom'].set_color(linecolor)
+    ax.spines['left'].set_color(linecolor)
+    ax.tick_params(axis='x', colors=textcolor)
+    ax.tick_params(axis='y', colors=textcolor)
+    plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1) + '_[%d-%dms]' % (times[t_inds[0]], times[t_inds[-1]]), fontsize=9, color=textcolor)
+    fig.tight_layout(pad=0.5, w_pad=0)
+
+    return fig
 
 
 
