@@ -160,6 +160,8 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
             for k in range(2):
                 SVM_dec = SVM_decoder()
                 SVM_dec.fit(X_data[training_inds[k]], y_violornot[training_inds[k]])
+                All_SVM.append(SVM_dec)
+
         else:
             training_inds = []
             testing_inds = []
