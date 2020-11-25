@@ -4,8 +4,8 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
-cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
@@ -14,12 +14,17 @@ cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nsp
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_analysis', 'hab', 'hab', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
+#cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
+cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
+cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features', 'svm_f', 'svm_coucou', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
+#cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
+cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
+cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 
+
+# cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Global_long')
+# cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Global_long')
 
 # cluster_funcs.create_qsub('EMS', 'ems', 'ems', queue='Nspin_bigM', sublist_subjects=['sub16-ma_190185'])
 # cluster_funcs.create_qsub('linear_reg', 'lreg', 'lreg', queue='Nspin_bigM')
@@ -28,7 +33,5 @@ cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nsp
 # cluster_funcs.create_qsub('surprise_omegas_analysis', 'coucou', 'coucou', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('simplified_linear_regression', 'reg', 'reg', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('simplified_with_complexity', 'reg_comp', 'reg_comp', queue='Nspin_bigM')
-
-
 
 print('Tomaste')
