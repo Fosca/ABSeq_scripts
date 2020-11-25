@@ -33,7 +33,7 @@ parallel, run_func, _ = parallel_func(svm_features, n_jobs=N_JOBS)
 parallel(run_func(subject) for subject in config.subjects_list)
 
 
-
+# -------------
 
 def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=0,vmax=1):
 

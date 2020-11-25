@@ -186,7 +186,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score'):
+def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -199,6 +199,9 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
     suf = ''
     if load_residuals_regression:
         suf = 'resid_'
+
+    if train_test_different_blocks:
+        suf += 'train_test_different_blocks'
 
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
@@ -254,7 +257,7 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc = 'score'):
+def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately and for each violation position.
@@ -267,6 +270,9 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
     suf = ''
     if load_residuals_regression:
         suf = 'resid_'
+
+    if train_test_different_blocks:
+        suf += 'train_test_different_blocks'
 
     saving_directory = op.join(config.SVM_path, subject)
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
