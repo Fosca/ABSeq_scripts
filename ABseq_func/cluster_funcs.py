@@ -137,11 +137,11 @@ def SVM_1(subject):
 
 
 def SVM_2(subject):
-    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=True)
+    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=False)
 
 
 def SVM_3(subject):
-    SVM_funcs.GAT_SVM(subject, load_residuals_regression=True)
+    SVM_funcs.GAT_SVM(subject, load_residuals_regression=False)
 
 
 def SVM_features(subject):
