@@ -134,7 +134,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     saving_directory = op.join(config.SVM_path, subject)
     utils.create_folder(saving_directory)
 
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_violation_standards=True)
     # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
@@ -160,6 +160,8 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
             for k in range(2):
                 SVM_dec = SVM_decoder()
                 SVM_dec.fit(X_data[training_inds[k]], y_violornot[training_inds[k]])
+                All_SVM.append(SVM_dec)
+
         else:
             training_inds = []
             testing_inds = []
@@ -432,9 +434,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ==== load the ems results ==============
     SVM_results_path = op.join(config.SVM_path, subject)
-
+    n_blocks = 4
     suf = ''
     if train_test_different_blocks:
+        n_blocks=2
         suf += 'train_test_different_blocks'
 
     SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
@@ -457,6 +460,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in ['mag', 'grad', 'eeg','all_chans']:
 
+        print(sens)
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
         epochs_1st_sens = epochs_1st[sens]
@@ -474,9 +478,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         print(data_for_epoch_object.shape)
         # ===============================
         counter = 0
-        for fold_number in range(4):
 
-            print('Fold ' + str(fold_number + 1) + ' on 4...')
+        for fold_number in range(n_blocks):
+
+            print('Fold ' + str(fold_number + 1) + ' on %i...'%n_blocks)
             start = time.time()
             test_indices = SVM_results[sens]['test_ind'][fold_number]
             epochs_sens_test = epochs_sens[test_indices]

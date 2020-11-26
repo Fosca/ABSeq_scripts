@@ -27,7 +27,7 @@ N_JOBS = max(config.N_JOBS // 4, 1)
 print('N_JOBS=' + str(N_JOBS))
 
 parallel, run_func, _ = parallel_func(SVM_funcs.generate_SVM_all_sequences, n_jobs=N_JOBS)
-parallel(run_func(subject) for subject in config.subjects_list[14:])
+parallel(run_func(subject) for subject in config.subjects_list[14:15])
 
 parallel, run_func, _ = parallel_func(svm_features, n_jobs=N_JOBS)
 parallel(run_func(subject) for subject in config.subjects_list)
