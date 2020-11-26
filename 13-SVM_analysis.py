@@ -73,6 +73,8 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                     if plot_individual_subjects:
                         print('plotting for subject:%s'%subject)
                         print(sub_fig_path)
+                        print("the shape of the GAT result is ")
+                        print(GAT_results.shape)
                         SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
                                                figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
@@ -128,7 +130,7 @@ vmax = [0.6,0.6,0.35]
 
 for ii,name in enumerate(['RepeatAlter_score_dict','StimID_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
+    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 
