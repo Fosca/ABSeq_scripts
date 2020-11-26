@@ -93,6 +93,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
         epochs.event_id = {'%i' % i: i for i in np.unique(epochs.events[:, 2])}
         epochs.equalize_event_counts(epochs.event_id)
 
+    import time
     before_decoding = time.time()
     kf = KFold(n_splits=4)
 
@@ -110,7 +111,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     times = epochs.times
     # then use plot_GAT_SVM to plot the gat matrix
     after_decoding = time.time()-before_decoding
-    print("================ the decoding of feature %s took %i ====="%(feature_name,int(after_decoding)))
+    print("================ the decoding of feature %s took %i seconds ====="%(feature_name,int(after_decoding)))
 
 
     return score, times
