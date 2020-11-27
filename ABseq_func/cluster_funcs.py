@@ -69,7 +69,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
         file_name = os.path.split(i)
         job_name = "%s" % file_name[1]
 
-        walltime = "36:00:00"  # "24:00:00"
+        walltime = "48:00:00"  # "24:00:00"
         if 'short' in queue:
             walltime = "2:00:00"  # "24:00:00"
 
