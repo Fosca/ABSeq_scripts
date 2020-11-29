@@ -19,7 +19,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_bigM')
+#cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 
