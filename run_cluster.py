@@ -18,15 +18,15 @@ print('jaime les tomates')
 #cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
+cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 
-cluster_funcs.create_qsub('SVM_1', 'svm1111', 'svm1111', queue='Nspin_long')
+#cluster_funcs.create_qsub('SVM_1', 'svm1111', 'svm1111', queue='Nspin_long')
 #cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
+#cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 
 
 
