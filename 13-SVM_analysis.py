@@ -9,33 +9,10 @@ from importlib import reload
 from mne.parallel import parallel_func
 
 
-def svm_features(subject):
-
-    list_features = ['RepeatAlter','StimID','WithinChunkPosition']
-    list_seq = [[3,4,5,6,7],[2,3,4,5,6,7],[4,5,6]]
-
-    for ii, feature_name in enumerate(list_features):
-        score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
-        save_path = config.SVM_path + subject + '/feature_decoding/'
-        utils.create_folder(save_path)
-        save_name = save_path + feature_name + '_score_dict.npy'
-        np.save(save_name, {'score': score, 'times': times})
-
-
-# make less parallel runs to limit memory usage
-N_JOBS = max(config.N_JOBS // 4, 1)
-print('N_JOBS=' + str(N_JOBS))
-
-parallel, run_func, _ = parallel_func(SVM_funcs.generate_SVM_all_sequences, n_jobs=N_JOBS)
-parallel(run_func(subject) for subject in config.subjects_list[14:15])
-
-parallel, run_func, _ = parallel_func(svm_features, n_jobs=N_JOBS)
-parallel(run_func(subject) for subject in config.subjects_list)
-
 
 # -------------
 
-def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=0,vmax=1):
+def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1):
 
     GAT_sens_all = {sens: [] for sens in sensors}
 
@@ -83,11 +60,11 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
         print("plotting in %s"%fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
-                SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
                                        figname=fig_name+key)
                 plt.close('all')
-            SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
-                                   save_path=fig_path, figname=fig_name + '_all_seq' + score_suff + '_',
+            SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
+                                   save_path=fig_path, figname=fig_name + '_all_seq' + '_',
                                    vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
@@ -106,17 +83,8 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 # ======= plot the GAT for all the sequences apart and together =============
 # ___________________________________________________________________________
 
-scores_on = True
-residual_analysis = True
-for scores_on in [True,False]:
-    for residual_analysis in [True,False]:
-        suf = ''
-        score_suff = ''
-        if residual_analysis:
-                suf = 'resid_'
-        if scores_on:
-            score_suff = '_score'
-        plot_all_subjects_results_SVM(suf+'GAT_results'+score_suff,config.subjects_list,suf+'GAT_results'+score_suff+'_13parts',plot_per_sequence=True,vmin=-0.1,vmax=0.1)
+
+plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
@@ -128,7 +96,7 @@ vmax = [0.6,0.6,0.35]
 #                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
 #                         'sub19-mg_190180']
 
-for ii,name in enumerate(['RepeatAlter_score_dict','StimID_score_dict','WithinChunkPosition_score_dict']):
+for ii,name in enumerate(['RepeatAlter_score_dict','WithinChunkPosition_score_dict','StimID_score_dict']):
     anal_name = 'feature_decoding/'+name
     plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
 

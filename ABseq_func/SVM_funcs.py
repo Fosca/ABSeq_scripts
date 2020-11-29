@@ -144,7 +144,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
     epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
-    epochs_balanced_all_chans = epochs_balanced.copy()
+    epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
     epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg,epochs_balanced_all_chans]
@@ -469,7 +469,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans':epochs_1st_element.copy()}
+                  'all_chans':epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in ['mag', 'grad', 'eeg','all_chans']:
@@ -505,6 +505,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                 run_m = epochs_sens[m].metadata['RunNumber'].values[0]
                 trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
                 epochs_1st_sens_m = epochs_1st_sens['SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
+
+                #if sens =="all_chans":
+                #    epochs_1st_sens_m.pick_types(meg=True,eeg=True)
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
