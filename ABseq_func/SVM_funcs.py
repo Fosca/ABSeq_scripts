@@ -603,7 +603,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                   'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['all_chans']:
+    for sens in ['all_chans','mag', 'grad', 'eeg']:
     # for sens in ['all_chans','mag', 'grad', 'eeg']:
 
         SVM_sens = SVM_results[sens]['SVM']
@@ -640,7 +640,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                 data_frame_meta = data_frame_meta.append(metadata_m)
         else:
             epochs_1st_sens_filtered_data_4folds = []
-            for fold_number in range(4):
+            for fold_number in range(n_folds):
                 SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
                 print("The shape of SVM_to_data is ")
                 print(SVM_to_data.shape)

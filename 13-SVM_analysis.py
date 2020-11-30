@@ -61,14 +61,14 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
-                                       figname=fig_name+key)
+                                       figname=fig_name+key,vmin=vmin, vmax=vmax)
                 plt.close('all')
             SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
                                    save_path=fig_path, figname=fig_name + '_all_seq' + '_',
                                    vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
-            SVM_funcs.plot_GAT_SVM(np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+            SVM_funcs.plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
@@ -84,13 +84,13 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 # ___________________________________________________________________________
 
 
-plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True)
+plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
 # ___________________________________________________________________________
-vmin = [0.4,0.4,0.15]
-vmax = [0.6,0.6,0.35]
+vmin = [0.45,0.20,0.4]
+vmax = [0.55,0.3,0.6]
 # config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
 #                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
 #                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
@@ -98,7 +98,7 @@ vmax = [0.6,0.6,0.35]
 
 for ii,name in enumerate(['RepeatAlter_score_dict','WithinChunkPosition_score_dict','StimID_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
+    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
 
