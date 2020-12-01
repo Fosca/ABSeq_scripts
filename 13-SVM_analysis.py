@@ -96,7 +96,7 @@ vmax = [0.55,0.3,0.6]
 #                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
 #                         'sub19-mg_190180']
 
-for ii,name in enumerate(['RepeatAlter_score_dict','WithinChunkPosition_score_dict','StimID_score_dict']):
+for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
     plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 

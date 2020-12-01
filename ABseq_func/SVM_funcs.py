@@ -35,7 +35,7 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 1):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 1,crop=None):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -47,6 +47,8 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     if decim is not None:
         epochs.decimate(decim)
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    if crop is not None:
+        epochs.crop(crop[0],crop[1])
     epochs.metadata = metadata
     epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
     # remove the stim channel from decoding

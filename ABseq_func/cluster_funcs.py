@@ -152,7 +152,7 @@ def SVM_features_repeatalter(subject):
     np.save(save_name, {'score': score, 'times': times})
 
 def SVM_features_stimID(subject):
-    score, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', list_sequences=[2,3,4,5,6,7], load_residuals_regression=False)
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', list_sequences=[2,3,4,5,6,7], load_residuals_regression=False,crop = [-0.1,0.4])
     save_path = config.SVM_path + subject + '/feature_decoding/'
     utils.create_folder(save_path)
     save_name = save_path + 'StimID' + '_score_dict.npy'
