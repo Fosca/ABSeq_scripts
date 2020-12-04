@@ -521,3 +521,37 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         # Save autoreject reject_log
         pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))
         # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
+
+
+
+# ______________________________________________________________________________________________________________________
+def sliding_window(epoch,sliding_window_size=25, sliding_window_step=4,
+                                             sliding_window_min_size=None):
+
+    """
+    This function outputs an epoch object that has been built from a sliding window on the data
+    :param epoch:
+    :param delta_t: sliding window in number of data points
+    :return:
+    """
+    epoch2 = epoch.copy()
+
+    from umne import transformers
+
+    xformer = transformers.SlidingWindow(window_size=sliding_window_size, step=sliding_window_step,
+                                         min_window_size=sliding_window_min_size)
+
+    n_time_points = epoch._data.shape[2]
+    window_start = np.array(range(0, n_time_points - sliding_window_size + 1, sliding_window_step))
+    window_end = window_start + sliding_window_size
+
+    window_end[-1] = min(window_end[-1], n_time_points)  # make sure that the last window doesn't exceed the input size
+
+    intermediate_times = [int((window_start[i] + window_end[i]) / 2) for i in range(len(window_start))]
+    times = epoch.times[intermediate_times]
+
+    epoch2 = mne.EpochsArray(xformer.fit_transform(epoch._data),epoch.info)
+    epoch2._set_times(times)
+    epoch2.metadata = epoch.metadata
+
+    return epoch2
