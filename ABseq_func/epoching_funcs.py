@@ -526,7 +526,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
 
 
 # ______________________________________________________________________________________________________________________
-def sliding_window(epoch,sliding_window_size=25, sliding_window_step=4,
+def sliding_window(epoch,sliding_window_size=25, sliding_window_step=1,
                                              sliding_window_min_size=None):
 
     """
@@ -537,9 +537,9 @@ def sliding_window(epoch,sliding_window_size=25, sliding_window_step=4,
     """
     epoch2 = epoch.copy()
 
-    from ABseq_func import transformers
+    from ABseq_func import SVM_funcs
 
-    xformer = transformers.SlidingWindow(window_size=sliding_window_size, step=sliding_window_step,
+    xformer = SVM_funcs.SlidingWindow(window_size=sliding_window_size, step=sliding_window_step,
                                          min_window_size=sliding_window_min_size)
 
     n_time_points = epoch._data.shape[2]
