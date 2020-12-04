@@ -928,16 +928,20 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xYxxxYYYYxYYxxxY']
 
     if sensor_type == 'mag':
-        vmin = -1.5
-        vmax = -0
+        vmin = -1
+        vmax = 1
         print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
     elif sensor_type == 'grad':
-        vmin = -1.5
-        vmax = -0
+        vmin = -1
+        vmax = 1
         print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
     elif sensor_type == 'eeg':
-        vmin = -1.5
-        vmax = -0
+        vmin = -1
+        vmax = 1
+        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
+    elif sensor_type == 'all_chans':
+        vmin = -1
+        vmax = 1
         print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
 
     n = 0
@@ -947,6 +951,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         # this provides us with the position of the violations and the times
         epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
         times = epochs_seq_subset.times
+        times = times + 0.3
         violpos_list = np.unique(epochs_seq_subset.metadata['ViolationInSequence'])
 
         # Average data from habituation trials

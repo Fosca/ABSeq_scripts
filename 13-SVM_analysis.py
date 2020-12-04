@@ -142,7 +142,7 @@ utils.create_folder(save_folder)
 
 # Figure with only one EMS projected (average window)
 epochs_list = {}
-for sens in ['mag', 'grad', 'eeg']:
+for sens in ['all_chans','mag', 'grad', 'eeg']:
     if sens == 'mag':
         epochs_list['hab'] = epochs_16_items_mag_habituation_window
         epochs_list['test'] = epochs_16_items_mag_test_window
@@ -152,6 +152,10 @@ for sens in ['mag', 'grad', 'eeg']:
     elif sens == 'eeg':
         epochs_list['hab'] = epochs_16_items_eeg_habituation_window
         epochs_list['test'] = epochs_16_items_eeg_test_window
+    elif sens == 'all_chans':
+        epochs_list['hab'] = epochs_16_items_all_chans_habituation_window
+        epochs_list['test'] = epochs_16_items_all_chans_test_window
+
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
     # for seq_ID in range(1, 8):
