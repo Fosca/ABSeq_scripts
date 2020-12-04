@@ -1,3 +1,7 @@
+"""
+Used to regress out suprise (& more)
+"""
+
 from __future__ import division
 from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
 import os.path as op
@@ -5,13 +9,29 @@ import numpy as np
 import config
 from ABseq_func import *
 from sklearn.preprocessing import scale
+import os
+
+# Exclude some subjects
+config.exclude_subjects.append('sub10-gp_190568')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
 
 # Recompute surprise ?
 for subject in config.subjects_list:
+    # remove old files
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    metadata_path = op.join(meg_subject_dir, 'metadata_item.pkl')
+    if op.exists(metadata_path):
+        os.remove(metadata_path)
+    metadata_path = op.join(meg_subject_dir, 'metadata_item_clean.pkl')
+    if op.exists(metadata_path):
+        os.remove(metadata_path)
+
     list_omegas = np.logspace(-1, 2, 50)
     TP_funcs.from_epochs_to_surprise(subject, list_omegas)
     TP_funcs.append_surprise_to_metadata_clean(subject)
 
+# Run the regression
 for subject in config.subjects_list:
 
     # =========== correction of the metadata with the surprise for the clean epochs ============
@@ -64,6 +84,10 @@ for subject in config.subjects_list:
     for name in names[1:]:  # all but intercept
         epochs.metadata[name] = scale(epochs.metadata[name])
 
+    # ====== baseline correction ? ====== #
+    print('Baseline correction...')
+    epochs = epochs.apply_baseline(baseline=(-0.050, 0))
+
     lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
 
     # Save surprise regression results
@@ -86,3 +110,7 @@ for subject in config.subjects_list:
 
     # save the residuals epoch in the same folder
     residual_epochs.save(out_path + op.sep + 'residuals-epo.fif', overwrite=True)
+
+# Create evoked from the residuals epochs
+for subject in config.subjects_list:
+    evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')

@@ -29,17 +29,22 @@ import glob
 import os
 from importlib import reload
 
+# Exclude some subjects
+config.exclude_subjects.append('sub10-gp_190568')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
 print('############------- Running analysis with ' + str(len(config.subjects_list)) + ' subjects ! -------############')
 
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'StandComplexity'
+analysis_name = 'ViolComplexity'
 # names = ['StimID', 'StimPosition', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkSize', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
 names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
 exclude_Repeat_and_Alternate = False
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
 use_baseline = True  # apply baseline to the epochs before running the regression
 lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
 Do3Dplot = True
@@ -196,7 +201,7 @@ if DoFirstLevel:
 
         # ====== apply baseline ? ====== #
         if use_baseline:
-            epochs = epochs.apply_baseline(baseline=(None, 0))
+            epochs = epochs.apply_baseline(baseline=(-0.050, 0))
 
         # ====== normalization ? ====== #
         for name in names:
@@ -309,7 +314,7 @@ if DoSecondLevel:
             win_size = .100
             stc = mean_stc
             maxval = np.max(stc._data)
-            colorlims = [maxval*.20, maxval*.30, maxval*.70]
+            colorlims = [maxval*.30, maxval*.40, maxval*.80]
             # plot and screenshot for each timewindow
             stc_screenshots = []
             for t in times_to_plot:
@@ -378,7 +383,8 @@ if DoSecondLevel:
                 betadata = evokeds.copy().pick_types(eeg=False, meg='mag').data
             elif ch_type == 'grad':
                 betadata = evokeds.copy().pick_types(eeg=False, meg='grad').data
-            minT = min(evokeds.times) * 1000
+            # minT = min(evokeds.times) * 1000
+            minT = -0.050 * 1000
             maxT = max(evokeds.times) * 1000
             # ---- Plot
             im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'

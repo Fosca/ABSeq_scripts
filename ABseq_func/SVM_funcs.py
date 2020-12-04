@@ -35,7 +35,7 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 1):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 1,crop=None):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -47,6 +47,8 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     if decim is not None:
         epochs.decimate(decim)
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    if crop is not None:
+        epochs.crop(crop[0],crop[1])
     epochs.metadata = metadata
     epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
     # remove the stim channel from decoding
@@ -93,6 +95,8 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
         epochs.event_id = {'%i' % i: i for i in np.unique(epochs.events[:, 2])}
         epochs.equalize_event_counts(epochs.event_id)
 
+    import time
+    before_decoding = time.time()
     kf = KFold(n_splits=4)
 
     y = epochs.events[:, 2]
@@ -108,6 +112,9 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     score = np.mean(scores, axis=0)
     times = epochs.times
     # then use plot_GAT_SVM to plot the gat matrix
+    after_decoding = time.time()-before_decoding
+    print("================ the decoding of feature %s took %i seconds ====="%(feature_name,int(after_decoding)))
+
 
     return score, times
 
@@ -134,12 +141,12 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     saving_directory = op.join(config.SVM_path, subject)
     utils.create_folder(saving_directory)
 
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_violation_standards=True)
     # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
     epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
-    epochs_balanced_all_chans = epochs_balanced.copy()
+    epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
     epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg,epochs_balanced_all_chans]
@@ -443,7 +450,6 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ==== load the ems results ==============
     SVM_results_path = op.join(config.SVM_path, subject)
-
     suf = ''
     n_folds = 4
     if train_test_different_blocks:
@@ -465,11 +471,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans':epochs_1st_element.copy()}
+                  'all_chans':epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in ['mag', 'grad', 'eeg','all_chans']:
 
+        print(sens)
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
         epochs_1st_sens = epochs_1st[sens]
@@ -488,8 +495,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         # ===============================
         counter = 0
         for fold_number in range(n_folds):
-
-            print('Fold ' + str(fold_number + 1) + ' on 4...')
+            print('Fold ' + str(fold_number + 1) + ' on %i...'%n_folds)
             start = time.time()
             test_indices = SVM_results[sens]['test_ind'][fold_number]
             epochs_sens_test = epochs_sens[test_indices]
@@ -501,6 +507,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                 run_m = epochs_sens[m].metadata['RunNumber'].values[0]
                 trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
                 epochs_1st_sens_m = epochs_1st_sens['SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
+
+                #if sens =="all_chans":
+                #    epochs_1st_sens_m.pick_types(meg=True,eeg=True)
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
@@ -596,7 +605,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                   'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['all_chans']:
+    for sens in ['all_chans','mag', 'grad', 'eeg']:
     # for sens in ['all_chans','mag', 'grad', 'eeg']:
 
         SVM_sens = SVM_results[sens]['SVM']
@@ -633,7 +642,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                 data_frame_meta = data_frame_meta.append(metadata_m)
         else:
             epochs_1st_sens_filtered_data_4folds = []
-            for fold_number in range(4):
+            for fold_number in range(n_folds):
                 SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
                 print("The shape of SVM_to_data is ")
                 print(SVM_to_data.shape)

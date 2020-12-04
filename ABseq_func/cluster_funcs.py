@@ -69,7 +69,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
         file_name = os.path.split(i)
         job_name = "%s" % file_name[1]
 
-        walltime = "36:00:00"  # "24:00:00"
+        walltime = "48:00:00"  # "24:00:00"
         if 'short' in queue:
             walltime = "2:00:00"  # "24:00:00"
 
@@ -124,7 +124,7 @@ def SVM_analysis(subject):
     # SVM_funcs.generate_SVM_all_sequences(subject)
     # SVM_funcs.GAT_SVM(subject)
     # SVM_funcs.GAT_SVM_4pos(subject)
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
+    # SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
@@ -144,16 +144,26 @@ def SVM_3(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=False)
 
 
-def SVM_features(subject):
-    list_features = ['RepeatAlter','StimID','WithinChunkPosition']
-    list_seq = [[3,4,5,6,7],[2,3,4,5,6,7],[4,5,6]]
+def SVM_features_repeatalter(subject):
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter', list_sequences=[3,4,5,6,7], load_residuals_regression=False)
+    save_path = config.SVM_path + subject + '/feature_decoding/'
+    utils.create_folder(save_path)
+    save_name = save_path + 'RepeatAlter' + '_score_dict.npy'
+    np.save(save_name, {'score': score, 'times': times})
 
-    for ii, feature_name in enumerate(list_features):
-        score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, list_sequences=list_seq[ii], load_residuals_regression=False)
-        save_path = config.SVM_path + subject + '/feature_decoding/'
-        utils.create_folder(save_path)
-        save_name = save_path + feature_name + '_score_dict.npy'
-        np.save(save_name, {'score': score, 'times': times})
+def SVM_features_stimID(subject):
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', list_sequences=[2,3,4,5,6,7], load_residuals_regression=False,crop = [-0.1,0.4])
+    save_path = config.SVM_path + subject + '/feature_decoding/'
+    utils.create_folder(save_path)
+    save_name = save_path + 'StimID' + '_score_dict.npy'
+    np.save(save_name, {'score': score, 'times': times})
+
+def SVM_features_withinchunk(subject):
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition', list_sequences=[4,5,6], load_residuals_regression=False)
+    save_path = config.SVM_path + subject + '/feature_decoding/'
+    utils.create_folder(save_path)
+    save_name = save_path + 'WithinChunkPosition' + '_score_dict.npy'
+    np.save(save_name, {'score': score, 'times': times})
 
 
 def compute_evoked(subject):

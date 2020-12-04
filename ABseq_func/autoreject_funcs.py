@@ -46,18 +46,6 @@ def run_autoreject(subject, epoch_on_first_element):
 
 
 def ar_log_summary(subject, epoch_on_first_element):
-    meg_subject_dir = op.join(config.meg_dir, subject)
-    if epoch_on_first_element:
-        arlog_name = op.join(meg_subject_dir, subject + '_1st_element_clean_epo_reject_log.obj')
-        save_path = op.join(config.fig_path, 'AutoReject_fullsequences_epochs', subject)
-    else:
-        arlog_name = op.join(meg_subject_dir, subject + '_clean_epo_reject_log.obj')
-        save_path = op.join(config.fig_path, 'AutoReject_items_epochs', subject)
-    reject_log = pickle.load(open(arlog_name, 'rb'))
-
-    # Plots
-    reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
-
     # reject_log content ===>
     # bad_epochs : array-like, shape (n_epochs,)
     #     The boolean array with entries True for epochs that
@@ -67,6 +55,28 @@ def ar_log_summary(subject, epoch_on_first_element):
     #     epoch is good (value 0), bad (1), or bad and interpolated (2).
     # ch_names : list of str
     #     The list of channels corresponding to the rows of the labels.
+
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    if epoch_on_first_element:
+        arlog_name = op.join(meg_subject_dir, subject + '_1st_element_clean_epo_reject_log.obj')
+        save_path = op.join(config.fig_path, 'AutoReject_fullsequences_epochs', subject)
+    else:
+        arlog_name = op.join(meg_subject_dir, subject + '_clean_epo_reject_log.obj')
+        save_path = op.join(config.fig_path, 'AutoReject_items_epochs', subject)
+
+    reject_log = pickle.load(open(arlog_name, 'rb'))
+
+    if epoch_on_first_element:
+        Nrej = sum(reject_log.bad_epochs == True)
+        Nepochs = 46 * 7 * 2
+        print('%s, fullsequence epochs: %d/%d rejected bad epochs items = %.2f%%' % (subject, Nrej, Nepochs, Nrej / Nepochs * 100))
+    else:
+        Nrej = sum(reject_log.bad_epochs == True)
+        Nepochs = 16 * 46 * 7 * 2
+        print('%s, items epochs: %d/%d rejected bad epochs items = %.2f%%' % (subject, Nrej, Nepochs, Nrej / Nepochs * 100))
+
+    # Plots
+    reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
 
 
 def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
