@@ -1092,3 +1092,6 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         plt.close('all')
 
     return figure
+
+
+
