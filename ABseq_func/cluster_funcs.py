@@ -4,9 +4,11 @@ import initialization_paths
 from ABseq_func import *
 from ABseq_func import TP_funcs, SVM_funcs
 import config
-import subprocess
-import MarkovModel_Python
+import mne
 import numpy as np
+import pickle
+from autoreject import AutoReject
+
 def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, queue='Unicog_long'):
     import subprocess
     import os, sys, glob
@@ -128,8 +130,34 @@ def SVM_analysis(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
-def fosca():
-    print('joli poulpe')
+def autoreject_marmouset():
+
+    root_path = '/neurospin/unicog/protocols/ABSeq_marmousets/'
+    neural_data_path = root_path+'neural_data/'
+
+    subject = 'Nr'
+    epoch_name = '/epoch_items'
+    tmin = -0.099
+
+    # ======== rebuild the epoch object and run autoreject ========
+    epoch_data = np.load(neural_data_path + subject + epoch_name+'_data.npy')
+    info = np.load(neural_data_path + subject + epoch_name+ '_info.npy',allow_pickle=True).item()
+    metadata = np.load(neural_data_path + subject + epoch_name +'_metadata.pkl',allow_pickle=True)
+    epochs = mne.EpochsArray(epoch_data,info=info,tmin=tmin)
+    epochs.metadata = metadata
+    epochs.load_data()
+
+    # ======== ======== ======== ======== ======== ======== ========
+    ar = AutoReject()
+    epochs, reject_log = ar.fit_transform(epochs, return_log=True)
+    epochs_clean_fname = neural_data_path + subject + epoch_name+'_clean.fif'
+    print("Output: ", epochs_clean_fname)
+    epochs.save(epochs_clean_fname, overwrite=True)
+    # Save autoreject reject_log
+    pickle.dump(reject_log, open(epochs_clean_fname[:-4] + '_reject_log.obj', 'wb'))
+    np.save(neural_data_path + subject + epoch_name+'_data_clean.npy',epochs.get_data())
+    epochs.metadata.to_pickle(neural_data_path + subject + epoch_name +'_metadata_clean.pkl')
+    np.save(neural_data_path + subject + epoch_name+ '_info_clean.npy',epochs.info)
 
 
 def SVM_1(subject):
