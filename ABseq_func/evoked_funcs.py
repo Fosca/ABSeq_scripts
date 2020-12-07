@@ -1033,7 +1033,7 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8)):
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2 ):
 
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
@@ -1046,7 +1046,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
     :return: figure
     """
     # Additional parameters
-    cmap_rescale_ratio = 0.2  # 'saturate' the colormap, min/max will be reduced with this ratio
+     # 'saturate' the colormap, min/max will be reduced with this ratio
 
     # Create figure
     fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
