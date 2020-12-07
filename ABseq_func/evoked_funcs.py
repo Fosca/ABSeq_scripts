@@ -1033,7 +1033,7 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2 ):
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2,vmin=None,vmax=None ):
 
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
@@ -1068,10 +1068,13 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         cmap = 'viridis'
         vmin = min(minlist)
         vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
-    else:
+    elif cmap_style='bilateral':
         cmap = 'RdBu_r'
         vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
+    else:
+        cmap = 'RdBu_r'
+
 
     n = 0
     for ii,seqID in enumerate(seq_list):
