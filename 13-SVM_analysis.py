@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import os.path as op
 import config
 import numpy as np
@@ -84,7 +86,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 # ___________________________________________________________________________
 
 
-plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
+plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
@@ -98,7 +100,7 @@ vmax = [0.55,0.3,0.6]
 
 for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
+    plot_all_subjects_results_SVM(anal_name,subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
 

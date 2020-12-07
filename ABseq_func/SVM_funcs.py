@@ -210,10 +210,13 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
     :param SVM_results: output of generate_SVM_all_sequences
     :return: GAT averaged over the 4 classification folds
     """
+    suf = ''
+
+    if sliding_window:
+        suf += 'SW_'
 
     saving_directory = op.join(config.SVM_path, subject)
     n_folds = 4
-    suf = ''
     if load_residuals_regression:
         suf = 'resid_'
 
@@ -221,8 +224,7 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
         suf += 'train_test_different_blocks'
         n_folds = 2
 
-    if sliding_window:
-        suf += 'SW_'
+
 
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
