@@ -1033,7 +1033,7 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None):
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8)):
 
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
@@ -1074,13 +1074,13 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
 
     n = 0
-    for seqID in range(1, 8):
+    for ii,seqID in enumerate(seq_list):
 
         # Sequence info
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
 
         # Subfig title
-        ax[seqID-1].set_title(seqname, loc='left', weight='bold')
+        ax[ii].set_title(seqname, loc='left', weight='bold')
 
         # Data
         y_list = []

@@ -1,4 +1,5 @@
 # This module contains all the functions related to the decoding analysis
+import ABseq_func
 import os.path as op
 import numpy as np
 import pandas as pd
