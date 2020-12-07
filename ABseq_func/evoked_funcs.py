@@ -1068,7 +1068,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         cmap = 'viridis'
         vmin = min(minlist)
         vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
-    elif cmap_style='bilateral':
+    elif cmap_style=='bilateral':
         cmap = 'RdBu_r'
         vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
