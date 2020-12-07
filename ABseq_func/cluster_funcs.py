@@ -161,15 +161,15 @@ def autoreject_marmouset():
 
 
 def SVM_1(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True)
 
 
 def SVM_2(subject):
-    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=False)
+    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=False,sliding_window=True)
 
 
 def SVM_3(subject):
-    SVM_funcs.GAT_SVM(subject, load_residuals_regression=False)
+    SVM_funcs.GAT_SVM(subject, load_residuals_regression=False,sliding_window=True)
 
 
 def SVM_features_repeatalter(subject):

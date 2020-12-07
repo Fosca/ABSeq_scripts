@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import os.path as op
 import config
 import numpy as np
@@ -84,7 +86,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 # ___________________________________________________________________________
 
 
-plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
+plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
@@ -98,7 +100,7 @@ vmax = [0.55,0.3,0.6]
 
 for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
+    plot_all_subjects_results_SVM(anal_name,subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
 
@@ -142,7 +144,7 @@ utils.create_folder(save_folder)
 
 # Figure with only one EMS projected (average window)
 epochs_list = {}
-for sens in ['mag', 'grad', 'eeg']:
+for sens in ['all_chans','mag', 'grad', 'eeg']:
     if sens == 'mag':
         epochs_list['hab'] = epochs_16_items_mag_habituation_window
         epochs_list['test'] = epochs_16_items_mag_test_window
@@ -152,6 +154,10 @@ for sens in ['mag', 'grad', 'eeg']:
     elif sens == 'eeg':
         epochs_list['hab'] = epochs_16_items_eeg_habituation_window
         epochs_list['test'] = epochs_16_items_eeg_test_window
+    elif sens == 'all_chans':
+        epochs_list['hab'] = epochs_16_items_all_chans_habituation_window
+        epochs_list['test'] = epochs_16_items_all_chans_test_window
+
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
     # for seq_ID in range(1, 8):

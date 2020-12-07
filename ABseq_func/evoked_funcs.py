@@ -1033,7 +1033,7 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None):
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2,vmin=None,vmax=None ):
 
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
@@ -1046,7 +1046,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
     :return: figure
     """
     # Additional parameters
-    cmap_rescale_ratio = 0.2  # 'saturate' the colormap, min/max will be reduced with this ratio
+     # 'saturate' the colormap, min/max will be reduced with this ratio
 
     # Create figure
     fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
@@ -1068,19 +1068,22 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         cmap = 'viridis'
         vmin = min(minlist)
         vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
-    else:
+    elif cmap_style=='bilateral':
         cmap = 'RdBu_r'
         vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
+    else:
+        cmap = 'RdBu_r'
+
 
     n = 0
-    for seqID in range(1, 8):
+    for ii,seqID in enumerate(seq_list):
 
         # Sequence info
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
 
         # Subfig title
-        ax[seqID-1].set_title(seqname, loc='left', weight='bold')
+        ax[ii].set_title(seqname, loc='left', weight='bold')
 
         # Data
         y_list = []

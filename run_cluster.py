@@ -6,7 +6,7 @@ print('jaime les tomates')
 
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub10-gp_190568'])
+#cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub10-gp_190568'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
@@ -27,6 +27,7 @@ print('jaime les tomates')
 #cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
 cluster_funcs.create_qsub('autoreject_marmouset', 'ar_marmouset', 'ar_marmouset', queue='Nspin_bigM', sublist_subjects=['whatever'])
+#cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
 cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 
@@ -43,9 +44,6 @@ cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 #cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
 #cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
 
-
-
->>>>>>> ee7f431e608f687aabde1cf9eb8bc26872757cf3
 
 
 # cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Global_long')
