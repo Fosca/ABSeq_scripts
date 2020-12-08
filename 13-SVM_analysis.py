@@ -59,7 +59,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         plt.close('all')
         # return GAT_sens_all
 
-        print("plotting in %s"%fig_path)
+        print("plotting in %s"%config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
@@ -86,21 +86,17 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 # ___________________________________________________________________________
 
 
-plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
+plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.1,vmax=0.1)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
 # ___________________________________________________________________________
 vmin = [0.45,0.20,0.4]
 vmax = [0.55,0.3,0.6]
-# config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
-#                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-#                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
-#                         'sub19-mg_190180']
 
 for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
-    plot_all_subjects_results_SVM(anal_name,subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
+    plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
 
@@ -160,11 +156,8 @@ for sens in ['all_chans','mag', 'grad', 'eeg']:
 
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
-    # for seq_ID in range(1, 8):
-    #     # "curve" figure
-    #     EMS_funcs.plot_EMS_projection_for_seqID_window(epochs_list, sensor_type=sens, seqID=seq_ID,
-    #                                                    save_path=op.join(save_folder, 'Seq%i_%s_window_%i_%ims.png' % (seq_ID, sens, win_tmin, win_tmax)))
-    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)))
+
+    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)),vmin=-1.5,vmax=1.5)
 
 # make less parallel runs to limit memory usage
 # N_JOBS = max(config.N_JOBS // 4, 1)

@@ -817,7 +817,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
     return figure
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None,vmin=-1,vmax=1):
 
     # window info, just for figure title
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0] * 1000
@@ -842,22 +842,8 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xxxxYYYYxxYYxYxY',
                 'xYxxxYYYYxYYxxxY']
 
-    if sensor_type == 'mag':
-        vmin = -1
-        vmax = 1
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
-    elif sensor_type == 'grad':
-        vmin = -1
-        vmax = 1
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
-    elif sensor_type == 'eeg':
-        vmin = -1
-        vmax = 1
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
-    elif sensor_type == 'all_chans':
-        vmin = -1
-        vmax = 1
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
+
+    print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
 
     n = 0
 

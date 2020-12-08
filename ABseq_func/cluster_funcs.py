@@ -1,5 +1,7 @@
 # This module contains all the functions that allow the computations to run on the cluster.
 from __future__ import division
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+
 import initialization_paths
 from ABseq_func import *
 from ABseq_func import TP_funcs, SVM_funcs
