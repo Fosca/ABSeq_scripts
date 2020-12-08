@@ -131,7 +131,7 @@ def SVM_analysis(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
-def autoreject_marmouset():
+def autoreject_marmouset(subject):
 
     root_path = '/neurospin/unicog/protocols/ABSeq_marmousets/'
     neural_data_path = root_path+'neural_data/'
