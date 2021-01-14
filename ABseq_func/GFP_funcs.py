@@ -76,7 +76,7 @@ def plot_GFP_with_sem(GFP_all_subjects, times, color_mean=None, label=None, filt
 
 
 # ______________________________________________________________________________________________________________________
-def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standard_or_deviant='standard'):
+def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standard_or_deviant='standard',ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     """
     For the subject 'subject', this function gets the corresponding epochs on each item and computes the GFP.
     :param epochs_items:
@@ -101,7 +101,7 @@ def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standa
         os.makedirs(fig_path)
 
     # Loop over the 3 ch_types and plot the GFP
-    ch_types = ['eeg', 'grad', 'mag']
+
     for ch_type in ch_types:
         print("Plotting the GFP for the 7 sequences for channel type %s .\n" % ch_type)
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
@@ -118,13 +118,13 @@ def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standa
         plt.axvline(0, linestyle='-', color='black', linewidth=2)
         for xx in range(3):
             plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-        for x in range(7):
+        for x in list_sequences:
             if standard_or_deviant == "standard":
-                epochs_of_interest = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == 0']
+                epochs_of_interest = epochs_items['SequenceID == "' + str(x) + '" and ViolationInSequence == 0']
                 epochs_of_interest = epochs_of_interest.average()
                 epochs_of_interest = epochs_of_interest.filter(h_freq=h_freq, l_freq=None)
             else:
-                epochs_of_interest = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == 1']
+                epochs_of_interest = epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == 1']
                 epochs_of_interest = epochs_of_interest.average()
                 epochs_of_interest = epochs_of_interest.filter(h_freq=h_freq, l_freq=None)
             times = epochs_of_interest.times * 1000
@@ -135,7 +135,7 @@ def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standa
             elif ch_type == 'grad':
                 gfp = np.sum(epochs_of_interest.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
             gfp = mne.baseline.rescale(gfp, times, baseline=(-100, 0))
-            plt.plot(times, gfp, label=('SeqID_' + str(x + 1) + ', N=' + str(epochs_of_interest.nave)), linewidth=2)
+            plt.plot(times, gfp, label=('SeqID_' + str(x) + ', N=' + str(epochs_of_interest.nave)), linewidth=2)
         plt.legend(loc='upper right', fontsize=9)
         ax.set_yticklabels([])
         ax.set_yticks([])
@@ -150,7 +150,7 @@ def plot_gfp_items_standard_or_deviants(epochs_items, subject, h_freq=30, standa
 
 
 # ______________________________________________________________________________________________________________________
-def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30):
+def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     """
     For each participant "subject", this function computes the GFP on the 16 item long sequence epoch
     :param epochs_full_sequence: 16 item long sequence epoch
@@ -165,12 +165,11 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30):
         os.makedirs(fig_path)
 
     # Loop over the 3 ch_types
-    ch_types = ['eeg', 'grad', 'mag']
     for ch_type in ch_types:
         print(ch_type)
 
         plt.close('all')
-        fig, axes = plt.subplots(7, 1, figsize=(16, 12), sharex=True, sharey=True, constrained_layout=True)
+        fig, axes = plt.subplots(len(list_sequences), 1, figsize=(16, 12), sharex=True, sharey=True, constrained_layout=True)
         if ch_type == 'eeg':
             fig.suptitle('GFP (EEG)', fontsize=12)
             fig_name = fig_path + op.sep + 'GFP_7sequences_standard_full_trials_EEG.png'
@@ -181,8 +180,8 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30):
             fig.suptitle('GFP (GRAD)', fontsize=12)
             fig_name = fig_path + op.sep + 'GFP_7sequences_standard_full_trials_GRAD.png'
         ax = axes.ravel()[::1]
-        for x in range(7):
-            standards = epochs_full_sequence['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].average()
+        for x, seq_num in enumerate(list_sequences):
+            standards = epochs_full_sequence['SequenceID == "' + str(seq_num) + '" and ViolationInSequence == "0"'].average()
             standards = standards.filter(h_freq=h_freq, l_freq=None)
             times = standards.times * 1000
             ax[x].axvline(0, linestyle='-', color='black', linewidth=2)
@@ -202,7 +201,7 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30):
                 ax[x].plot(times, gfp, label=('Standard, N=' + str(standards.nave)), linewidth=2.5, color='purple')
             ax[x].legend(loc='upper left', fontsize=10)
             ax[x].set_yticklabels([])
-            ax[x].set_ylabel('SequenceID_' + str(x + 1))
+            ax[x].set_ylabel('SequenceID_' + str(seq_num))
             ax[x].set_xlim(-200, 4250)
         axes.ravel()[-1].set_xlabel('Time [ms]')
         # Save
@@ -212,7 +211,7 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30):
 
 
 # ______________________________________________________________________________________________________________________
-def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30):
+def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     """
     For each participant "subject", this function plots the GFP only for the violations.
     :param epochs_items:
@@ -227,12 +226,11 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30):
         os.makedirs(fig_path)
 
     # Loop over the 3 ch_types
-    ch_types = ['eeg', 'grad', 'mag']
     for ch_type in ch_types:
         print(ch_type)
 
         plt.close('all')
-        fig, axes = plt.subplots(7, 1, figsize=(16, 12), sharex=True, sharey=True, constrained_layout=True)
+        fig, axes = plt.subplots(len(list_sequences), 1, figsize=(16, 12), sharex=True, sharey=True, constrained_layout=True)
         if ch_type == 'eeg':
             fig.suptitle('GFP (EEG)', fontsize=12)
             fig_name = fig_path + op.sep + 'GFP_7sequences_deviant_4positions_full_trials_EEG.png'
@@ -243,9 +241,9 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30):
             fig.suptitle('GFP (GRAD)', fontsize=12)
             fig_name = fig_path + op.sep + 'GFP_7sequences_deviant_4positions_full_trials_GRAD.png'
         ax = axes.ravel()[::1]
-        for x in range(7):
+        for x, num_seq in enumerate(list_sequences):
             # Select only the trials with a violation (for one sequence)
-            seqEpochs = epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationInSequence > 0'].copy()
+            seqEpochs = epochs_items['SequenceID == "' + str(num_seq) + '" and ViolationInSequence > 0'].copy()
             # Create 'Evoked' object that will contain the evoked response for each of the 4 deviant positions (of one sequence)
             data4pos = []
             all_devpos = np.unique(seqEpochs.metadata.ViolationInSequence)  # Position of deviants
@@ -275,7 +273,7 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30):
                     ax[x].plot(times, gfp, label=('Deviant position=' + str(all_devpos[devpos]) + ', N=' + str(data4pos[devpos].nave)), linewidth=2)
             ax[x].legend(loc='upper left', fontsize=10)
             ax[x].set_yticklabels([])
-            ax[x].set_ylabel('SequenceID_' + str(x + 1))
+            ax[x].set_ylabel('SequenceID_' + str(num_seq))
             ax[x].set_xlim(-200, 4250)
         axes.ravel()[-1].set_xlabel('Time [ms]')
         # Save

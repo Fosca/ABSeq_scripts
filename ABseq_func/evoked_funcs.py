@@ -11,8 +11,7 @@ from scipy.stats import sem
 import matplotlib.ticker as ticker
 import copy
 
-
-def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False):
+def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     # Figures folder
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', subject)
@@ -27,42 +26,49 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
         os.makedirs(fig_path)
 
     # Make evoked - deviants OR standards for each sequence
-    evokeds_per_seq = []
-    for x in range(7):
+    evokeds_per_seq = {'%i'%i:[] for i in list_sequences}
+    for x in list_sequences:
         if apply_baseline:
-            evokeds_per_seq.append(epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == "%i"' % violation_or_not].apply_baseline().average())
+            evokeds_per_seq[x]= (epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == "%i"' % violation_or_not].apply_baseline().average())
         else:
-            evokeds_per_seq.append(epochs_items['SequenceID == "' + str(x + 1) + '" and ViolationOrNot == "%i"' % violation_or_not].average())
+            evokeds_per_seq[x] = (epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == "%i"' % violation_or_not].average())
 
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
     ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
     topomap_args = dict(time_unit='s')
 
-    for x in range(7):
+    for x in list_sequences:
         # EEG
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='eeg', times=times, show=False)
-        fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+        if ch_types==['eeg']:
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='eeg', times=times, show=False)
+            fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
+        else:
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='eeg', times=times, show=False)
+            fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
+            # MAG
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='mag', times=times, show=False)
+            fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
 
-        # MAG
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='mag', times=times, show=False)
-        fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
-
-        # #GRAD
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='grad', times=times, show=False)
-        fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+            # #GRAD
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='grad', times=times, show=False)
+            fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
 
 
 def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, residevoked=False, apply_baseline=False):
@@ -87,6 +93,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
     topomap_args = dict(time_unit='ms', ylim=ylim)
     topotimes = np.arange(0.070, 0.501, 0.050)
     topo_avg = 0.020
+
 
     for x, seq in enumerate(evoked.keys()):
         # Sequence info
@@ -171,6 +178,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
 
 
 def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=1, residevoked=False):
+
     # Grand average
     tmp = list(evoked.keys())
     evoked_seq = evoked[tmp[0]]
@@ -230,6 +238,7 @@ def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=
 
 
 def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=0):
+
     # Figures folder & lims
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_FullSequence', 'GROUP')
@@ -308,48 +317,59 @@ def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=
         plt.close(fig)
 
 
-def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", apply_baseline=False):
+def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", apply_baseline=False,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     # Figures folder
     fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_FullSequence', subject)
     if not os.path.exists(fig_path):
         os.makedirs(fig_path)
 
     # Make evoked - not-violated - for each sequence
-    evokeds_per_seq = []
-    for x in range(7):
+
+    evokeds_per_seq = {'%i'%i:[] for i in list_sequences}
+
+    for x in list_sequences:
         if apply_baseline:
-            evokeds_per_seq.append(epochs_first_item['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].apply_baseline().average())
+            evokeds_per_seq[x] = (epochs_first_item['SequenceID == "' + str(x) + '" and ViolationInSequence == "0"'].apply_baseline().average())
         else:
-            evokeds_per_seq.append(epochs_first_item['SequenceID == "' + str(x + 1) + '" and ViolationInSequence == "0"'].average())
+            evokeds_per_seq[x] = (epochs_first_item['SequenceID == "' + str(x) + '" and ViolationInSequence == "0"'].average())
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
     ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
     topomap_args = dict(time_unit='s')
 
-    for x in range(7):
+    for x in list_sequences:
         # EEG
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='eeg', times=times, show=False)
-        fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+        if ch_types==['eeg']:
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='eeg', times=times, show=False)
+            fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
+        else:
 
-        # MAG
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='mag', times=times, show=False)
-        fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='eeg', times=times, show=False)
+            fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
 
-        # #GRAD
-        fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x + 1),
-                                            topomap_args=topomap_args, picks='grad', times=times, show=False)
-        fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+            # MAG
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='mag', times=times, show=False)
+            fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
+
+            # #GRAD
+            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
+                                                topomap_args=topomap_args, picks='grad', times=times, show=False)
+            fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x) + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
 
 
 def create_evoked(subject, cleaned=True):
@@ -498,6 +518,7 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
 
 
 def create_evoked_for_regression_factors(regressor_names, subject, cleaned=True):
+
     # This will create one evoked fif for each (unique) level of each regressor
     # of regressor_names, e.g., one evoked for ChunkSize=1, one for ChunkSize=2, etc.
 
@@ -608,7 +629,7 @@ def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, 
     return evoked_dict, path_evo
 
 
-def load_evoked_resid(subject='all', filter_name='', filter_not=None, root_path=None):
+def load_evoked_resid(subject='all', filter_name='', filter_not=None,root_path=None):
     """
     IDENTICAL TO load_evoked BUT TAKES EVOKED FROM RESIDUALS OF A REGRESSION INSTEAD OF ORIGINAL EVOKED
 
@@ -701,6 +722,7 @@ def average_evoked(evoked_dict):
 
 
 def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
+
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -758,6 +780,7 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, f
 
 
 def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
+
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -815,6 +838,7 @@ def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label
 
 
 def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_style='bilateral', filter=True):
+
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -891,6 +915,7 @@ def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_s
 
 
 def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', filter=True):
+
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -972,6 +997,7 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
 
 
 def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=True, axis=None):
+
     times = data[0][0].times * 1000
 
     group_data_seq = []
@@ -1005,7 +1031,8 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None):
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2,vmin=None,vmax=None ):
+
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
                          each contains keys 'seq1', 'seq2', 'seq3', 'seq4', 'seq5', 'seq6', 'seq7'
@@ -1017,7 +1044,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
     :return: figure
     """
     # Additional parameters
-    cmap_rescale_ratio = 0.2  # 'saturate' the colormap, min/max will be reduced with this ratio
+     # 'saturate' the colormap, min/max will be reduced with this ratio
 
     # Create figure
     fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
@@ -1039,19 +1066,22 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         cmap = 'viridis'
         vmin = min(minlist)
         vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
-    else:
+    elif cmap_style=='bilateral':
         cmap = 'RdBu_r'
         vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
+    else:
+        cmap = 'RdBu_r'
+
 
     n = 0
-    for seqID in range(1, 8):
+    for ii, seqID in enumerate(seq_list):
 
         # Sequence info
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
 
         # Subfig title
-        ax[seqID - 1].set_title(seqname, loc='left', weight='bold')
+        ax[ii].set_title(seqname, loc='left', weight='bold')
 
         # Data
         y_list = []

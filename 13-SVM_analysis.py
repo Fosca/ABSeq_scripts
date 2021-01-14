@@ -1,3 +1,5 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import os.path as op
 import config
 import numpy as np
@@ -7,6 +9,7 @@ import mne
 import os.path as op
 from importlib import reload
 from mne.parallel import parallel_func
+from scipy.signal import savgol_filter
 
 
 
@@ -57,7 +60,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         plt.close('all')
         # return GAT_sens_all
 
-        print("plotting in %s"%fig_path)
+        print("plotting in %s"%config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
@@ -72,29 +75,19 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
-
-
-# config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
-#                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-#                         'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110','sub17-mt_170249', 'sub18-eo_190576',
-#                         'sub19-mg_190180']
-
+    return GAT_sens_all, times
 # ___________________________________________________________________________
 # ======= plot the GAT for all the sequences apart and together =============
 # ___________________________________________________________________________
 
 
-plot_all_subjects_results_SVM('train_test_different_blocksGAT_results_score',config.subjects_list,'train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.05,vmax=0.05)
+GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,vmin=-0.1,vmax=0.1)
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
 # ___________________________________________________________________________
 vmin = [0.45,0.20,0.4]
 vmax = [0.55,0.3,0.6]
-# config.subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub06-kc_160388',
-#                         'sub07-jm_100109', 'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-#                         'sub13-lq_180242', 'sub14-js_180232', 'sub17-mt_170249', 'sub18-eo_190576',
-#                         'sub19-mg_190180']
 
 for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/'+name
@@ -142,7 +135,7 @@ utils.create_folder(save_folder)
 
 # Figure with only one EMS projected (average window)
 epochs_list = {}
-for sens in ['mag', 'grad', 'eeg']:
+for sens in ['all_chans','mag', 'grad', 'eeg']:
     if sens == 'mag':
         epochs_list['hab'] = epochs_16_items_mag_habituation_window
         epochs_list['test'] = epochs_16_items_mag_test_window
@@ -152,40 +145,57 @@ for sens in ['mag', 'grad', 'eeg']:
     elif sens == 'eeg':
         epochs_list['hab'] = epochs_16_items_eeg_habituation_window
         epochs_list['test'] = epochs_16_items_eeg_test_window
+    elif sens == 'all_chans':
+        epochs_list['hab'] = epochs_16_items_all_chans_habituation_window
+        epochs_list['test'] = epochs_16_items_all_chans_test_window
+
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
-    # for seq_ID in range(1, 8):
-    #     # "curve" figure
-    #     EMS_funcs.plot_EMS_projection_for_seqID_window(epochs_list, sensor_type=sens, seqID=seq_ID,
-    #                                                    save_path=op.join(save_folder, 'Seq%i_%s_window_%i_%ims.png' % (seq_ID, sens, win_tmin, win_tmax)))
-    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)))
 
-# make less parallel runs to limit memory usage
-# N_JOBS = max(config.N_JOBS // 4, 1)
-N_JOBS = 2  # config.N_JOBS
-#
-config.subjects_list = ['sub16-ma_190185']
+    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)),vmin=-1.0,vmax=1.0)
 
-def SVM_analysis(subject):
-    # creating the SVM results dictionnary
-    # SVM_funcs.generate_SVM_all_sequences(subject)
-    # SVM_funcs.GAT_SVM(subject)
-    # SVM_funcs.GAT_SVM_4pos(subject)
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject)
+# ___________________________________________________________________________
+# ======= plot the GAT diagonal for each of the 7 sequences in the nice viridis colors ============
+# ___________________________________________________________________________
 
+GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',
+                                             config.subjects_list,
+                                             'SW_train_test_different_blocksGAT_results_score',
+                                             plot_per_sequence=True, vmin=-0.1, vmax=0.1)
 
-def SVM_features(subject):
-    list_features = ['Identity','RepeatAlter','ChunkNumber','WithinChunkPosition']
-    for feature_name in list_features:
-        score, times = SVM_funcs.SVM_decode_feature(subject, feature_name, load_residuals_regression=False)
-        save_path = config.SVM_path+subject + '/feature_decoding/'
-        utils.create_folder(save_path)
-        save_name = save_path+feature_name+'_score_dict.npy'
-        np.save(save_name,{'score':score,'times':times})
+times = times*1000
+# ALL SEQUENCES IN THE SAME FIGURE (MEAN WITH CI) (just Diff)
+sensors = ['all_chans','eeg','mag','grad']
+for sens in sensors:
+    filter = True
+    NUM_COLORS = 7
+    cm = plt.get_cmap('viridis')
+    colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    plt.close('all')
+    fig, ax = plt.subplots(1, 1, figsize=(10, 7))
+    plt.axvline(0, linestyle='-', color='black', linewidth=2)
+    plt.axhline(0, linestyle='-', color='black', linewidth=1)
+    perform_seq = GAT_sens_all[sens]
 
-
-
-# Here we use fewer N_JOBS to prevent potential memory problems
-parallel, run_func, _ = parallel_func(SVM_features, n_jobs=N_JOBS)
-parallel(run_func(subject) for subject in config.subjects_list)
->>>>>>> Stashed changes
+    plt.title('Decoder performance - ' + sens)
+    for xx in range(3):
+        plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+    for SeqID in range(1, 8):
+        color_mean = colorslist[SeqID - 1]
+        mean = np.diagonal(-np.nanmean(perform_seq['SeqID_' + str(SeqID)], axis=0))
+        ub = np.diagonal(mean + np.nanstd(perform_seq['SeqID_' + str(SeqID)], axis=0)/(np.sqrt(15)))
+        lb = np.diagonal(mean - np.nanstd(perform_seq['SeqID_' + str(SeqID)], axis=0)/(np.sqrt(15)))
+        if filter == True:
+            mean = savgol_filter(mean, 11, 3)
+            ub = savgol_filter(ub, 11, 3)
+            lb = savgol_filter(lb, 11, 3)
+        plt.fill_between(times, ub, lb, color=color_mean, alpha=.2)
+        plt.plot(times, mean, color=color_mean, linewidth=1.5, label='SeqID_' + str(SeqID))
+    plt.legend(loc='best', fontsize=9)
+    ax.set_xlim(-100, 700)
+    ax.set_xlabel('Time [ms]')
+    ax.set_ylabel('a.u.')
+    plt.savefig(op.join(config.fig_path, 'SVM', 'All_sequences_diff_%s.png' % sens), dpi=300)
+    ax.set_xlim(0, 250)
+    fig.set_figwidth(5)
+    plt.savefig(op.join(config.fig_path, 'SVM', 'All_sequences_diff_%s_crop.png' % sens), dpi=300)

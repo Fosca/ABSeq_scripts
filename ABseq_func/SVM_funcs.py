@@ -1,4 +1,5 @@
 # This module contains all the functions related to the decoding analysis
+import ABseq_func
 import os.path as op
 import numpy as np
 import pandas as pd
@@ -19,6 +20,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.model_selection import KFold
+import numpy as np
+import random
+
+from sklearn.base import TransformerMixin
 
 
 # ______________________________________________________________________________________________________________________
@@ -120,7 +125,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
 
 
 # ______________________________________________________________________________________________________________________
-def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_test_different_blocks=True):
+def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_test_different_blocks=True,sliding_window=False):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -142,6 +147,10 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     utils.create_folder(saving_directory)
 
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_violation_standards=True)
+    if sliding_window:
+        epochs_balanced = epoching_funcs.sliding_window(epochs_balanced)
+        suf += 'SW_'
+
     # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
@@ -195,23 +204,28 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True):
+def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True,sliding_window=False):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
     :param SVM_results: output of generate_SVM_all_sequences
     :return: GAT averaged over the 4 classification folds
     """
+    suf = ''
+
+    if sliding_window:
+        suf += 'SW_'
 
     saving_directory = op.join(config.SVM_path, subject)
     n_folds = 4
-    suf = ''
     if load_residuals_regression:
         suf = 'resid_'
 
     if train_test_different_blocks:
         suf += 'train_test_different_blocks'
         n_folds = 2
+
+
 
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
@@ -677,105 +691,6 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     return True
 
 
-#
-# # ______________________________________________________________________________________________________________________
-# def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False):
-#     """
-#     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
-#     trials according to the folds.
-#     :param subject:
-#     :param times:
-#     :return:
-#     """
-#
-#     # ==== load the ems results ==============
-#     SVM_results_path = op.join(config.SVM_path, subject)
-#     SVM_results = np.load(op.join(SVM_results_path, 'SVM_results.npy'), allow_pickle=True).item()
-#
-#     # ==== define the paths ==============
-#     meg_subject_dir = op.join(config.meg_dir, subject)
-#     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
-#     extension = subject + '_1st_element_epo'
-#     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
-#     print("Input: ", fname_in)
-#
-#     # ====== loading the 16 items sequences epoched on the first element ===================
-#     epochs_1st_element = mne.read_epochs(fname_in, preload=True)
-#
-#     # select the habituation trials (i.e. the 10 first ones)
-#
-#     epochs_1st_element= epochs_1st_element["TrialNumber < 11"]
-#     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
-#                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-#                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False)}
-#
-#     # ====== compute the projections for each of the 3 types of sensors ===================
-#     for sens in ['mag', 'grad', 'eeg']:
-#
-#         SVM_sens = SVM_results[sens]['SVM']
-#         points = SVM_results[sens]['epochs'][0].time_as_index(times)
-#
-#         epochs_1st_sens = epochs_1st[sens]
-#
-#         # = we initialize the metadata
-#         data_frame_meta = pd.DataFrame([])
-#         n_habituation = epochs_1st_element.get_data().shape[0]
-#         data_for_epoch_object = np.zeros(
-#             (n_habituation* len(times), epochs_1st_sens.get_data().shape[2]))
-#         if window:
-#             data_for_epoch_object = np.zeros(
-#                 (n_habituation, epochs_1st_sens.get_data().shape[2]))
-#
-#         # ========== les 4 filtres peuvent etre appliquees aux sequences d habituation sans souci, selection en fonction des indices ========
-#         data_1st_el_m = epochs_1st_sens.get_data()
-#
-#
-#         if not window:
-#             for mm, point_of_interest in enumerate(points):
-#                 epochs_1st_sens_filtered_data_4folds = []
-#                 for fold_number in range(4):
-#                     SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
-#                     print("The shape of SVM_to_data is ")
-#                     print(SVM_to_data.shape)
-#                     print(
-#                         " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-#                     epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
-#                     # epochs_1st_sens_filtered_data_4folds.append(np.dot(SVM_sens[fold_number].filters_[:, point_of_interest],data_1st_el_m.T))
-#                 # ==== now that we projected the 4 filters, we can average over the 4 folds ================
-#                 epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds,axis=0).T
-#                 data_for_epoch_object[n_habituation*mm:n_habituation*(mm+1),:] = epochs_1st_sens_filtered_data
-#                 metadata_m = epochs_1st_sens.metadata
-#                 metadata_m['SVM_filter_datapoint'] = int(point_of_interest)
-#                 metadata_m['SVM_filter_time'] = times[mm]
-#                 data_frame_meta = data_frame_meta.append(metadata_m)
-#         else:
-#             epochs_1st_sens_filtered_data_4folds = []
-#             for fold_number in range(4):
-#                 SVM_to_data = SVM_sens[fold_number].decision_function(data_1st_el_m)
-#                 print(
-#                     " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points), :] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-#                 epochs_1st_sens_filtered_data_4folds.append(np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0))
-#             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
-#             data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
-#
-#             metadata = epochs_1st_sens.metadata
-#             metadata['SVM_filter_min_datapoint'] = np.min(points)
-#             metadata['SVM_filter_max_datapoint'] = np.max(points)
-#             metadata['SVM_filter_tmin_window'] = times[0]
-#             metadata['SVM_filter_tmax_window'] = times[-1]
-#             data_frame_meta = data_frame_meta.append(metadata)
-#
-#         dat = np.expand_dims(data_for_epoch_object, axis=1)
-#         info = mne.create_info(['SVM'], epochs_1st_sens.info['sfreq'])
-#         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
-#         epochs_proj_sens.metadata = data_frame_meta
-#         if window:
-#             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
-#         else:
-#             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
-#
-#     return True
-
 # ______________________________________________________________________________________________________________________
 def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None, color_mean=None, plot_noviolation=True):
     """
@@ -902,7 +817,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
     return figure
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None,vmin=-1,vmax=1):
 
     # window info, just for figure title
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0] * 1000
@@ -927,18 +842,8 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xxxxYYYYxxYYxYxY',
                 'xYxxxYYYYxYYxxxY']
 
-    if sensor_type == 'mag':
-        vmin = -1.5
-        vmax = -0
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
-    elif sensor_type == 'grad':
-        vmin = -1.5
-        vmax = -0
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
-    elif sensor_type == 'eeg':
-        vmin = -1.5
-        vmax = -0
-        print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
+
+    print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
 
     n = 0
 
@@ -947,6 +852,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         # this provides us with the position of the violations and the times
         epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
         times = epochs_seq_subset.times
+        times = times + 0.3
         violpos_list = np.unique(epochs_seq_subset.metadata['ViolationInSequence'])
 
         # Average data from habituation trials
@@ -1087,3 +993,263 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         plt.close('all')
 
     return figure
+
+
+
+#=========================================================================================================
+
+class ZScoreEachChannel(TransformerMixin):
+    """
+    Z-score the data of each channel separately
+
+    Input matrix: Epochs x Channels x TimePoints
+    Output matrix: Epochs x Channels x TimePoints (same size as input)
+    """
+
+    #--------------------------------------------------
+    def __init__(self, debug=False):
+        self._debug = debug
+
+    #--------------------------------------------------
+    # noinspection PyUnusedLocal
+    def fit(self, x, y=None, *_):
+        return self
+
+    #--------------------------------------------------
+    def transform(self, x):
+        result = np.zeros(x.shape)
+        n_epochs, nchannels, ntimes = x.shape
+        for c in range(nchannels):
+            channel_data = x[:, c, :]
+            m = np.mean(channel_data)
+            sd = np.std(channel_data)
+            if self._debug:
+                print('ZScoreEachChannel: channel {:} m={:}, sd={:}'.format(c, m, sd))
+            result[:, c, :] = (x[:, c, :]-m)/sd
+
+        return result
+
+
+#=========================================================================================================
+
+class SlidingWindow(TransformerMixin):
+    """
+    Aggregate time points in a "sliding window" manner
+
+    Input: Anything x Anything x Time points
+    Output - if averaging: Unchanged x Unchanged x Windows
+    Output - if not averaging: Windows x Unchanged x Unchanged x Window size
+                Note that in this case, the output may not be a real matrix in case the last sliding window is smaller than the others
+    """
+
+    #--------------------------------------------------
+    def __init__(self, window_size, step, min_window_size=None, average=True, debug=False):
+        """
+        :param window_size: The no. of time points to average
+        :param step: The no. of time points to slide the window to get the next result
+        :param min_window_size: The minimal number of time points acceptable in the last step of the sliding window.
+                                If None: min_window_size will be the same as window_size
+        :param average: If True, just reduce the number of time points by averaging over each window
+                        If False, each window is copied as-is to the output, without averaging
+        """
+        self._window_size = window_size
+        self._step = step
+        self._min_window_size = min_window_size
+        self._average = average
+        self._debug = debug
+
+
+    #--------------------------------------------------
+    # noinspection PyUnusedLocal
+    def fit(self, x, y=None, *_):
+        return self
+
+    #--------------------------------------------------
+    def transform(self, x):
+        x = np.array(x)
+        assert len(x.shape) == 3
+        n1, n2, n_time_points = x.shape
+
+        #-- Get the start-end indices of each window
+        min_window_size = self._min_window_size or self._window_size
+        window_start = np.array(range(0, n_time_points-min_window_size+1, self._step))
+        if len(window_start) == 0:
+            #-- There are fewer than window_size time points
+            raise Exception('There are only {:} time points, but at least {:} are required for the sliding window'.
+                            format(n_time_points, self._min_window_size))
+        window_end = window_start + self._window_size
+        window_end[-1] = min(window_end[-1], n_time_points)  # make sure that the last window doesn't exceed the input size
+
+        if self._debug:
+            win_info = [(s, e, e-s) for s, e in zip(window_start, window_end)]
+            print('SlidingWindow transformer: the start,end,length of each sliding window: {:}'.
+                  format(win_info))
+            if len(win_info) > 1 and win_info[0][2] != win_info[-1][2] and not self._average:
+                print('SlidingWindow transformer: note that the last sliding window is smaller than the previous ones, ' +
+                      'so the result will be a list of 3-dimensional matrices, with the last list element having ' +
+                      'a different dimension than the previous elements. ' +
+                      'This format is acceptable by the RiemannDissimilarity transformer')
+
+        if self._average:
+            #-- Average the data in each sliding window
+            result = np.zeros((n1, n2, len(window_start)))
+            for i in range(len(window_start)):
+                result[:, :, i] = np.mean(x[:, :, window_start[i]:window_end[i]], axis=2)
+
+        else:
+            #-- Don't average the data in each sliding window - just copy it
+            result = []
+            for i in range(len(window_start)):
+                result.append(x[:, :, window_start[i]:window_end[i]])
+
+        return result
+
+
+#=========================================================================================================
+
+class AveragePerEvent(TransformerMixin):
+    """
+    This transformer averages all epochs that have the same label.
+    It can also create several averages per event ID (based on independent sets of trials)
+
+    Input matrix: Epochs x Channels x TimePoints
+    Output matrix: Labels x Channels x TimePoints. If asked to create N results per event ID, the "labels"
+                   dimension is multiplied accordingly.
+    """
+
+    #--------------------------------------------------
+    def __init__(self, event_ids=None, n_results_per_event=1, max_events_with_missing_epochs=0, debug=False):
+        """
+        :param event_ids: The event IDs to average on. If None, compute average for all available events.
+        :param n_results_per_event: The number of aggregated stimuli to create per event type.
+               The event's epochs are distributed randomly into N groups, and each group is averaged, creating
+               N independent results.
+        :param max_events_with_missing_epochs: The maximal number of event IDs for which we allow the number
+               of epochs to be smaller than 'n_results_per_event'. For such events, randomly-selected epochs
+               will be duplicated.
+        """
+        assert isinstance(n_results_per_event, int) and n_results_per_event > 0
+        assert isinstance(max_events_with_missing_epochs, int) and max_events_with_missing_epochs >= 0
+
+        self._event_ids = None if event_ids is None else np.array(event_ids)
+        self._curr_event_ids = None
+        self._n_results_per_event = n_results_per_event
+        self._max_events_with_missing_epochs = max_events_with_missing_epochs
+        self._debug = debug
+
+        if debug:
+            if event_ids is None:
+                print('AveragePerEvent: will create averages for all events.')
+            else:
+                print('AveragePerEvent: will create averages for these events: {:}'.format(event_ids))
+
+
+    #--------------------------------------------------
+    # noinspection PyUnusedLocal,PyAttributeOutsideInit
+    def fit(self, x, y, *_):
+
+        self._y = np.array(y)
+
+        if self._event_ids is None:
+            self._curr_event_ids = np.unique(y)
+            if self._debug:
+                print('AveragePerEvent: events IDs are {:}'.format(self._event_ids))
+        else:
+            self._curr_event_ids = self._event_ids
+
+        return self
+
+
+    #--------------------------------------------------
+    def transform(self, x):
+
+        x = np.array(x)
+
+        result = []
+
+        #-- Split the epochs by event ID.
+        #-- x_per_event_id has a 3-dim matrix for each event ID
+        x_per_event_id = [x[self._y == eid] for eid in self._curr_event_ids]
+
+        #-- Check if there are enough epochs per event ID
+        too_few_epochs = [len(e) < self._n_results_per_event for e in x_per_event_id]  # list of bool - one per event ID
+        if sum(too_few_epochs) > self._max_events_with_missing_epochs:
+            raise Exception('There are {:} event IDs with fewer than {:} epochs: {:}'.
+                            format(sum(too_few_epochs), self._n_results_per_event,
+                            self._curr_event_ids[np.where(too_few_epochs)[0]]))
+        elif sum(too_few_epochs) > 0:
+            print('WARNING (AveragePerEvent): There are {:} event IDs with fewer than {:} epochs: {:}'.
+                  format(sum(too_few_epochs), self._n_results_per_event,
+                         self._curr_event_ids[np.where(too_few_epochs)[0]]))
+
+        #-- Do the actual aggregation
+        for i in range(len(x_per_event_id)):
+            # Get a list whose length is n_results_per_event; each list entry is a 3-dim matrix to average
+            agg = self._aggregate(x_per_event_id[i])
+            if self._debug:
+                print('AveragePerEvent: event={:}, #epochs={:}'.format(self._curr_event_ids[i], [len(a) for a in agg]))
+            result.extend([np.mean(a, axis=0) for a in agg])
+
+        result = np.array(result)
+
+        if self._debug:
+            print('AveragePerEvent: transformed from shape={:} to shape={:}'.format(x.shape, result.shape))
+
+        return result
+
+    #--------------------------------------------------
+    def _aggregate(self, one_event_x):
+        """
+        Distribute the epochs of one_event_x into separate sets
+
+        The function returns a list with self._n_results_per_event different sets.
+        """
+
+        if self._n_results_per_event == 1:
+            #-- Aggregate all epochs into one result
+            return [one_event_x]
+
+        if len(one_event_x) >= self._n_results_per_event:
+
+            #-- The number of epochs is sufficient to have at least one different epoch per result
+
+            one_event_x = np.array(one_event_x)
+
+            result = [[]] * self._n_results_per_event
+
+            #-- First, distribute an equal number of epochs to each result
+            n_in_epochs = len(one_event_x)
+            in_epochs_inds = range(len(one_event_x))
+            random.shuffle(in_epochs_inds)
+            n_take_per_result = int(np.floor(n_in_epochs / self._n_results_per_event))
+            for i in range(self._n_results_per_event):
+                result[i] = list(one_event_x[in_epochs_inds[:n_take_per_result]])
+                in_epochs_inds = in_epochs_inds[n_take_per_result:]
+
+            #-- If some epochs remained, add each of them to a different result set
+            n_remained = len(in_epochs_inds)
+            for i in range(n_remained):
+                result[i].append(one_event_x[in_epochs_inds[i]])
+
+        else:
+
+            #-- The number of epochs is too small: each result will consist of a single epoch, and epochs some will be duplicated
+
+            #-- First, take all events that we have
+            result = list(one_event_x)
+
+            #-- Then pick random some epochs and duplicate them
+            n_missing = self._n_results_per_event - len(result)
+            epoch_inds = range(len(one_event_x))
+            random.shuffle(epoch_inds)
+            duplicated_inds = epoch_inds[:n_missing]
+            result.extend(np.array(result)[duplicated_inds])
+
+            result = [[x] for x in result]
+
+        random.shuffle(result)
+
+        return result
+
+
+
