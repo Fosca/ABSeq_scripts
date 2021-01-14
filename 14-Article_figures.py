@@ -6,19 +6,26 @@ import matplotlib.pyplot as plt
 import mne
 import numpy as np
 
+
+# Exclude some subjects
+config.exclude_subjects.append('sub10-gp_190568')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
+
 # =============================================================================== #
 # ================================= Load data =================================== #
 # =============================================================================== #
 # -- items: Nsubjects X 7 sequences
-evoked_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_seq', filter_not='pos')
-evoked_viol_seq = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_seq', filter_not='pos')
-evoked_balanced_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_balanced_seq', filter_not='pos')
+evoked_standard_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_seq', filter_not='pos')
+evoked_viol_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_seq', filter_not='pos')
+evoked_balanced_standard_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_balanced_seq', filter_not='pos')
 # -- full sequence: Nsubjects X 7 sequences
-evoked_full_seq_standard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard_seq', filter_not='pos')
+evoked_full_seq_standard_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_standard_seq', filter_not='pos')
 # -- items: Nsubjects X 1 sequence (all seq average)
-evoked_all_standard = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_all', filter_not=None)
-evoked_all_viol = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_all', filter_not=None)
-evoked_all_standard_balanced = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_balanced_all', filter_not=None)
+evoked_all_standard, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_all', filter_not=None)
+evoked_all_viol, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_viol_all', filter_not=None)
+evoked_all_standard_balanced, _ = evoked_funcs.load_evoked(subject='all', filter_name='items_standard_balanced_all', filter_not=None)
 
 # =============================================================================== #
 # ===================== Butterfly full sequences / each seq ===================== #
@@ -263,3 +270,69 @@ for ch_type in ['eeg', 'grad', 'mag']:
 
 
 # reload(evoked_funcs)
+# =============================================================================== #
+# ================================== Sources plots - TO DO !! =============================== #
+# =============================================================================== #
+
+fig_path = op.join(config.fig_path, 'Sources_evoked')
+utils.create_folder(fig_path)
+
+# items_standard_all
+name = 'items_standard_all'
+ev_data = evoked_all_standard['items_standard_all-']
+all_stcs = []
+for nsub, subject in enumerate(config.subjects_list):
+    stc = source_estimation_funcs.normalized_sources_from_evoked(subject, ev_data[nsub][0])
+    all_stcs.append(stc)
+
+# Group mean stc
+n_subjects = len(all_stcs)
+mean_stc = all_stcs[0].copy()  # get copy of first instance
+for sub in range(1, n_subjects):
+    mean_stc._data += all_stcs[sub].data
+mean_stc._data /= n_subjects
+mean_ev = mne.grand_average(ev_data)  # not working... list of list issue??
+mean_ev = mne.grand_average([ev_data[ii][0] for ii in range(len(ev_data))])  # correct the list of lists issue ?
+
+
+# Timecourse source figure
+output_file = op.join(fig_path, 'Sources_' + name + '_timecourse.png')
+times_to_plot = [.0, .075, .150, .225, .300, .375, .450, .575]
+times_to_plot = [.060, .130]
+win_size = .030
+stc = mean_stc
+maxval = np.max(stc._data)
+colorlims = [maxval * .30, maxval * .40, maxval * .80]
+# plot and screenshot for each timewindow
+stc_screenshots = []
+for t in times_to_plot:
+    twin_min = t
+    twin_max = t + win_size
+    stc_timewin = stc.copy()
+    stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+    stc_timewin = stc_timewin.mean()
+    brain = stc_timewin.plot(views=['lat'], surface='pial', hemi='split', size=(1400, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
+                             subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
+                             colormap='hot', colorbar=False, time_viewer=False)
+    screenshot = brain.screenshot()
+    brain.close()
+    nonwhite_pix = (screenshot != 255).any(-1)
+    nonwhite_row = nonwhite_pix.any(1)
+    nonwhite_col = nonwhite_pix.any(0)
+    cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+    plt.close('all')
+    stc_screenshots.append(cropped_screenshot)
+# main figure
+fig, axes = plt.subplots(len(times_to_plot), 1, figsize=(len(times_to_plot) * 1.1, 4))
+fig.suptitle(name, fontsize=8, fontweight='bold')
+for idx in range(len(times_to_plot)):
+    axes[idx].imshow(stc_screenshots[idx])
+    axes[idx].axis('off')
+    twin_min = times_to_plot[idx]
+    twin_max = times_to_plot[idx] + win_size
+    axes[idx].set_title('[%d - %d ms]' % (twin_min * 1000, twin_max * 1000), fontsize=5)
+# tweak margins and spacing
+fig.subplots_adjust(left=0.1, right=0.9, bottom=0.01, top=0.9, wspace=1, hspace=0.6)
+fig.savefig(output_file, bbox_inches='tight', dpi=600)
+print('========> ' + output_file + " saved !")
+plt.close(fig)
