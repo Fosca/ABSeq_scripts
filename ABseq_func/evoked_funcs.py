@@ -5,11 +5,12 @@ import mne
 import matplotlib.pyplot as plt
 import numpy as np
 from ABseq_func import *
-from ABseq_func import utils   # why do we need this now ?? (error otherwise)
+from ABseq_func import utils  # why do we need this now ?? (error otherwise)
 from scipy.signal import savgol_filter
 from scipy.stats import sem
 import matplotlib.ticker as ticker
 import copy
+
 
 def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False):
     # Figures folder
@@ -65,7 +66,6 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
 
 
 def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, residevoked=False, apply_baseline=False):
-
     # Figures folder
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', 'GROUP')
@@ -88,10 +88,9 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
     topotimes = np.arange(0.070, 0.501, 0.050)
     topo_avg = 0.020
 
-
     for x, seq in enumerate(evoked.keys()):
         # Sequence info
-        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x+1)
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x + 1)
 
         evokeds_seq = evoked[seq]
         if apply_baseline:
@@ -103,7 +102,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(5, 3))
         grand_avg_seq.plot(axes=axes, picks='eeg', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
         axes.texts = []
-        axes.set_title('EEG: '+seqname)
+        axes.set_title('EEG: ' + seqname)
         # Remove spines
         for key in ('top', 'right'):
             axes.spines[key].set(visible=False)
@@ -116,7 +115,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
         # topomaps
-        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='eeg', time_unit='ms', title='EEG: '+seqname, vmin=-ylim_eeg*0.6, vmax=ylim_eeg*0.6, average=topo_avg)
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='eeg', time_unit='ms', title='EEG: ' + seqname, vmin=-ylim_eeg * 0.6, vmax=ylim_eeg * 0.6, average=topo_avg)
         fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x + 1) + '_TOPOS.png')
         print('Saving ' + fig_name)
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
@@ -140,7 +139,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
         # topomaps
-        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='mag', time_unit='ms', title='MAG: '+seqname, vmin=-ylim_mag*0.6, vmax=ylim_mag*0.6, average=topo_avg)
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='mag', time_unit='ms', title='MAG: ' + seqname, vmin=-ylim_mag * 0.6, vmax=ylim_mag * 0.6, average=topo_avg)
         fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x + 1) + '_TOPOS.png')
         print('Saving ' + fig_name)
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
@@ -164,7 +163,7 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
         # topomaps
-        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='grad', time_unit='ms', title='GRAD: '+seqname, vmin=-ylim_grad*0.6, vmax=ylim_grad*0.6, average=topo_avg)
+        fig = grand_avg_seq.plot_topomap(topotimes, ch_type='grad', time_unit='ms', title='GRAD: ' + seqname, vmin=-ylim_grad * 0.6, vmax=ylim_grad * 0.6, average=topo_avg)
         fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x + 1) + '_TOPOS.png')
         print('Saving ' + fig_name)
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
@@ -172,7 +171,6 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
 
 
 def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=1, residevoked=False):
-
     # Grand average
     tmp = list(evoked.keys())
     evoked_seq = evoked[tmp[0]]
@@ -210,8 +208,8 @@ def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=
         grand_avg_seq.plot(axes=axes, picks=ch_type, gfp=False, spatial_colors=True, show=True, time_unit='ms', ylim=ylim)
         axes.texts = []
         axes.set_title(ch_type)
-        peak_line = axes.axvline(x=time_peak1*1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
-        peak_line = axes.axvline(x=time_peak2*1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
+        peak_line = axes.axvline(x=time_peak1 * 1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
+        peak_line = axes.axvline(x=time_peak2 * 1000, ymin=0.90, ymax=1, color='#707070', ls='-', linewidth=3)
         # Remove spines
         for key in ('top', 'right'):
             axes.spines[key].set(visible=False)
@@ -224,15 +222,14 @@ def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
         # topomaps
-        fig = grand_avg_seq.plot_topomap([time_peak1, time_peak2], ch_type=ch_type, time_unit='ms', title=ch_type+ '_AllSeq', vmin=ymin*0.6, vmax=ymax*0.6, average=0.010)
-        fig_name = fig_path + op.sep + (ch_type+'_AllSeq_TOPOS.png')
+        fig = grand_avg_seq.plot_topomap([time_peak1, time_peak2], ch_type=ch_type, time_unit='ms', title=ch_type + '_AllSeq', vmin=ymin * 0.6, vmax=ymax * 0.6, average=0.010)
+        fig_name = fig_path + op.sep + (ch_type + '_AllSeq_TOPOS.png')
         print('Saving ' + fig_name)
         fig.savefig(fig_name, bbox_inches='tight', dpi=300)
         plt.close(fig)
 
 
 def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=0):
-
     # Figures folder & lims
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_FullSequence', 'GROUP')
@@ -249,7 +246,7 @@ def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=
 
     for x, seq in enumerate(evoked.keys()):
         # Sequence info
-        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x+1)
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(x + 1)
 
         evokeds_seq = evoked[seq]
         grand_avg_seq = mne.grand_average([evokeds_seq[i][0] for i in range(len(evokeds_seq))])
@@ -259,7 +256,7 @@ def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=
         fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(8, 2))
         grand_avg_seq.plot(axes=axes, picks='eeg', gfp=False, spatial_colors=True, show=True, window_title=seqname, time_unit='ms', ylim=ylim)
         axes.texts = []
-        axes.set_title('EEG: '+seqname)
+        axes.set_title('EEG: ' + seqname)
         # Remove spines
         for key in ('top', 'right'):
             axes.spines[key].set(visible=False)
@@ -374,7 +371,7 @@ def create_evoked(subject, cleaned=True):
     # create folder for evoked
     path_evo = op.join(config.meg_dir, subject, 'evoked')
     if cleaned:
-        path_evo = path_evo+'_cleaned'
+        path_evo = path_evo + '_cleaned'
     utils.create_folder(path_evo)
 
     epochs_full_sequence = epoching_funcs.load_epochs_full_sequence(subject, cleaned=cleaned)
@@ -449,7 +446,6 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
     path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
     utils.create_folder(path_evo)
 
-
     # # =======================================================
     # # ========== evoked on full 16-items seq ================
     # # =======================================================
@@ -482,7 +478,7 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
     epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
     epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
     epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items, balance_violation_standards=False)
     epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
     for k in range(1, 8):
@@ -502,14 +498,13 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
 
 
 def create_evoked_for_regression_factors(regressor_names, subject, cleaned=True):
-
     # This will create one evoked fif for each (unique) level of each regressor
     # of regressor_names, e.g., one evoked for ChunkSize=1, one for ChunkSize=2, etc.
 
     # create folder for evoked
     path_evo = op.join(config.meg_dir, subject, 'evoked')
     if cleaned:
-        path_evo = path_evo+'_cleaned'
+        path_evo = path_evo + '_cleaned'
     utils.create_folder(path_evo)
 
     # ========================================= #
@@ -613,7 +608,7 @@ def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, 
     return evoked_dict, path_evo
 
 
-def load_evoked_resid(subject='all', filter_name='', filter_not=None,root_path=None):
+def load_evoked_resid(subject='all', filter_name='', filter_not=None, root_path=None):
     """
     IDENTICAL TO load_evoked BUT TAKES EVOKED FROM RESIDUALS OF A REGRESSION INSTEAD OF ORIGINAL EVOKED
 
@@ -706,7 +701,6 @@ def average_evoked(evoked_dict):
 
 
 def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -725,7 +719,7 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, f
         cond = list(evoked_dict_copy.keys())[nseq]
         data = copy.deepcopy(evoked_dict)
         data = data[cond]
-        times = data[0][0].times*1000
+        times = data[0][0].times * 1000
 
         group_data_seq = []
         for nn in range(len(data)):
@@ -750,7 +744,7 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, f
             lb = savgol_filter(lb, 9, 3)
 
         # Sequence info
-        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq+1)
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
 
         plt.fill_between(times, ub, lb, color=color_mean[nseq], alpha=.2)
         plt.plot(times, mean, color=color_mean[nseq], linewidth=1.5, label=seqname)
@@ -764,7 +758,6 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, f
 
 
 def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -783,7 +776,7 @@ def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label
         cond = list(evoked_dict_copy.keys())[nseq]
         data = copy.deepcopy(evoked_dict)
         data = data[cond]
-        times = data[0][0].times*1000
+        times = data[0][0].times * 1000
 
         group_data_seq = []
         for nn in range(len(data)):
@@ -808,7 +801,7 @@ def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label
             lb = savgol_filter(lb, 9, 3)
 
         # Sequence info
-        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq+1)
+        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
 
         plt.fill_between(times, ub, lb, color=color_mean[nseq], alpha=.2)
         plt.plot(times, mean, color=color_mean[nseq], linewidth=1.5, label=seqname)
@@ -822,7 +815,6 @@ def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label
 
 
 def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_style='bilateral', filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -835,7 +827,7 @@ def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_s
         cond = list(evoked_dict_copy.keys())[nseq]
         data = copy.deepcopy(evoked_dict)
         data = data[cond]
-        times = data[0][0].times*1000
+        times = data[0][0].times * 1000
 
         group_data_seq = []
         for nn in range(len(data)):
@@ -899,7 +891,6 @@ def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_s
 
 
 def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -915,7 +906,7 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
         cond = list(evoked_dict_copy.keys())[nseq]
         data = copy.deepcopy(evoked_dict)
         data = data[cond]
-        times = data[0][0].times*1000
+        times = data[0][0].times * 1000
 
         group_data_seq = []
         for nn in range(len(data)):
@@ -953,8 +944,8 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
         ub = allseq_ub[nseq]
         lb = allseq_lb[nseq]
         ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
-        ax[nseq].fill_between(times, ub/scalings[ch_type], lb/scalings[ch_type], color='black', alpha=.2)
-        ax[nseq].plot(times, mean/scalings[ch_type], color=ch_colors[ch_type], linewidth=1.5, label=seqname)
+        ax[nseq].fill_between(times, ub / scalings[ch_type], lb / scalings[ch_type], color='black', alpha=.2)
+        ax[nseq].plot(times, mean / scalings[ch_type], color=ch_colors[ch_type], linewidth=1.5, label=seqname)
         ax[nseq].axvline(0, linestyle='-', color='black', linewidth=2)
         ax[nseq].set_xlim([min(times), max(times)])
         # Add vertical lines
@@ -973,7 +964,7 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
     ax[nseq].set_xlabel('Time (ms)')
     # Add "xY" using the same yval for all
     ylim = ax[nseq].get_ylim()
-    yval = ylim[1] - ylim[1]*0.1
+    yval = ylim[1] - ylim[1] * 0.1
     for nseq in range(7):
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
         for xx in range(16):
@@ -981,7 +972,6 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
 
 
 def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=True, axis=None):
-
     times = data[0][0].times * 1000
 
     group_data_seq = []
@@ -1016,7 +1006,6 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
 
 
 def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None):
-
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
                          each contains keys 'seq1', 'seq2', 'seq3', 'seq4', 'seq5', 'seq6', 'seq7'
@@ -1062,7 +1051,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
 
         # Subfig title
-        ax[seqID-1].set_title(seqname, loc='left', weight='bold')
+        ax[seqID - 1].set_title(seqname, loc='left', weight='bold')
 
         # Data
         y_list = []
@@ -1108,7 +1097,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
 
     figure = plt.gcf()
     if file_name is not None:
-        print('Saving '+file_name)
+        print('Saving ' + file_name)
         figure.savefig(file_name, bbox_inches='tight', dpi=300)
         plt.close('all')
 
