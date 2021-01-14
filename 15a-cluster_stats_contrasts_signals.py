@@ -19,11 +19,16 @@ from matplotlib import pyplot as plt
 from importlib import reload
 import pickle
 
+# Exclude some subjects
+config.exclude_subjects.append('sub10-gp_190568')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
 # =========================================================== #
 # Options
 # =========================================================== #
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 use_balanced_epochs = True  # option to use only standard epochs with positions matched with the positions of deviants
 use_baseline = True  # option to apply a baseline to the evokeds before running the contrast
 lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
@@ -136,12 +141,12 @@ if DoFirstLevel:
             else:
                 if cleaned:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
-                    epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
+                    # epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
                 else:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             if use_balanced_epochs:
-                epochs = epoching_funcs.balance_epochs_violation_positions(epochs)
+                epochs = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=False)
             if lowpass_epochs:
                 print('Low pass filtering...')
                 epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
