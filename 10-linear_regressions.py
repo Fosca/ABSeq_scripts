@@ -11,6 +11,7 @@ Can use the residuals of a previous regression (with surprise) instead of origin
 Uses filters (using epochs.metadata) to include/exclude some epochs in the regression (e.g. filters[analysis_name] = ['ViolationOrNot == 1'] for deviant items only)
 Regressors are always normalized with "scale" (sklearn.preprocessing)
 
+TO DO: DETREND EVOKED
 """
 
 from __future__ import division
@@ -39,12 +40,12 @@ print('############------- Running analysis with ' + str(len(config.subjects_lis
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'ViolComplexity'
-# names = ['StimID', 'StimPosition', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkSize', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
-names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
-exclude_Repeat_and_Alternate = False
+analysis_name = 'StandMultiStructure'
+names = ['StimID', 'ChunkBeginning', 'ChunkEnd', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+# names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+exclude_Repeat_and_Alternate = True
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 use_baseline = True  # apply baseline to the epochs before running the regression
 lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
 Do3Dplot = True
@@ -99,7 +100,7 @@ if DoFirstLevel:
         else:
             if cleaned:
                 epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
-                epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
+                # epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             else:
                 epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                 epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
@@ -531,11 +532,11 @@ if DoSecondLevel:
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo_bars.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo_bars.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
