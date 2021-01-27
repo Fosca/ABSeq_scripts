@@ -33,7 +33,6 @@ def SVM_decoder():
     It is meant to generalize across time by construction.
     :return:
     """
-
     clf = make_pipeline(StandardScaler(), SVC(C=1, kernel='linear', probability=True))
     time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
 
@@ -46,7 +45,6 @@ def regression_decoder():
     It is meant to generalize across time by construction.
     :return:
     """
-
     clf = make_pipeline(StandardScaler(), LinearSVR())
     time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
 
@@ -78,7 +76,7 @@ def train_quads_test_others(epochs,list_sequences):
     return X_train, y_train, X_test, y_test
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True,distance = True):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -113,12 +111,16 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_
         epochs.events[:, 2] = epochs.metadata[feature_name].values
 
     scores = []
+    dec = []
     if cross_val_func is not None:
         X_train, y_train, X_test, y_test = cross_val_func(epochs,list_sequences)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
+            if distance:
+                dec.append(SVM_dec.decision_function(X_test[k], y_test[k]))
+
     else:
         kf = KFold(n_splits=4)
         y = epochs.events[:, 2]
@@ -129,11 +131,14 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_
             y_train, y_test = y[train_index], y[test_index]
             SVM_dec.fit(X_train, y_train)
             scores.append(SVM_dec.score(X_test, y_test))
+            if distance:
+                dec.append(SVM_dec.decision_function(X_test, y_test))
 
     score = np.mean(scores, axis=0)
+    dec = np.mean(dec, axis=0)
     times = epochs.times
 
-    return score, times
+    return score, dec, times
 
 
 def balance_epochs_for_feature(epochs, feature_name, list_sequences):
