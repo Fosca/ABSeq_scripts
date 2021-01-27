@@ -18,7 +18,7 @@ import matplotlib.ticker as ticker
 from mne.decoding import GeneralizingEstimator
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVR
 from sklearn.model_selection import KFold
 import numpy as np
 import random
@@ -40,6 +40,18 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
+def regression_decoder():
+    """
+    Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
+    It is meant to generalize across time by construction.
+    :return:
+    """
+
+    clf = make_pipeline(StandardScaler(), LinearSVR())
+    time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
+
+    return time_gen
+# ______________________________________________________________________________________________________________________
 def leave_one_sequence_out(epochs,list_sequences):
 
     X_train = []
@@ -55,15 +67,24 @@ def leave_one_sequence_out(epochs,list_sequences):
 
     return X_train, y_train, X_test, y_test
 
+# ______________________________________________________________________________________________________________________
+def train_quads_test_others(epochs,list_sequences):
 
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None):
+    X_train = epochs["SequenceID == 4 "].get_data()
+    y_train = epochs["SequenceID == 4 "].events[:,2]
+    X_test = epochs["SequenceID != 4 "].get_data()
+    y_test = epochs["SequenceID != 4 "].events[:,2]
+
+    return X_train, y_train, X_test, y_test
+
+# ______________________________________________________________________________________________________________________
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
     :return:
     """
 
-    SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
 
@@ -76,7 +97,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     # We remove the habituation trials
     epochs = epochs["TrialNumber>10 and ViolationOrNot == 0"]
     # remove the stim channel from decoding
-    epochs.pick_types(meg=True,eeg=True,stim=False)
+    epochs.pick_types(meg=meg,eeg=eeg,stim=False)
 
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
@@ -84,7 +105,12 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
     print('-- The values of the metadata for the feature %s are : ' % feature_name)
     print(np.unique(epochs.metadata[feature_name].values))
 
-    epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences)
+    if balance_features:
+        epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences)
+    else:
+        filter_epochs = np.where(1 - np.isnan(epochs.metadata[feature_name].values))[0]
+        epochs = epochs[filter_epochs]
+        epochs.events[:, 2] = epochs.metadata[feature_name].values
 
     scores = []
     if cross_val_func is not None:
