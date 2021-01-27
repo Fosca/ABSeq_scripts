@@ -75,6 +75,22 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
+    # ===== GROUP AVG FIGURES ===== #
+    plt.close('all')
+    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+        GAT_avg_sens = GAT_sens_all[sens]
+        for seqID in range(1, 8):
+            GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
+            GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
+            SVM_funcs.plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
+                                   save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                                   figname=suf + 'GAT_' + str(seqID) + score_suff + '_')
+            plt.close('all')
+        GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
+        SVM_funcs.plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
+                               save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                               figname=suf + 'GAT_all_seq' + score_suff + '_')
+
     return GAT_sens_all, times
 # ___________________________________________________________________________
 # ======= plot the GAT for all the sequences apart and together =============
@@ -95,17 +111,6 @@ for ii,name in enumerate(['StimID_score_dict','RepeatAlter_score_dict','WithinCh
 
 
 
-# ===== GROUP AVG FIGURES ===== #
-plt.close('all')
-for sens in ['eeg', 'mag', 'grad','all_chans']:
-    GAT_avg_sens = GAT_sens_seq_all[sens]
-    for seqID in range(1, 8):
-        GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i'%seqID]
-        GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq,axis=0)
-        SVM_funcs.plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens, save_path=op.join(config.fig_path, 'SVM', 'GAT'), figname=suf+'GAT_'+str(seqID)+score_suff+'_')
-        plt.close('all')
-    GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
-    SVM_funcs.plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens, save_path=op.join(config.fig_path, 'SVM', 'GAT'), figname=suf+'GAT_all_seq'+score_suff+'_')
 
 # ___________________________________________________________________________
 # ======= plot the decoder predictions for the 16 item sequences ============
