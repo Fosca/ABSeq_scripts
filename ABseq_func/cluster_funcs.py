@@ -3,7 +3,7 @@ from __future__ import division
 import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 from initialization_paths import initialization_paths
-from ABseq_func import TP_funcs, SVM_funcs
+from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs
 import config
 import mne
 import numpy as np
