@@ -76,7 +76,7 @@ def ar_log_summary(subject, epoch_on_first_element):
         print('%s, items epochs: %d/%d rejected bad epochs items = %.2f%%' % (subject, Nrej, Nepochs, Nrej / Nepochs * 100))
 
     # Plots
-    reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
+    # reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
 
 
 def reject_log_plot(reject_log, subject, save_path='', fig_name=''):

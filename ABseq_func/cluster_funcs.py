@@ -1,8 +1,8 @@
 # This module contains all the functions that allow the computations to run on the cluster.
 from __future__ import division
-
-import initialization_paths
-from ABseq_func import *
+import sys
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+from initialization_paths import initialization_paths
 from ABseq_func import TP_funcs, SVM_funcs
 import config
 import mne
@@ -122,14 +122,6 @@ def EMS(subject):
     EMS_funcs.apply_EMS_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
 
 
-def SVM_analysis(subject):
-    # creating the SVM results dictionnary
-    # SVM_funcs.generate_SVM_all_sequences(subject)
-    # SVM_funcs.GAT_SVM(subject)
-    # SVM_funcs.GAT_SVM_4pos(subject)
-    # SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True)
-    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True)
-
 
 def autoreject_marmouset(subject):
 
@@ -160,39 +152,40 @@ def autoreject_marmouset(subject):
     epochs.metadata.to_pickle(neural_data_path + subject + epoch_name +'_metadata_clean.pkl')
     np.save(neural_data_path + subject + epoch_name+ '_info_clean.npy',epochs.info)
 
+# ----------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------- DECODING FUNCTIONS FOR THE CLUSTER ------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
-def SVM_1(subject):
+def SVM_generate_all_sequences(subject):
     SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True)
 
-
-def SVM_2(subject):
-    SVM_funcs.GAT_SVM_4pos(subject, load_residuals_regression=False,sliding_window=True)
-
-
-def SVM_3(subject):
+def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=False,sliding_window=True)
 
+def SVM_analysis(subject):
+    # ----- We test on the 16 items sequences. We average the predictions of the decoders between 140 and 180 ms -----
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
 
 def SVM_features_repeatalter(subject):
-    score, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter', list_sequences=[3,4,5,6,7], load_residuals_regression=False)
-    save_path = config.SVM_path + subject + '/feature_decoding/'
-    utils.create_folder(save_path)
-    save_name = save_path + 'RepeatAlter' + '_score_dict.npy'
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter', list_sequences=[3,4,5,6,7], load_residuals_regression=False,crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    save_name = config.SVM_path + subject + '/feature_decoding/' + 'RepeatAlter' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times})
 
 def SVM_features_stimID(subject):
-    score, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', list_sequences=[2,3,4,5,6,7], load_residuals_regression=False,crop = [-0.1,0.4])
-    save_path = config.SVM_path + subject + '/feature_decoding/'
-    utils.create_folder(save_path)
-    save_name = save_path + 'StimID' + '_score_dict.npy'
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', list_sequences=[1,2,3,4,5,6,7], load_residuals_regression=False,crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    save_name = config.SVM_path + subject + '/feature_decoding/' + 'StimID' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times})
 
 def SVM_features_withinchunk(subject):
-    score, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition', list_sequences=[4,5,6], load_residuals_regression=False)
-    save_path = config.SVM_path + subject + '/feature_decoding/'
-    utils.create_folder(save_path)
-    save_name = save_path + 'WithinChunkPosition' + '_score_dict.npy'
+    score, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition', list_sequences=[4,5,6], load_residuals_regression=False,crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    save_name = config.SVM_path + subject + '/feature_decoding/' + 'WithinChunkPosition' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times})
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 def compute_evoked(subject):

@@ -41,6 +41,7 @@ for subject in config.subjects_list:
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
     metadata = epoching_funcs.update_metadata(subject, clean=True, new_field_name=None, new_field_values=None)
     metadata["surprise_100"] = metadata["surprise_100.00000"]  # "rename" the variable
+    # metadata.to_csv(r'tmp.csv')
 
     # ============ build the repeatAlter and the surprise 100 for n+1 ==================
     metadata_notclean = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)

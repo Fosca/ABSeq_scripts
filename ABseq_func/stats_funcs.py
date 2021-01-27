@@ -179,15 +179,14 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
 
         fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
         # image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head',  mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
-        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask,  axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
-
+        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
 
         divider = make_axes_locatable(ax_topo)
         # add axes for colorbar
         ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
         plt.colorbar(image, cax=ax_colorbar, format='%0.1f')
         ax_topo.set_xlabel('Averaged t-map\n({:0.1f} - {:0.1f} ms)'.format(*cinfo['sig_times'][[0, -1]]))
-        ax_topo.set(title=ch_type+': '+fname)
+        ax_topo.set(title=ch_type + ': ' + fname)
 
         # signal average & sem (over subjects)
         ax_signals = divider.append_axes('right', size='300%', pad=1.2)
@@ -272,7 +271,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
     ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
-    ax.set_xlim([-100, 600])
+    ax.set_xlim([-50, 600])
     ax.set_ylim([ymin, ymax])
     ax.set_ylabel(units[ch_type], color=textcolor)
     ax.spines['bottom'].set_color(linecolor)
@@ -315,9 +314,9 @@ def plot_clusters_evo_bars(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='
         NUM_COLORS = len(condnames)
         cm = plt.get_cmap('viridis')
         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+
     for ncond, condname in enumerate(condnames):
         data = evoked_dict[condname].copy()
-        times = data[0][0].times * 1000
         group_data_seq = []
         for nn in range(len(data)):
             sub_data = data[nn][0].copy()
@@ -355,17 +354,15 @@ def plot_clusters_evo_bars(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='
     ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
     # ax.set_xlim([-100, 600])
     # ax.set_ylim([ymin, ymax])
-    plt.xticks(np.arange(len(condnames)), condnames, rotation=45)
+    if condnames[0][-14:] == 'SequenceID_01-':
+        condnames = ['SeqID1', 'SeqID2', 'SeqID3', 'SeqID4', 'SeqID5', 'SeqID6', 'SeqID7']
+    plt.xticks(np.arange(len(condnames)), condnames, rotation=40)
     ax.set_ylabel(units[ch_type], color=textcolor)
     ax.spines['bottom'].set_color(linecolor)
     ax.spines['left'].set_color(linecolor)
-    ax.tick_params(axis='x', colors=textcolor)
+    ax.tick_params(axis='x', colors=textcolor, length=0)
     ax.tick_params(axis='y', colors=textcolor)
+    times = data[0][0].times * 1000 + 100  # since clusters starts at 0 and epochs at -100
     plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1) + '_[%d-%dms]' % (times[t_inds[0]], times[t_inds[-1]]), fontsize=9, color=textcolor)
     fig.tight_layout(pad=0.5, w_pad=0)
-
     return fig
-
-
-
-

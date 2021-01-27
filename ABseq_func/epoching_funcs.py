@@ -156,13 +156,13 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
             metadata = epochs_items_cleaned.metadata
     else:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item.pkl')
-        # if op.exists(metadata_path):
-        #     with open(metadata_path,'rb') as fid:
-        #         metadata = pickle.load(fid)
-        # else:
-        metadata = convert_csv_info_to_metadata(run_info_subject_dir)
-        metadata = pd.DataFrame.from_dict(metadata, orient='index')
-        metadata = pd.DataFrame.transpose(metadata)
+        if op.exists(metadata_path):
+            with open(metadata_path,'rb') as fid:
+                metadata = pickle.load(fid)
+        else:
+            metadata = convert_csv_info_to_metadata(run_info_subject_dir)
+            metadata = pd.DataFrame.from_dict(metadata, orient='index')
+            metadata = pd.DataFrame.transpose(metadata)
 
     if new_field_name is not None:
         metadata[new_field_name] = new_field_values
@@ -186,7 +186,8 @@ def convert_csv_info_to_metadata(csv_path):
     'GlobalEntropy': Entropy from all the statistics of the sequence
     'RunNumber': From 1 to 14, corresponds to the number of the run during the MEEG acquisition
     'TrialNumber': From 1 to 46, corresponds to the index of the sequence presentation within a run
-    'StimID': Was it the sound A or B that was presented
+    'StimID': Was it the sound A or B that was presented (i.e. AFTER violation, if any)
+    'Identity': Was it the sound A or B /!\ BEFORE violation, if any /!\
     'ViolationOrNot': 0 if no violation, 1 if violation
     'StimPosition': From 1 to 16, corresponds to the ordinal position of a sound within a sequence
     'ViolationInSequence': 0 if the sequence was not violated, the position of the violation for all the 16 sequence items if the sequence was violated
@@ -384,7 +385,30 @@ def balance_epochs_violation_positions(epochs,balance_violation_standards=True):
 
     return epochs_balanced
 
-    # ---------------------------------------------------------------------------------------------------------------- #
+def metadata_balance_epochs_violation_positions(metadata):
+    """
+    This function balances violations and standards by position for each sequence by adding a yes/no column in metadata, for standard with matched positions
+    /!\ careful with indexes of pd dataframe (after removal of bad epochs)...
+    """
+    metadata['balanced_standard'] = 'no'
+    all_idx = []
+    for seqID in range(1, 8):
+        tmp = metadata[(metadata['ViolationOrNot'] == 1) & (metadata['SequenceID'] == seqID)]  # Deviant trials for this sequence
+        devpos = np.unique(tmp['StimPosition'])  # Position of deviants
+        idx = (metadata['SequenceID'] == seqID) & (metadata['TrialNumber'] > 10) & (metadata['ViolationInSequence'] == 0) & (metadata['StimPosition'] == devpos[0])
+        all_idx.extend(np.where(idx)[0].tolist())
+        idx = (metadata['SequenceID'] == seqID) & (metadata['TrialNumber'] > 10) & (metadata['ViolationInSequence'] == 0) & (metadata['StimPosition'] == devpos[1])
+        all_idx.extend(np.where(idx)[0].tolist())
+        idx = (metadata['SequenceID'] == seqID) & (metadata['TrialNumber'] > 10) & (metadata['ViolationInSequence'] == 0) & (metadata['StimPosition'] == devpos[2])
+        all_idx.extend(np.where(idx)[0].tolist())
+        idx = (metadata['SequenceID'] == seqID) & (metadata['TrialNumber'] > 10) & (metadata['ViolationInSequence'] == 0) & (metadata['StimPosition'] == devpos[3])
+        all_idx.extend(np.where(idx)[0].tolist())
+    for ii, idx in enumerate(all_idx):  # tried to use a loop and one value at a time to avoid Pandas SettingWithCopyWarning, but no luck...
+        metadata['balanced_standard'].iloc[idx] = 'yes'
+        # metadata.iloc[idx, 'balanced_standard'] = 'yes'
+    return metadata
+
+# ---------------------------------------------------------------------------------------------------------------- #
     # ---------------------------------------------------------------------------------------------------------------- #
 
 

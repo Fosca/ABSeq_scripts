@@ -1,5 +1,7 @@
 # This module contains all the functions related to the decoding analysis
-import ABseq_func
+import sys
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+from initialization_paths import initialization_paths
 import os.path as op
 import numpy as np
 import pandas as pd
@@ -7,13 +9,11 @@ import matplotlib.pyplot as plt
 import mne
 import time
 from sklearn.model_selection import StratifiedKFold
-from scipy.ndimage.filters import gaussian_filter1d
 from ABseq_func import *
 import config
 from scipy.stats import sem
 from ABseq_func import utils  # why do we need this now ?? (error otherwise)
 import matplotlib.ticker as ticker
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from mne.decoding import GeneralizingEstimator
 from sklearn.pipeline import make_pipeline
@@ -40,7 +40,23 @@ def SVM_decoder():
     return time_gen
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = None, decim = 1,crop=None):
+def leave_one_sequence_out(epochs,list_sequences):
+
+    X_train = []
+    y_train = []
+    X_test = []
+    y_test = []
+
+    for seqID in list_sequences:
+        X_train.append(epochs["SequenceID != " + str(seqID)].get_data())
+        y_train.append(epochs["SequenceID != " + str(seqID)].events[:,2])
+        X_test.append(epochs["SequenceID == " + str(seqID)].get_data())
+        y_test.append(epochs["SequenceID == " + str(seqID)].events[:,2])
+
+    return X_train, y_train, X_test, y_test
+
+
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -49,79 +65,82 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False, lis
 
     SVM_dec = SVM_decoder()
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+
     if decim is not None:
         epochs.decimate(decim)
-    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
     if crop is not None:
         epochs.crop(crop[0],crop[1])
+
     epochs.metadata = metadata
-    epochs = epochs["TrialNumber>10 and ViolationOrNot ==0"]
+    # We remove the habituation trials
+    epochs = epochs["TrialNumber>10 and ViolationOrNot == 0"]
     # remove the stim channel from decoding
     epochs.pick_types(meg=True,eeg=True,stim=False)
-    suf = ''
+
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
-        suf = 'resid_'
 
     print('-- The values of the metadata for the feature %s are : ' % feature_name)
     print(np.unique(epochs.metadata[feature_name].values))
 
-    if list_sequences is not None:
-        # concatenate the epochs belonging to the different sequences from the list_sequences
-        epochs_concat1 = []
-        # count the number of epochs that contribute per sequence in order later to balance this
-        n_epochs = []
-        for seqID in list_sequences:
-            epo = epochs["SequenceID == " + str(seqID)].copy()
-            filter_epochs = np.where(1-np.isnan(epo.metadata[feature_name].values))[0]
-            epo = epo[filter_epochs]
-            epo.events[:, 2] = epo.metadata[feature_name].values
-            epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
-            epo.equalize_event_counts(epo.event_id)
-            n_epochs.append(len(epo))
-            print("---- there are %i epochs that contribute from sequence %i -----" % (len(epo), seqID))
-            epochs_concat1.append(epo)
-        # now determine the minimum number of epochs that come from a sequence
-        epochs_concat2 = []
-        n_min = np.min(n_epochs)
-        n_max = np.max(n_epochs)
-        if n_min != n_max:
-            for k in range(len(list_sequences)):
-                n_epo_seq = len(epochs_concat1[k])
-                inds = np.random.permutation(n_epo_seq)
-                inds = inds[:n_min]
-                epochs_concat2.append(mne.concatenate_epochs([epochs_concat1[k][i] for i in inds]))
-        else:
-            epochs_concat2 = epochs_concat1
+    epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences)
 
-        epochs = mne.concatenate_epochs(epochs_concat2)
-    else:
-        epochs.events[:, 2] = epochs.metadata[feature_name].values
-        epochs.event_id = {'%i' % i: i for i in np.unique(epochs.events[:, 2])}
-        epochs.equalize_event_counts(epochs.event_id)
-
-    import time
-    before_decoding = time.time()
-    kf = KFold(n_splits=4)
-
-    y = epochs.events[:, 2]
-    X = epochs._data
     scores = []
-    for train_index, test_index in kf.split(X):
-        print("TRAIN:", train_index, "TEST:", test_index)
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-        SVM_dec.fit(X_train, y_train)
-        scores.append(SVM_dec.score(X_test, y_test))
+    if cross_val_func is not None:
+        X_train, y_train, X_test, y_test = cross_val_func(epochs,list_sequences)
+        n_folds = len(list_sequences)
+        for k in range(n_folds):
+            SVM_dec.fit(X_train[k], y_train[k])
+            scores.append(SVM_dec.score(X_test[k], y_test[k]))
+    else:
+        kf = KFold(n_splits=4)
+        y = epochs.events[:, 2]
+        X = epochs._data
+        for train_index, test_index in kf.split(X):
+            print("TRAIN:", train_index, "TEST:", test_index)
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            SVM_dec.fit(X_train, y_train)
+            scores.append(SVM_dec.score(X_test, y_test))
 
     score = np.mean(scores, axis=0)
     times = epochs.times
-    # then use plot_GAT_SVM to plot the gat matrix
-    after_decoding = time.time()-before_decoding
-    print("================ the decoding of feature %s took %i seconds ====="%(feature_name,int(after_decoding)))
-
 
     return score, times
+
+
+def balance_epochs_for_feature(epochs, feature_name, list_sequences):
+    # concatenate the epochs belonging to the different sequences from the list_sequences
+    epochs_concat1 = []
+    # count the number of epochs that contribute per sequence in order later to balance this
+    n_epochs = []
+    for seqID in list_sequences:
+        epo = epochs["SequenceID == " + str(seqID)].copy()
+        # ---- remove the epochs that have nan values for the feature we are decoding ----
+        filter_epochs = np.where(1 - np.isnan(epo.metadata[feature_name].values))[0]
+        epo = epo[filter_epochs]
+        epo.events[:, 2] = epo.metadata[feature_name].values
+        epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
+        epo.equalize_event_counts(epo.event_id)
+        n_epochs.append(len(epo))
+        print("---- there are %i epochs that contribute from sequence %i -----" % (len(epo), seqID))
+        epochs_concat1.append(epo)
+    # now determine the minimum number of epochs that come from a sequence and append the same number of epochs from each
+    # sequence type
+    epochs_concat2 = []
+    n_min = np.min(n_epochs)
+    n_max = np.max(n_epochs)
+    if n_min != n_max:
+        for k in range(len(list_sequences)):
+            n_epo_seq = len(epochs_concat1[k])
+            inds = np.random.permutation(n_epo_seq)
+            inds = inds[:n_min]
+            epochs_concat2.append(mne.concatenate_epochs([epochs_concat1[k][i] for i in inds]))
+    else:
+        epochs_concat2 = epochs_concat1
+    epochs = mne.concatenate_epochs(epochs_concat2)
+    return epochs
 
 
 # ______________________________________________________________________________________________________________________
@@ -224,8 +243,6 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
     if train_test_different_blocks:
         suf += 'train_test_different_blocks'
         n_folds = 2
-
-
 
     SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
 
@@ -452,7 +469,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
     return fig
 
 # ______________________________________________________________________________________________________________________
-def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],window=False,train_test_different_blocks=True ):
+def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],window=False,train_test_different_blocks=True,sliding_window = False ):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
     :param subject:
@@ -466,6 +483,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     SVM_results_path = op.join(config.SVM_path, subject)
     suf = ''
     n_folds = 4
+
+    if sliding_window:
+        suf += 'SW_'
+
     if train_test_different_blocks:
         n_folds = 2
         suf += 'train_test_different_blocks'
@@ -481,6 +502,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ====== loading the 16 items sequences epoched on the first element ===================
     epochs_1st_element = mne.read_epochs(fname_in, preload=True)
+
+    if sliding_window:
+        epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
+
     epochs_1st_element = epochs_1st_element["TrialNumber > 10"]
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
@@ -584,7 +609,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     return True
 
 
-def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False,train_test_different_blocks=True ):
+def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False,train_test_different_blocks=True,sliding_window = False  ):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -597,6 +622,10 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     SVM_results_path = op.join(config.SVM_path, subject)
     suf = ''
     n_folds = 4
+
+    if sliding_window:
+        suf += 'SW_'
+
     if train_test_different_blocks:
         n_folds = 2
         suf += 'train_test_different_blocks'
@@ -612,6 +641,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
     # ====== loading the 16 items sequences epoched on the first element ===================
     epochs_1st_element = mne.read_epochs(fname_in, preload=True)
+    if sliding_window:
+        epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
     epochs_1st_element= epochs_1st_element["TrialNumber < 11"]
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
