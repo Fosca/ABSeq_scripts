@@ -119,7 +119,7 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_
             SVM_dec.fit(X_train[k], y_train[k])
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
-                dec.append(SVM_dec.decision_function(X_test[k], y_test[k]))
+                dec.append(SVM_dec.decision_function(X_test[k]))
 
     else:
         kf = KFold(n_splits=4)
@@ -1314,4 +1314,85 @@ class AveragePerEvent(TransformerMixin):
         return result
 
 
+
+# ---------------------------------------------------------------------------------------------------------------------
+
+def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
+
+    GAT_sens_all = {sens: [] for sens in sensors}
+
+    for sens in sensors:
+        print("==== running the plotting for sensor type %s"%sens)
+        count = 0
+        for subject in subjects_list:
+            SVM_path = op.join(config.SVM_path, subject)
+            GAT_path = op.join(SVM_path,analysis_name+'.npy')
+            if op.exists(GAT_path):
+                count +=1
+
+                GAT_results = np.load(GAT_path, allow_pickle=True).item()
+                print(op.join(SVM_path, analysis_name+'.npy'))
+                times = GAT_results['times']
+                GAT_results = GAT_results[score_field]
+                fig_path = op.join(config.fig_path, 'SVM', folder_name)
+                sub_fig_path = op.join(fig_path,subject)
+                utils.create_folder(sub_fig_path)
+                if plot_per_sequence:
+                    if not GAT_sens_all[sens]:  # initialize the keys and empty lists only the first time
+                        GAT_sens_all[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
+                        GAT_sens_all[sens]['average_all_sequences'] = []
+                    for key in ['SeqID_%i' % i for i in range(1, 8)]:
+                        GAT_sens_all[sens][key].append(GAT_results[sens][key])
+                        # ================ Plot & save each subject / each sequence figures ???
+                        if plot_individual_subjects:
+                                SVM_funcs.plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                    # ================ Plot & save each subject / average of all sequences figures ???
+                    GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
+                    SVM_funcs.plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
+                    plt.close('all')
+                else:
+                    GAT_sens_all[sens].append(GAT_results)
+                    if plot_individual_subjects:
+                        print('plotting for subject:%s'%subject)
+                        print(sub_fig_path)
+                        print("the shape of the GAT result is ")
+                        print(GAT_results.shape)
+                        SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                                               figname=fig_name,vmin=vmin,vmax=vmax)
+                        plt.close('all')
+        # return GAT_sens_all
+
+        print("plotting in %s"%config.fig_path)
+        if plot_per_sequence:
+            for key in ['SeqID_%i' % i for i in range(1, 8)]:
+                SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                                       figname=fig_name+key,vmin=vmin, vmax=vmax)
+                plt.close('all')
+            SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
+                                   save_path=fig_path, figname=fig_name + '_all_seq' + '_',
+                                   vmin=vmin, vmax=vmax)
+            plt.close('all')
+        else:
+            SVM_funcs.plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
+
+    # ===== GROUP AVG FIGURES ===== #
+    if analysis_type == 'perSeq':
+        plt.close('all')
+        for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+            GAT_avg_sens = GAT_sens_all[sens]
+            for seqID in range(1, 8):
+                GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
+                GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
+                SVM_funcs.plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
+                                       save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                                       figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
+                plt.close('all')
+            GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
+            SVM_funcs.plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
+                                   save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                                   figname=suf + 'GAT_all_seq'  + '_allparticipants_')
+
+    return GAT_sens_all, times
 
