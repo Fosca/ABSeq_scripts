@@ -76,7 +76,7 @@ def train_quads_test_others(epochs,list_sequences):
     return X_train, y_train, X_test, y_test
 
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True,distance = True):
+def SVM_decode_feature(subject,feature_name,load_residuals_regression=True,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True,distance = True):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -1345,10 +1345,10 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         GAT_sens_all[sens][key].append(GAT_results[sens][key])
                         # ================ Plot & save each subject / each sequence figures ???
                         if plot_individual_subjects:
-                                SVM_funcs.plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                                plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
                     # ================ Plot & save each subject / average of all sequences figures ???
                     GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
-                    SVM_funcs.plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
+                    plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
                     plt.close('all')
                 else:
                     GAT_sens_all[sens].append(GAT_results)
@@ -1357,7 +1357,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         print(sub_fig_path)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
-                        SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                        plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
                                                figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all
@@ -1365,15 +1365,15 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
         print("plotting in %s"%config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
-                SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
                                        figname=fig_name+key,vmin=vmin, vmax=vmax)
                 plt.close('all')
-            SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
+            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
                                    save_path=fig_path, figname=fig_name + '_all_seq' + '_',
                                    vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
-            SVM_funcs.plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+            plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
@@ -1385,12 +1385,12 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
             for seqID in range(1, 8):
                 GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
                 GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
-                SVM_funcs.plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
+                plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
                                        save_path=op.join(config.fig_path, 'SVM', 'GAT'),
                                        figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
                 plt.close('all')
             GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
-            SVM_funcs.plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
+            plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
                                    save_path=op.join(config.fig_path, 'SVM', 'GAT'),
                                    figname=suf + 'GAT_all_seq'  + '_allparticipants_')
 

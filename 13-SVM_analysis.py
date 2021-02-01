@@ -4,7 +4,9 @@ import os.path as op
 import config
 import numpy as np
 import matplotlib.pyplot as plt
+import ABseq_func.SVM_funcs
 from ABseq_func import *
+from ABseq_func import SVM_funcs
 import mne
 import os.path as op
 from importlib import reload
@@ -18,9 +20,9 @@ from scipy.signal import savgol_filter
 # ======= plot the GAT for all the sequences apart and together =============
 # ___________________________________________________________________________
 
-GAT_sens_all, times = SVM_funcs.plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
-                                                    'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
-                                                    vmin=-0.1,vmax=0.1,analysis_type='perSeq')
+# GAT_sens_all, times = SVM_funcs.plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
+#                                                     'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
+#                                                     vmin=-0.1,vmax=0.1,analysis_type='perSeq')
 
 # ___________________________________________________________________________
 # ======= plot the GAT for the different features =============
@@ -30,7 +32,7 @@ vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
 for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
     anal_name = 'feature_decoding/'+name
-    SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,
+    ABseq_func.SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,name,score_field='score',plot_per_sequence=False,
                                   plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
 
 
@@ -42,7 +44,7 @@ for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Op
 # ===== LOAD DATA ===== #
 
 suf = 'SW_train_test_different_blocks'
-suf = 'train_test_different_blocks'
+# suf = 'train_test_different_blocks'
 
 epochs_16_items_mag_test_window = []; epochs_16_items_grad_test_window = []; epochs_16_items_eeg_test_window = [];epochs_16_items_all_chans_test_window = [];
 epochs_16_items_mag_habituation_window = []; epochs_16_items_grad_habituation_window = []; epochs_16_items_eeg_habituation_window = [];epochs_16_items_all_chans_habituation_window = [];

@@ -169,50 +169,50 @@ def SVM_full_sequences_16items(subject):
 
 def SVM_features_repeatalter(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter', list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'RepeatAlter' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'RepeatAlter' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_stimID(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID',crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,meg=True,eeg=False,decim=4)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'StimID' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'StimID' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_stimID_eeg(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,meg=False)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'StimID' + '_EEGONLY_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'StimID' + '_EEGONLY_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_withinchunk(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition', list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'WithinChunkPosition' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'WithinChunkPosition' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_withinchunk_train_quads_test_others(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition', list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.train_quads_test_others,balance_features=False)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'WithinChunkPosition_train_Quads_test_others' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'WithinChunkPosition_train_Quads_test_others' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_withinchunkrev(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPositionReverse', list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'WithinChunkPositionReverse' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'WithinChunkPositionReverse' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences ? ----
 def SVM_features_number_ofOpenedChunks(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'OpenedChunks',SVM_dec=SVM_funcs.regression_decoder(),list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,balance_features=False,distance=False)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'Number_Open_Chunks' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'Number_Open_Chunks' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences pour chunk opening ? ----
 def SVM_features_chunkBeg(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkBeginning',list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'ChunkBeg' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'ChunkBeg' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences pour chunk closing ? ----
 def SVM_features_chunkEnd(subject):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkEnd',list_sequences=[3,4,5,6,7], crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
-    save_name = config.SVM_path + subject + '/feature_decoding/' + 'ChunkEnd' + '_score_dict.npy'
+    save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'ChunkEnd' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----------------------------------------------------------------------------------------------------------------------
