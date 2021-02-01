@@ -132,7 +132,7 @@ def update_metadata_rejected(subject, epochs_items):
 
 # ====================== change 31/3/2020 ========================
 
-def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None):
+def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=False):
     """
     This function appends data to the metadata
     :param subject:
@@ -156,7 +156,7 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
             metadata = epochs_items_cleaned.metadata
     else:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item.pkl')
-        if op.exists(metadata_path):
+        if op.exists(metadata_path) and not recompute:
             with open(metadata_path,'rb') as fid:
                 metadata = pickle.load(fid)
         else:

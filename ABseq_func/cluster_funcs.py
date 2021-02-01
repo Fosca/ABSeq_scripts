@@ -123,7 +123,7 @@ def EMS(subject):
 
 
 
-def autoreject_marmouset():
+def autoreject_marmouset(subject):
 
     root_path = '/neurospin/unicog/protocols/ABSeq_marmousets/'
     neural_data_path = root_path+'neural_data/'
@@ -173,7 +173,7 @@ def SVM_features_repeatalter(subject):
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 def SVM_features_stimID(subject):
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID',crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,meg=True,eeg=False,decim=4)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID',crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,eeg=False,decim=4)
     save_name = config.SVM_path + subject + '/feature_decoding/resid_' + 'StimID' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
