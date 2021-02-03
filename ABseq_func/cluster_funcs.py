@@ -167,6 +167,7 @@ def SVM_full_sequences_16items(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
 
+<<<<<<< HEAD
 def SVM_features_repeatalter(subject,load_residuals_regression=True):
     if load_residuals_regression:
         resid_suffix = 'resid_'
