@@ -137,10 +137,6 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=True,SVM_d
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
-<<<<<<< HEAD
-=======
-
->>>>>>> 301a4a07026eea3f70d843b9ebb234031724af8a
     else:
         kf = KFold(n_splits=4)
         y = epochs.events[:, 2]
@@ -1415,4 +1411,44 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                                    figname=suf + 'GAT_all_seq'  + '_allparticipants_')
 
     return GAT_sens_all, times
+
+def SVM_GAT_linear_reg_sequence_complexity(subject):
+
+    # load the participants GAT results for the decoding of standard VS deviant for all the different sequences =========
+    SVM_path = op.join(config.SVM_path, subject)
+    GAT_path = op.join(SVM_path,'GAT_results.npy')
+    GAT_results = np.load(GAT_path, allow_pickle=True).item()
+    times = GAT_results['times']
+    GAT = GAT_results['GAT']['all_chans']
+    # We concatenate the data from all the sequences for that participant =========
+    GAT_all_sequences = []
+    for seqID in range(1, 8):
+        GAT_all_sequences.append(GAT['SeqID_%i' % seqID])
+
+    GAT_all_sequences = np.asarray(GAT_all_sequences)
+
+    # ====== select a training and a testing time and compute the regression coeffs =====
+    from sklearn.linear_model import LinearRegression
+    complexities = [4,6,6,6,12,14,23]
+    coeff_constant = np.zeros((GAT_all_sequences.shape[1],GAT_all_sequences.shape[1]))
+
+    coeff_complexity = np.zeros((GAT_all_sequences.shape[1],GAT_all_sequences.shape[1]))
+    for train_ind in range(GAT_all_sequences.shape[1]):
+        for test_ind in range(GAT_all_sequences.shape[1]):
+            data = GAT_all_sequences[train_ind,test_ind,:]
+            reg = LinearRegression().fit(complexities, data)
+            coeff_complexity[train_ind,test_ind] = reg.coef_
+            coeff_constant[train_ind,test_ind] = reg.intercept_
+
+    np.save(SVM_path+'/GAT_lin_reg_complexity.npy',{'coeff_complexity':coeff_complexity,'coeff_constant':coeff_constant,'times':times})
+
+    return coeff_complexity, coeff_constant
+
+
+
+
+
+
+
+
 
