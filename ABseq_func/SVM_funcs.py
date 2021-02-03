@@ -1,5 +1,6 @@
 # This module contains all the functions related to the decoding analysis
 import sys
+
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 from initialization_paths import initialization_paths
 import os.path as op
@@ -38,6 +39,7 @@ def SVM_decoder():
 
     return time_gen
 
+
 # ______________________________________________________________________________________________________________________
 def regression_decoder():
     """
@@ -49,9 +51,10 @@ def regression_decoder():
     time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
 
     return time_gen
-# ______________________________________________________________________________________________________________________
-def leave_one_sequence_out(epochs,list_sequences):
 
+
+# ______________________________________________________________________________________________________________________
+def leave_one_sequence_out(epochs, list_sequences):
     X_train = []
     y_train = []
     X_test = []
@@ -59,24 +62,27 @@ def leave_one_sequence_out(epochs,list_sequences):
 
     for seqID in list_sequences:
         X_train.append(epochs["SequenceID != " + str(seqID)].get_data())
-        y_train.append(epochs["SequenceID != " + str(seqID)].events[:,2])
+        y_train.append(epochs["SequenceID != " + str(seqID)].events[:, 2])
         X_test.append(epochs["SequenceID == " + str(seqID)].get_data())
-        y_test.append(epochs["SequenceID == " + str(seqID)].events[:,2])
+        y_test.append(epochs["SequenceID == " + str(seqID)].events[:, 2])
 
     return X_train, y_train, X_test, y_test
 
-# ______________________________________________________________________________________________________________________
-def train_quads_test_others(epochs,list_sequences):
 
+# ______________________________________________________________________________________________________________________
+def train_quads_test_others(epochs, list_sequences):
     X_train = epochs["SequenceID == 4 "].get_data()
-    y_train = epochs["SequenceID == 4 "].events[:,2]
+    y_train = epochs["SequenceID == 4 "].events[:, 2]
     X_test = epochs["SequenceID != 4 "].get_data()
-    y_test = epochs["SequenceID != 4 "].events[:,2]
+    y_test = epochs["SequenceID != 4 "].events[:, 2]
 
     return [X_train], [y_train], [X_test], [y_test]
 
+
 # ______________________________________________________________________________________________________________________
-def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_dec=SVM_decoder(), list_sequences = [1,2,3,4,5,6,7], decim = 1,crop=None,cross_val_func=None,balance_features=True,meg=True,eeg=True,distance = True):
+def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
+                       list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
+                       balance_features=True, meg=True, eeg=True, distance=True):
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
@@ -97,24 +103,25 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_
 
     """
 
-    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=True)
-    epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-    epochs = epoching_funcs.sliding_window(epochs)
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                              recompute=True)
 
+    if load_residuals_regression:
+        epochs = epoching_funcs.load_resid_epochs_items(subject)
+    else:
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+    epochs = epoching_funcs.sliding_window(epochs)
 
     if decim is not None:
         epochs.decimate(decim)
     if crop is not None:
-        epochs.crop(crop[0],crop[1])
+        epochs.crop(crop[0], crop[1])
 
     epochs.metadata = metadata
     # We remove the habituation trials
     epochs = epochs["TrialNumber>10 and ViolationOrNot == 0"]
     # remove the stim channel from decoding
-    epochs.pick_types(meg=meg,eeg=eeg,stim=False)
-
-    if load_residuals_regression:
-        epochs = epoching_funcs.load_resid_epochs_items(subject)
+    epochs.pick_types(meg=meg, eeg=eeg, stim=False)
 
     print('-- The values of the metadata for the feature %s are : ' % feature_name)
     print(np.unique(epochs.metadata[feature_name].values))
@@ -128,19 +135,15 @@ def SVM_decode_feature(subject,feature_name,load_residuals_regression=False,SVM_
 
     scores = []
     dec = []
-    
+
     if cross_val_func is not None:
-        X_train, y_train, X_test, y_test = cross_val_func(epochs,list_sequences)
+        X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
-<<<<<<< HEAD
-=======
-
->>>>>>> 301a4a07026eea3f70d843b9ebb234031724af8a
     else:
         kf = KFold(n_splits=4)
         y = epochs.events[:, 2]
@@ -195,7 +198,8 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences):
 
 
 # ______________________________________________________________________________________________________________________
-def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_test_different_blocks=True,sliding_window=False):
+def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_test_different_blocks=True,
+                               sliding_window=False):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -206,7 +210,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     """
 
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-    epochs.pick_types(meg=True,eeg=True,stim=False)
+    epochs.pick_types(meg=True, eeg=True, stim=False)
 
     suf = ''
     if load_residuals_regression:
@@ -216,7 +220,7 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     saving_directory = op.join(config.SVM_path, subject)
     utils.create_folder(saving_directory)
 
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_violation_standards=True)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
     if sliding_window:
         epochs_balanced = epoching_funcs.sliding_window(epochs_balanced)
         suf += 'SW_'
@@ -228,9 +232,9 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
     epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
-    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg,epochs_balanced_all_chans]
-    sensor_types = ['mag', 'grad', 'eeg','all_chans']
-    SVM_results = {'mag': [], 'grad': [], 'eeg': [],'all_chans':[]}
+    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
+    sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
+    SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
 
     for l in range(4):
         senso = sensor_types[l]
@@ -270,11 +274,12 @@ def generate_SVM_all_sequences(subject,load_residuals_regression=False,train_tes
 
     if train_test_different_blocks:
         suf += 'train_test_different_blocks'
-    np.save(op.join(saving_directory, suf+'SVM_results.npy'), SVM_results)
+    np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True,sliding_window=False):
+def GAT_SVM(subject, load_residuals_regression=False, score_or_decisionfunc='score', train_test_different_blocks=True,
+            sliding_window=False):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -295,12 +300,12 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
         suf += 'train_test_different_blocks'
         n_folds = 2
 
-    SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
+    SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
+    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad','all_chans']:
-    # for sens in ['eeg']:
+    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+        # for sens in ['eeg']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -310,9 +315,9 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
         SVM_sens = SVM_results[sens]['SVM']
 
         for k in range(1, 8):
-            print('The value of k is %i'%k)
+            print('The value of k is %i' % k)
             seqID = 'SeqID_%i' % k
-            GAT_seq = np.zeros((4,n_times,n_times))
+            GAT_seq = np.zeros((4, n_times, n_times))
             for fold_number in range(n_folds):
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
@@ -326,8 +331,8 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
                 else:
                     GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
                 GAT_seq[fold_number, :, :] = np.mean(
-                    GAT_each_epoch[inds_seq_noviol,:,:],axis=0) - np.mean(
-                    GAT_each_epoch[inds_seq_viol,:,:],axis=0)
+                    GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
+                    GAT_each_epoch[inds_seq_viol, :, :], axis=0)
                 print('The shape of GAT_seq[fold_number, :, :] is')
                 print(GAT_seq[fold_number, :, :].shape)
 
@@ -340,16 +345,16 @@ def GAT_SVM(subject,load_residuals_regression=False,score_or_decisionfunc = 'sco
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
-
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     if score_or_decisionfunc == 'score':
-        np.save(op.join(saving_directory, suf+'GAT_results_score.npy'), GAT_results)
+        np.save(op.join(saving_directory, suf + 'GAT_results_score.npy'), GAT_results)
     else:
-        np.save(op.join(saving_directory, suf+'GAT_results.npy'), GAT_results)
+        np.save(op.join(saving_directory, suf + 'GAT_results.npy'), GAT_results)
 
 
 # ______________________________________________________________________________________________________________________
-def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc = 'score',train_test_different_blocks=True):
+def GAT_SVM_4pos(subject, load_residuals_regression=False, score_or_decisionfunc='score',
+                 train_test_different_blocks=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately and for each violation position.
@@ -369,11 +374,11 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
         suf += 'train_test_different_blocks'
 
     saving_directory = op.join(config.SVM_path, subject)
-    SVM_results = np.load(op.join(saving_directory, suf+'SVM_results.npy'), allow_pickle=True).item()
+    SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad','all_chans']}
+    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad','all_chans']:
+    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
         print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
@@ -387,23 +392,23 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
             violpos_list = np.unique(epochs_sens['SequenceID == %i' % k].metadata['ViolationInSequence'])[1:]
             GAT_seq = np.zeros((4, n_times, n_times, 4))
             for fold_number in range(n_folds):
-                print("====== running for fold number %i =======\n"%fold_number)
+                print("====== running for fold number %i =======\n" % fold_number)
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
                 X = epochs_sens_test.get_data()
-                if score_or_decisionfunc =='score':
+                if score_or_decisionfunc == 'score':
                     GAT_each_epoch = SVM_sens[fold_number].predict(X)
                 else:
                     GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
                 for nn, pos_viol in enumerate(violpos_list):
-                    print("===== RUNNING for SEQ %i and position violation %i"%(k,nn))
+                    print("===== RUNNING for SEQ %i and position violation %i" % (k, nn))
                     inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
                             epochs_sens_test.metadata['ViolationOrNot'].values == 0) & (
                                                        epochs_sens_test.metadata['StimPosition'].values == pos_viol))[0]
                     inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
                             epochs_sens_test.metadata['ViolationOrNot'].values == 1) & (
                                                      epochs_sens_test.metadata['StimPosition'].values == pos_viol))[0]
-                    GAT_seq[fold_number, :, :,nn] = np.mean(
+                    GAT_seq[fold_number, :, :, nn] = np.mean(
                         GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
                         GAT_each_epoch[inds_seq_viol, :, :], axis=0)
                     print("======== finished the loop ==========")
@@ -421,10 +426,11 @@ def GAT_SVM_4pos(subject,load_residuals_regression=False,score_or_decisionfunc =
     print('coucou3')
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     if score_or_decisionfunc == 'score':
-        np.save(op.join(saving_directory, suf+'GAT_results_4pos_score.npy'), GAT_results)
+        np.save(op.join(saving_directory, suf + 'GAT_results_4pos_score.npy'), GAT_results)
     else:
-        np.save(op.join(saving_directory, suf+'GAT_results_4pos.npy'), GAT_results)
+        np.save(op.join(saving_directory, suf + 'GAT_results_4pos.npy'), GAT_results)
     print(" ======== job done ============")
+
 
 # ______________________________________________________________________________________________________________________
 def SVM_applied_to_epochs(SVM_results, sequenceID=None):
@@ -438,10 +444,10 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
     :return:
     """
 
-    y_violornot = {'eeg': [], 'grad': [], 'mag': [],'all_chans':[]}
-    X_transform = {'eeg': [], 'grad': [], 'mag': [],'all_chans':[]}
+    y_violornot = {'eeg': [], 'grad': [], 'mag': [], 'all_chans': []}
+    X_transform = {'eeg': [], 'grad': [], 'mag': [], 'all_chans': []}
 
-    for sens in {'eeg', 'grad', 'mag','all_chans'}:
+    for sens in {'eeg', 'grad', 'mag', 'all_chans'}:
         print(sens)
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
@@ -461,6 +467,7 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
     times = epochs_sens_test.times
 
     return X_transform, y_violornot, times
+
 
 # ______________________________________________________________________________________________________________________
 def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=None, vmax=None):
@@ -482,6 +489,7 @@ def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmi
 
     return fig
 
+
 # ______________________________________________________________________________________________________________________
 def plot_SVM_average(X_transform, y_violornot, times, fig_path=None, figname='Average_SVM_all_sequences_'):
     fig = plt.figure()
@@ -501,6 +509,7 @@ def plot_SVM_average(X_transform, y_violornot, times, fig_path=None, figname='Av
 
     return fig
 
+
 # ______________________________________________________________________________________________________________________
 def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='all_trials'):
     fig = plt.figure()
@@ -519,8 +528,10 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
 
     return fig
 
+
 # ______________________________________________________________________________________________________________________
-def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],window=False,train_test_different_blocks=True,sliding_window = False ):
+def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
+                                     train_test_different_blocks=True, sliding_window=False):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
     :param subject:
@@ -542,7 +553,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         n_folds = 2
         suf += 'train_test_different_blocks'
 
-    SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
+    SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -561,10 +572,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans':epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
+                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['mag', 'grad', 'eeg','all_chans']:
+    for sens in ['mag', 'grad', 'eeg', 'all_chans']:
 
         print(sens)
         SVM_sens = SVM_results[sens]['SVM']
@@ -585,7 +596,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         # ===============================
         counter = 0
         for fold_number in range(n_folds):
-            print('Fold ' + str(fold_number + 1) + ' on %i...'%n_folds)
+            print('Fold ' + str(fold_number + 1) + ' on %i...' % n_folds)
             start = time.time()
             test_indices = SVM_results[sens]['test_ind'][fold_number]
             epochs_sens_test = epochs_sens[test_indices]
@@ -595,10 +606,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
                 seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
                 run_m = epochs_sens[m].metadata['RunNumber'].values[0]
-                trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
-                epochs_1st_sens_m = epochs_1st_sens['SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
+                trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[
+                    0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
+                epochs_1st_sens_m = epochs_1st_sens[
+                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
 
-                #if sens =="all_chans":
+                # if sens =="all_chans":
                 #    epochs_1st_sens_m.pick_types(meg=True,eeg=True)
 
                 if len(epochs_1st_sens_m.events) != 0:
@@ -608,9 +621,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     print(SVM_to_data.shape)
                     if not window:
                         for mm, point_of_interest in enumerate(points):
-                            print(" The point of interest has index %i"%point_of_interest)
-                            print(" === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===" )
-                            epochs_1st_sens_m_filtered_data = SVM_to_data[point_of_interest,:]
+                            print(" The point of interest has index %i" % point_of_interest)
+                            print(
+                                " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
+                            epochs_1st_sens_m_filtered_data = SVM_to_data[point_of_interest, :]
                             print('epochs_1st_sens_m_filtered_data has shape')
                             print(epochs_1st_sens_m_filtered_data.shape)
                             print("data_for_epoch_object has shape")
@@ -626,7 +640,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                         print(
                             " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                         print(SVM_to_data.shape)
-                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points),:],axis=0)
+                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0)
                         print(epochs_1st_sens_m_filtered_data.shape)
                         print('This was the shape of epochs_1st_sens_m_filtered_data')
 
@@ -640,9 +654,13 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                         counter += 1
 
                 else:
-                    print('========================================================================================================================================')
-                    print(' Epoch on first element for sequence %s Run number %i and Trial number %i was excluded by autoreject' % (seqID_m, run_m, trial_number_m))
-                    print('========================================================================================================================================')
+                    print(
+                        '========================================================================================================================================')
+                    print(
+                        ' Epoch on first element for sequence %s Run number %i and Trial number %i was excluded by autoreject' % (
+                        seqID_m, run_m, trial_number_m))
+                    print(
+                        '========================================================================================================================================')
             end = time.time()
             elapsed = end - start
             print('... lasted: ' + str(elapsed) + ' s')
@@ -653,14 +671,17 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         epochs_proj_sens.metadata = data_frame_meta
 
         if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',
+                                  overwrite=True)
         else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test-epo.fif',
+                                  overwrite=True)
 
     return True
 
 
-def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],window = False,train_test_different_blocks=True,sliding_window = False  ):
+def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
+                                                 train_test_different_blocks=True, sliding_window=False):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -681,7 +702,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         n_folds = 2
         suf += 'train_test_different_blocks'
 
-    SVM_results = np.load(op.join(SVM_results_path, suf+'SVM_results.npy'),allow_pickle=True).item()
+    SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -694,15 +715,15 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     epochs_1st_element = mne.read_epochs(fname_in, preload=True)
     if sliding_window:
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
-    epochs_1st_element= epochs_1st_element["TrialNumber < 11"]
+    epochs_1st_element = epochs_1st_element["TrialNumber < 11"]
     epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
                   'grad': epochs_1st_element.copy().pick_types(meg='grad'),
                   'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
                   'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['all_chans','mag', 'grad', 'eeg']:
-    # for sens in ['all_chans','mag', 'grad', 'eeg']:
+    for sens in ['all_chans', 'mag', 'grad', 'eeg']:
+        # for sens in ['all_chans','mag', 'grad', 'eeg']:
 
         SVM_sens = SVM_results[sens]['SVM']
         points = SVM_results[sens]['epochs'][0].time_as_index(times)
@@ -713,7 +734,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         data_frame_meta = pd.DataFrame([])
         n_habituation = epochs_1st_element.get_data().shape[0]
         data_for_epoch_object = np.zeros(
-            (n_habituation* len(times), epochs_1st_sens.get_data().shape[2]))
+            (n_habituation * len(times), epochs_1st_sens.get_data().shape[2]))
         if window:
             data_for_epoch_object = np.zeros(
                 (n_habituation, epochs_1st_sens.get_data().shape[2]))
@@ -730,8 +751,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                     epochs_1st_sens_filtered_data_4folds.append(SVM_to_data[point_of_interest, :])
 
                     # ==== now that we projected the 4 filters, we can average over the 4 folds ================
-                epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds,axis=0).T
-                data_for_epoch_object[n_habituation*mm:n_habituation*(mm+1),:] = epochs_1st_sens_filtered_data
+                epochs_1st_sens_filtered_data = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0).T
+                data_for_epoch_object[n_habituation * mm:n_habituation * (mm + 1), :] = epochs_1st_sens_filtered_data
                 metadata_m = epochs_1st_sens.metadata
                 metadata_m['SVM_filter_datapoint'] = int(point_of_interest)
                 metadata_m['SVM_filter_time'] = times[mm]
@@ -745,13 +766,13 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                 print(
                     " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
                 epochs_1st_sens_filtered_data_4folds.append(
-                    np.mean(SVM_to_data[:,np.min(points):np.max(points), :], axis=1))
+                    np.mean(SVM_to_data[:, np.min(points):np.max(points), :], axis=1))
 
             # ==== now that we projected the 4 filters, we can average over the 4 folds ================
             data_for_epoch_object = np.mean(epochs_1st_sens_filtered_data_4folds, axis=0)
 
             metadata = epochs_1st_sens.metadata
-            print("==== the length of the epochs_1st_sens.metadata to append is %i ===="%len(metadata))
+            print("==== the length of the epochs_1st_sens.metadata to append is %i ====" % len(metadata))
             metadata['SVM_filter_min_datapoint'] = np.min(points)
             metadata['SVM_filter_max_datapoint'] = np.max(points)
             metadata['SVM_filter_tmin_window'] = times[0]
@@ -766,15 +787,19 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
         epochs_proj_sens.metadata = data_frame_meta
         if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens +suf+ '_SVM_on_16_items_habituation_window-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_habituation_window-epo.fif',
+                                  overwrite=True)
         else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens +suf+ '_SVM_on_16_items_habituation-epo.fif',overwrite=True)
+            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_habituation-epo.fif',
+                                  overwrite=True)
 
     return True
 
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None, color_mean=None, plot_noviolation=True):
+def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1,
+                                  SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None,
+                                  color_mean=None, plot_noviolation=True):
     """
     This will allow to plot the Projections of the SVM on the 4 positions of the violations.
 
@@ -815,7 +840,8 @@ def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1, SVM_filter_
             ax[n].plot(times * 1000, mean, color=color_mean[ii], linewidth=1.5, label=str(point_of_interest))
             ax[n].set_xlim(-500, 4250)
             # ax[n].legend(loc='upper left', fontsize=10)
-            ax[n].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=len(SVM_filter_times), mode="expand", borderaxespad=0.)
+            ax[n].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=len(SVM_filter_times),
+                         mode="expand", borderaxespad=0.)
             ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
             if viol_pos != 0:
                 ax[n].axvline(250 * (viol_pos - 1), linestyle='-', color='red', linewidth=2)
@@ -829,6 +855,7 @@ def plot_SVM_projection_for_seqID(epochs_list, sensor_type, seqID=1, SVM_filter_
 
     return figure
 
+
 # ______________________________________________________________________________________________________________________
 def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save_path=None):
     # this provides us with the position of the violations and the times
@@ -841,7 +868,8 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0] * 1000
 
     fig, axes = plt.subplots(6, 1, figsize=(12, 9), sharex=True, sharey=True, constrained_layout=True)
-    fig.suptitle('SVM %s - window %d-%dms - SequenceID_%d; N subjects = %d' % (sensor_type, win_tmin, win_tmax, seqID, len(epochs_list['test'])), fontsize=12)
+    fig.suptitle('SVM %s - window %d-%dms - SequenceID_%d; N subjects = %d' % (
+    sensor_type, win_tmin, win_tmax, seqID, len(epochs_list['test'])), fontsize=12)
     ax = axes.ravel()[::1]
     ax[0].set_title('Habituation trials', loc='right', weight='bold')
     ax[1].set_title('Standard test trials', loc='right', weight='bold')
@@ -869,11 +897,11 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
     ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
     n += 1
 
-
     for viol_pos in violpos_list:
         y_list = []
         for epochs in epochs_list['test']:
-            epochs_subset = epochs['SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
+            epochs_subset = epochs[
+                'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
             y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').get_data()))
         mean = np.mean(y_list, axis=0)
         ub = mean + sem(y_list, axis=0)
@@ -898,9 +926,9 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
     return figure
 
-# ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None,vmin=-1,vmax=1):
 
+# ______________________________________________________________________________________________________________________
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1):
     # window info, just for figure title
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0] * 1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0] * 1000
@@ -924,14 +952,13 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xxxxYYYYxxYYxYxY',
                 'xYxxxYYYYxYYxxxY']
 
-
-    print("vmin = %0.02f, vmax = %0.02f"%(vmin, vmax))
+    print("vmin = %0.02f, vmax = %0.02f" % (vmin, vmax))
 
     n = 0
 
     for seqID in range(1, 8):
 
-        # this provides us with the position of the violations and the times
+        #  this provides us with the position of the violations and the times
         epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
         times = epochs_seq_subset.times
         times = times + 0.3
@@ -942,7 +969,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         data_mean = []
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
+            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
             # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean_hab = np.mean(y_list, axis=0)
@@ -954,7 +981,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
                     'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
+                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
             data_mean.append(mean)
@@ -964,22 +991,25 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         for xx in range(16):
             ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
             txt = seqtxtXY[n][xx]
-            ax[n].text(250*(xx+1)-125, width*6+(width/3), txt, horizontalalignment='center', fontsize=16)
+            ax[n].text(250 * (xx + 1) - 125, width * 6 + (width / 3), txt, horizontalalignment='center', fontsize=16)
 
         # return data_mean
-        im = ax[n].imshow(data_mean, extent=[min(times)*1000, max(times)*1000, 0, 6*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+        im = ax[n].imshow(data_mean, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                          vmin=vmin, vmax=vmax)
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
-        ax[n].set_yticks(np.arange(width/2, 6*width, width))
-        ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3], 'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1], 'Standard','Habituation'])
+        ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
+        ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3],
+                               'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1],
+                               'Standard', 'Habituation'])
         ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
 
         # add deviant marks
         for k in range(4):
-            viol_pos = violpos_list[k+1]
+            viol_pos = violpos_list[k + 1]
             x = 250 * (viol_pos - 1)
-            y1 = (4-k)*width
-            y2 = (4-1-k)*width
+            y1 = (4 - k) * width
+            y2 = (4 - 1 - k) * width
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
         # add colorbar
@@ -999,16 +1029,19 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
 
     return figure
 
-# ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None,vmin=None,vmax=None):
 
+# ______________________________________________________________________________________________________________________
+def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1,
+                                          SVM_filter_times=[x / 1000 for x in range(100, 700, 50)], save_path=None,
+                                          vmin=None, vmax=None):
     # this provides us with the position of the violations and the times
     epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
     times = epochs_seq_subset.times
     violpos_list = np.unique(epochs_seq_subset.metadata['ViolationInSequence'])
 
     fig, axes = plt.subplots(6, 1, figsize=(12, 9), sharex=True, sharey=True, constrained_layout=True)
-    fig.suptitle('SVM %s - SequenceID_' % sensor_type + str(seqID) + ' N subjects = ' + str(len(epochs_list['test'])), fontsize=12)
+    fig.suptitle('SVM %s - SequenceID_' % sensor_type + str(seqID) + ' N subjects = ' + str(len(epochs_list['test'])),
+                 fontsize=12)
     ax = axes.ravel()[::1]
     ax[0].set_title('Habituation trials', loc='left', weight='bold')
     ax[1].set_title('Standard test trials', loc='left', weight='bold')
@@ -1025,7 +1058,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID)
                                    + '" and SVM_filter_time == "' + str(point_of_interest) + '"']
-            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
+            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
             # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
             # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
         mean = np.mean(y_list, axis=0)
@@ -1033,8 +1066,11 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
     width = 50
     for xx in range(16):
         ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
-    ax[n].imshow(mean_all_SVM_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
-    ax[n].set_yticks(np.arange(width/2, len(SVM_filter_times)*width, len(SVM_filter_times)*width/len(SVM_filter_times)))
+    ax[n].imshow(mean_all_SVM_times, origin='lower',
+                 extent=[min(times) * 1000, max(times) * 1000, 0, len(SVM_filter_times) * width], cmap='RdBu_r',
+                 vmin=vmin, vmax=vmax)
+    ax[n].set_yticks(
+        np.arange(width / 2, len(SVM_filter_times) * width, len(SVM_filter_times) * width / len(SVM_filter_times)))
     ax[n].set_yticklabels(SVM_filter_times)
     ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
     n += 1
@@ -1048,7 +1084,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
                 epochs_subset = epochs['SequenceID == "' + str(seqID)
                                        + '" and SVM_filter_time == "' + str(point_of_interest)
                                        + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()),axis=0))
+                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
                 # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
                 # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
             mean = np.mean(y_list, axis=0)
@@ -1057,10 +1093,13 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
         width = 50
         for xx in range(16):
             ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
-        ax[n].imshow(mean_all_SVM_times, origin='lower', extent=[min(times)*1000, max(times)*1000, 0, len(SVM_filter_times)*width], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+        ax[n].imshow(mean_all_SVM_times, origin='lower',
+                     extent=[min(times) * 1000, max(times) * 1000, 0, len(SVM_filter_times) * width], cmap='RdBu_r',
+                     vmin=vmin, vmax=vmax)
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
-        ax[n].set_yticks(np.arange(width/2, len(SVM_filter_times)*width, len(SVM_filter_times)*width/len(SVM_filter_times)))
+        ax[n].set_yticks(
+            np.arange(width / 2, len(SVM_filter_times) * width, len(SVM_filter_times) * width / len(SVM_filter_times)))
         ax[n].set_yticklabels(SVM_filter_times)
         ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
         if viol_pos != 0:
@@ -1077,8 +1116,7 @@ def plot_SVM_projection_for_seqID_heatmap(epochs_list, sensor_type, seqID=1, SVM
     return figure
 
 
-
-#=========================================================================================================
+# =========================================================================================================
 
 class ZScoreEachChannel(TransformerMixin):
     """
@@ -1088,16 +1126,16 @@ class ZScoreEachChannel(TransformerMixin):
     Output matrix: Epochs x Channels x TimePoints (same size as input)
     """
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def __init__(self, debug=False):
         self._debug = debug
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     # noinspection PyUnusedLocal
     def fit(self, x, y=None, *_):
         return self
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def transform(self, x):
         result = np.zeros(x.shape)
         n_epochs, nchannels, ntimes = x.shape
@@ -1107,12 +1145,12 @@ class ZScoreEachChannel(TransformerMixin):
             sd = np.std(channel_data)
             if self._debug:
                 print('ZScoreEachChannel: channel {:} m={:}, sd={:}'.format(c, m, sd))
-            result[:, c, :] = (x[:, c, :]-m)/sd
+            result[:, c, :] = (x[:, c, :] - m) / sd
 
         return result
 
 
-#=========================================================================================================
+# =========================================================================================================
 
 class SlidingWindow(TransformerMixin):
     """
@@ -1124,7 +1162,7 @@ class SlidingWindow(TransformerMixin):
                 Note that in this case, the output may not be a real matrix in case the last sliding window is smaller than the others
     """
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def __init__(self, window_size, step, min_window_size=None, average=True, debug=False):
         """
         :param window_size: The no. of time points to average
@@ -1140,46 +1178,47 @@ class SlidingWindow(TransformerMixin):
         self._average = average
         self._debug = debug
 
-
-    #--------------------------------------------------
+    # --------------------------------------------------
     # noinspection PyUnusedLocal
     def fit(self, x, y=None, *_):
         return self
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def transform(self, x):
         x = np.array(x)
         assert len(x.shape) == 3
         n1, n2, n_time_points = x.shape
 
-        #-- Get the start-end indices of each window
+        # -- Get the start-end indices of each window
         min_window_size = self._min_window_size or self._window_size
-        window_start = np.array(range(0, n_time_points-min_window_size+1, self._step))
+        window_start = np.array(range(0, n_time_points - min_window_size + 1, self._step))
         if len(window_start) == 0:
-            #-- There are fewer than window_size time points
+            # -- There are fewer than window_size time points
             raise Exception('There are only {:} time points, but at least {:} are required for the sliding window'.
                             format(n_time_points, self._min_window_size))
         window_end = window_start + self._window_size
-        window_end[-1] = min(window_end[-1], n_time_points)  # make sure that the last window doesn't exceed the input size
+        window_end[-1] = min(window_end[-1],
+                             n_time_points)  # make sure that the last window doesn't exceed the input size
 
         if self._debug:
-            win_info = [(s, e, e-s) for s, e in zip(window_start, window_end)]
+            win_info = [(s, e, e - s) for s, e in zip(window_start, window_end)]
             print('SlidingWindow transformer: the start,end,length of each sliding window: {:}'.
                   format(win_info))
             if len(win_info) > 1 and win_info[0][2] != win_info[-1][2] and not self._average:
-                print('SlidingWindow transformer: note that the last sliding window is smaller than the previous ones, ' +
-                      'so the result will be a list of 3-dimensional matrices, with the last list element having ' +
-                      'a different dimension than the previous elements. ' +
-                      'This format is acceptable by the RiemannDissimilarity transformer')
+                print(
+                    'SlidingWindow transformer: note that the last sliding window is smaller than the previous ones, ' +
+                    'so the result will be a list of 3-dimensional matrices, with the last list element having ' +
+                    'a different dimension than the previous elements. ' +
+                    'This format is acceptable by the RiemannDissimilarity transformer')
 
         if self._average:
-            #-- Average the data in each sliding window
+            # -- Average the data in each sliding window
             result = np.zeros((n1, n2, len(window_start)))
             for i in range(len(window_start)):
                 result[:, :, i] = np.mean(x[:, :, window_start[i]:window_end[i]], axis=2)
 
         else:
-            #-- Don't average the data in each sliding window - just copy it
+            # -- Don't average the data in each sliding window - just copy it
             result = []
             for i in range(len(window_start)):
                 result.append(x[:, :, window_start[i]:window_end[i]])
@@ -1187,7 +1226,7 @@ class SlidingWindow(TransformerMixin):
         return result
 
 
-#=========================================================================================================
+# =========================================================================================================
 
 class AveragePerEvent(TransformerMixin):
     """
@@ -1199,7 +1238,7 @@ class AveragePerEvent(TransformerMixin):
                    dimension is multiplied accordingly.
     """
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def __init__(self, event_ids=None, n_results_per_event=1, max_events_with_missing_epochs=0, debug=False):
         """
         :param event_ids: The event IDs to average on. If None, compute average for all available events.
@@ -1225,8 +1264,7 @@ class AveragePerEvent(TransformerMixin):
             else:
                 print('AveragePerEvent: will create averages for these events: {:}'.format(event_ids))
 
-
-    #--------------------------------------------------
+    # --------------------------------------------------
     # noinspection PyUnusedLocal,PyAttributeOutsideInit
     def fit(self, x, y, *_):
 
@@ -1241,30 +1279,29 @@ class AveragePerEvent(TransformerMixin):
 
         return self
 
-
-    #--------------------------------------------------
+    # --------------------------------------------------
     def transform(self, x):
 
         x = np.array(x)
 
         result = []
 
-        #-- Split the epochs by event ID.
-        #-- x_per_event_id has a 3-dim matrix for each event ID
+        # -- Split the epochs by event ID.
+        # -- x_per_event_id has a 3-dim matrix for each event ID
         x_per_event_id = [x[self._y == eid] for eid in self._curr_event_ids]
 
-        #-- Check if there are enough epochs per event ID
+        # -- Check if there are enough epochs per event ID
         too_few_epochs = [len(e) < self._n_results_per_event for e in x_per_event_id]  # list of bool - one per event ID
         if sum(too_few_epochs) > self._max_events_with_missing_epochs:
             raise Exception('There are {:} event IDs with fewer than {:} epochs: {:}'.
                             format(sum(too_few_epochs), self._n_results_per_event,
-                            self._curr_event_ids[np.where(too_few_epochs)[0]]))
+                                   self._curr_event_ids[np.where(too_few_epochs)[0]]))
         elif sum(too_few_epochs) > 0:
             print('WARNING (AveragePerEvent): There are {:} event IDs with fewer than {:} epochs: {:}'.
                   format(sum(too_few_epochs), self._n_results_per_event,
                          self._curr_event_ids[np.where(too_few_epochs)[0]]))
 
-        #-- Do the actual aggregation
+        # -- Do the actual aggregation
         for i in range(len(x_per_event_id)):
             # Get a list whose length is n_results_per_event; each list entry is a 3-dim matrix to average
             agg = self._aggregate(x_per_event_id[i])
@@ -1279,7 +1316,7 @@ class AveragePerEvent(TransformerMixin):
 
         return result
 
-    #--------------------------------------------------
+    # --------------------------------------------------
     def _aggregate(self, one_event_x):
         """
         Distribute the epochs of one_event_x into separate sets
@@ -1288,18 +1325,18 @@ class AveragePerEvent(TransformerMixin):
         """
 
         if self._n_results_per_event == 1:
-            #-- Aggregate all epochs into one result
+            # -- Aggregate all epochs into one result
             return [one_event_x]
 
         if len(one_event_x) >= self._n_results_per_event:
 
-            #-- The number of epochs is sufficient to have at least one different epoch per result
+            # -- The number of epochs is sufficient to have at least one different epoch per result
 
             one_event_x = np.array(one_event_x)
 
             result = [[]] * self._n_results_per_event
 
-            #-- First, distribute an equal number of epochs to each result
+            # -- First, distribute an equal number of epochs to each result
             n_in_epochs = len(one_event_x)
             in_epochs_inds = range(len(one_event_x))
             random.shuffle(in_epochs_inds)
@@ -1308,19 +1345,19 @@ class AveragePerEvent(TransformerMixin):
                 result[i] = list(one_event_x[in_epochs_inds[:n_take_per_result]])
                 in_epochs_inds = in_epochs_inds[n_take_per_result:]
 
-            #-- If some epochs remained, add each of them to a different result set
+            # -- If some epochs remained, add each of them to a different result set
             n_remained = len(in_epochs_inds)
             for i in range(n_remained):
                 result[i].append(one_event_x[in_epochs_inds[i]])
 
         else:
 
-            #-- The number of epochs is too small: each result will consist of a single epoch, and epochs some will be duplicated
+            # -- The number of epochs is too small: each result will consist of a single epoch, and epochs some will be duplicated
 
-            #-- First, take all events that we have
+            # -- First, take all events that we have
             result = list(one_event_x)
 
-            #-- Then pick random some epochs and duplicate them
+            # -- Then pick random some epochs and duplicate them
             n_missing = self._n_results_per_event - len(result)
             epoch_inds = range(len(one_event_x))
             random.shuffle(epoch_inds)
@@ -1334,28 +1371,28 @@ class AveragePerEvent(TransformerMixin):
         return result
 
 
-
 # ---------------------------------------------------------------------------------------------------------------------
 
-def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
-
+def plot_all_subjects_results_SVM(analysis_name, subjects_list, fig_name, plot_per_sequence=False,
+                                  plot_individual_subjects=False, score_field='GAT', folder_name='GAT',
+                                  sensors=['eeg', 'mag', 'grad', 'all_chans'], vmin=-0.1, vmax=.1, analysis_type=''):
     GAT_sens_all = {sens: [] for sens in sensors}
 
     for sens in sensors:
-        print("==== running the plotting for sensor type %s"%sens)
+        print("==== running the plotting for sensor type %s" % sens)
         count = 0
         for subject in subjects_list:
             SVM_path = op.join(config.SVM_path, subject)
-            GAT_path = op.join(SVM_path,analysis_name+'.npy')
+            GAT_path = op.join(SVM_path, analysis_name + '.npy')
             if op.exists(GAT_path):
-                count +=1
+                count += 1
 
                 GAT_results = np.load(GAT_path, allow_pickle=True).item()
-                print(op.join(SVM_path, analysis_name+'.npy'))
+                print(op.join(SVM_path, analysis_name + '.npy'))
                 times = GAT_results['times']
                 GAT_results = GAT_results[score_field]
                 fig_path = op.join(config.fig_path, 'SVM', folder_name)
-                sub_fig_path = op.join(fig_path,subject)
+                sub_fig_path = op.join(fig_path, subject)
                 utils.create_folder(sub_fig_path)
                 if plot_per_sequence:
                     if not GAT_sens_all[sens]:  # initialize the keys and empty lists only the first time
@@ -1365,37 +1402,41 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         GAT_sens_all[sens][key].append(GAT_results[sens][key])
                         # ================ Plot & save each subject / each sequence figures ???
                         if plot_individual_subjects:
-                                SVM_funcs.plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                            plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path,
+                                         figname=fig_name + key);
+                            plt.close('all')
                     # ================ Plot & save each subject / average of all sequences figures ???
                     GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
-                    SVM_funcs.plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
+                    plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path,
+                                 figname=fig_name + '_all_seq', vmin=vmin, vmax=vmax)
                     plt.close('all')
                 else:
                     GAT_sens_all[sens].append(GAT_results)
                     if plot_individual_subjects:
-                        print('plotting for subject:%s'%subject)
+                        print('plotting for subject:%s' % subject)
                         print(sub_fig_path)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
-                        SVM_funcs.plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
-                                               figname=fig_name,vmin=vmin,vmax=vmax)
+                        plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                                     figname=fig_name, vmin=vmin, vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all
 
-        print("plotting in %s"%config.fig_path)
+        print("plotting in %s" % config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
-                SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
-                                       figname=fig_name+key,vmin=vmin, vmax=vmax)
+                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key], axis=0), times, sens=sens, save_path=fig_path,
+                             figname=fig_name + key, vmin=vmin, vmax=vmax)
                 plt.close('all')
-            SVM_funcs.plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
-                                   save_path=fig_path, figname=fig_name + '_all_seq' + '_',
-                                   vmin=vmin, vmax=vmax)
+            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'], axis=0), times, sens=sens,
+                         save_path=fig_path, figname=fig_name + '_all_seq' + '_',
+                         vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
-            SVM_funcs.plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+            plot_GAT_SVM(-np.mean(GAT_sens_all[sens], axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,
+                         vmin=vmin, vmax=vmax)
 
-    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
 
     # ===== GROUP AVG FIGURES ===== #
     if analysis_type == 'perSeq':
@@ -1405,14 +1446,14 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
             for seqID in range(1, 8):
                 GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
                 GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
-                SVM_funcs.plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
-                                       save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                                       figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
+                plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
+                             save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                             figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
                 plt.close('all')
             GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
-            SVM_funcs.plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
-                                   save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                                   figname=suf + 'GAT_all_seq'  + '_allparticipants_')
+            plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
+                         save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                         figname=suf + 'GAT_all_seq' + '_allparticipants_')
 
     return GAT_sens_all, times
 
