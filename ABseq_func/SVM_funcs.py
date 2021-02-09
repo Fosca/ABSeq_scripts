@@ -92,9 +92,10 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     SVM_dec=SVM_decoder()
     subject = 'sub06-kc_160388'
     feature_name = 'ChunkBeginning'
-    load_residuals_regression = False
+    load_residuals_regression = True
     list_sequences=[3,4,5,6,7]
     crop = [-0.1,0.4]
+
     decim = 10
     cross_val_func=SVM_funcs.leave_one_sequence_out
     balance_features=True
@@ -104,13 +105,16 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
 
     """
 
-    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
-                                              recompute=True)
-
     if load_residuals_regression:
         epochs = epoching_funcs.load_resid_epochs_items(subject)
+        # metadata = epoching_funcs.update_metadata(subject, clean=True,recompute=True)
     else:
         epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                                  recompute=True)
+        epochs.metadata = metadata
+
+
     epochs = epoching_funcs.sliding_window(epochs)
 
     if decim is not None:
@@ -118,7 +122,6 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     if crop is not None:
         epochs.crop(crop[0], crop[1])
 
-    epochs.metadata = metadata
     # We remove the habituation trials
     epochs = epochs["TrialNumber>10 and ViolationOrNot == 0"]
     # remove the stim channel from decoding
@@ -475,13 +478,12 @@ def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmi
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
-    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='PRGn', vmin=vmin, vmax=vmax)
     # -----# ADD LINES ?
     plt.axvline(0, linestyle='-', color='black', linewidth=1)
     plt.axhline(0, linestyle='-', color='black', linewidth=1)
     plt.plot([minT, maxT], [minT, maxT], linestyle='--', color='black', linewidth=1)
     # -----#
-    plt.title('Generalization across time performance - ' + sens)
     plt.ylabel('Training time (ms)')  # NO TRANSPOSE
     plt.xlabel('Testing time (ms)')  # NO TRANSPOSE
     plt.colorbar()
@@ -1374,26 +1376,25 @@ class AveragePerEvent(TransformerMixin):
 
 # ---------------------------------------------------------------------------------------------------------------------
 
-def plot_all_subjects_results_SVM(analysis_name, subjects_list, fig_name, plot_per_sequence=False,
-                                  plot_individual_subjects=False, score_field='GAT', folder_name='GAT',
-                                  sensors=['eeg', 'mag', 'grad', 'all_chans'], vmin=-0.1, vmax=.1, analysis_type=''):
+def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
+
     GAT_sens_all = {sens: [] for sens in sensors}
 
     for sens in sensors:
-        print("==== running the plotting for sensor type %s" % sens)
+        print("==== running the plotting for sensor type %s"%sens)
         count = 0
         for subject in subjects_list:
             SVM_path = op.join(config.SVM_path, subject)
-            GAT_path = op.join(SVM_path, analysis_name + '.npy')
+            GAT_path = op.join(SVM_path,analysis_name+'.npy')
             if op.exists(GAT_path):
-                count += 1
+                count +=1
 
                 GAT_results = np.load(GAT_path, allow_pickle=True).item()
-                print(op.join(SVM_path, analysis_name + '.npy'))
+                print(op.join(SVM_path, analysis_name+'.npy'))
                 times = GAT_results['times']
                 GAT_results = GAT_results[score_field]
                 fig_path = op.join(config.fig_path, 'SVM', folder_name)
-                sub_fig_path = op.join(fig_path, subject)
+                sub_fig_path = op.join(fig_path,subject)
                 utils.create_folder(sub_fig_path)
                 if plot_per_sequence:
                     if not GAT_sens_all[sens]:  # initialize the keys and empty lists only the first time
@@ -1403,64 +1404,36 @@ def plot_all_subjects_results_SVM(analysis_name, subjects_list, fig_name, plot_p
                         GAT_sens_all[sens][key].append(GAT_results[sens][key])
                         # ================ Plot & save each subject / each sequence figures ???
                         if plot_individual_subjects:
-<<<<<<< HEAD
-                            plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path,
-                                         figname=fig_name + key);
-                            plt.close('all')
-                    # ================ Plot & save each subject / average of all sequences figures ???
-                    GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
-                    plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path,
-                                 figname=fig_name + '_all_seq', vmin=vmin, vmax=vmax)
-=======
-                                plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                            plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
                     # ================ Plot & save each subject / average of all sequences figures ???
                     GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
                     plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
->>>>>>> 99f2b539cee9035cdf97bdf486f91b0271982e89
                     plt.close('all')
                 else:
                     GAT_sens_all[sens].append(GAT_results)
                     if plot_individual_subjects:
-                        print('plotting for subject:%s' % subject)
-                        print(sub_fig_path)
+                        print('plotting for subject:%s'%subject)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
                         plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
-<<<<<<< HEAD
-                                     figname=fig_name, vmin=vmin, vmax=vmax)
-=======
-                                               figname=fig_name,vmin=vmin,vmax=vmax)
->>>>>>> 99f2b539cee9035cdf97bdf486f91b0271982e89
+                                     figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all
 
-        print("plotting in %s" % config.fig_path)
+        print("plotting in %s"%config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
-<<<<<<< HEAD
-                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key], axis=0), times, sens=sens, save_path=fig_path,
-                             figname=fig_name + key, vmin=vmin, vmax=vmax)
+                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                             figname=fig_name+key,vmin=vmin, vmax=vmax)
                 plt.close('all')
-            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'], axis=0), times, sens=sens,
+            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
                          save_path=fig_path, figname=fig_name + '_all_seq' + '_',
                          vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
-            plot_GAT_SVM(-np.mean(GAT_sens_all[sens], axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,
-                         vmin=vmin, vmax=vmax)
-=======
-                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
-                                       figname=fig_name+key,vmin=vmin, vmax=vmax)
-                plt.close('all')
-            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
-                                   save_path=fig_path, figname=fig_name + '_all_seq' + '_',
-                                   vmin=vmin, vmax=vmax)
-            plt.close('all')
-        else:
             plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
->>>>>>> 99f2b539cee9035cdf97bdf486f91b0271982e89
 
-    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 
     # ===== GROUP AVG FIGURES ===== #
     if analysis_type == 'perSeq':
@@ -1471,23 +1444,13 @@ def plot_all_subjects_results_SVM(analysis_name, subjects_list, fig_name, plot_p
                 GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
                 GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
                 plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
-<<<<<<< HEAD
                              save_path=op.join(config.fig_path, 'SVM', 'GAT'),
                              figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
                 plt.close('all')
             GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
             plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
                          save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                         figname=suf + 'GAT_all_seq' + '_allparticipants_')
-=======
-                                       save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                                       figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
-                plt.close('all')
-            GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
-            plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
-                                   save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                                   figname=suf + 'GAT_all_seq'  + '_allparticipants_')
->>>>>>> 99f2b539cee9035cdf97bdf486f91b0271982e89
+                         figname=suf + 'GAT_all_seq'  + '_allparticipants_')
 
     return GAT_sens_all, times
 
@@ -1495,7 +1458,7 @@ def SVM_GAT_linear_reg_sequence_complexity(subject):
 
     # load the participants GAT results for the decoding of standard VS deviant for all the different sequences =========
     SVM_path = op.join(config.SVM_path, subject)
-    GAT_path = op.join(SVM_path,'GAT_results.npy')
+    GAT_path = op.join(SVM_path,'SW_train_test_different_blocksGAT_results_score.npy')
     GAT_results = np.load(GAT_path, allow_pickle=True).item()
     times = GAT_results['times']
     GAT = GAT_results['GAT']['all_chans']
@@ -1508,20 +1471,20 @@ def SVM_GAT_linear_reg_sequence_complexity(subject):
 
     # ====== select a training and a testing time and compute the regression coeffs =====
     from sklearn.linear_model import LinearRegression
-    complexities = [4,6,6,6,12,14,23]
+    complexities = np.asarray([4,6,6,6,12,14,23])
     coeff_constant = np.zeros((GAT_all_sequences.shape[1],GAT_all_sequences.shape[1]))
 
     coeff_complexity = np.zeros((GAT_all_sequences.shape[1],GAT_all_sequences.shape[1]))
     for train_ind in range(GAT_all_sequences.shape[1]):
         for test_ind in range(GAT_all_sequences.shape[1]):
-            data = GAT_all_sequences[train_ind,test_ind,:]
-            reg = LinearRegression().fit(complexities, data)
+            data = GAT_all_sequences[:,train_ind,test_ind]
+            reg = LinearRegression().fit(complexities.reshape(-1,1), data)
             coeff_complexity[train_ind,test_ind] = reg.coef_
             coeff_constant[train_ind,test_ind] = reg.intercept_
 
     np.save(SVM_path+'/GAT_lin_reg_complexity.npy',{'coeff_complexity':coeff_complexity,'coeff_constant':coeff_constant,'times':times})
 
-    return coeff_complexity, coeff_constant
+    return coeff_complexity, coeff_constant, times
 
 
 

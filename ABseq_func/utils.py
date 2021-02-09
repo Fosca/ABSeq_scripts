@@ -13,7 +13,7 @@ def load_info_subjects(subjects_list):
     for subject in subjects_list:
         evoked_path = os.path.join(config.meg_dir,subject,'evoked_cleaned','items_standard_all-ave.fif')
         ev = mne.read_evokeds(evoked_path)
-        infos.append(ev.info)
+        infos.append(ev[0].info)
 
     return infos
 
