@@ -1,5 +1,6 @@
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
 import os.path as op
 import config
 import numpy as np
@@ -12,6 +13,7 @@ import os.path as op
 from importlib import reload
 from mne.parallel import parallel_func
 from scipy.signal import savgol_filter
+
 
 
 
@@ -57,21 +59,62 @@ plt.show()
 vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
 vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
+from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
+
+# ---------------------------------------------------------------------------------------------------------------------
+def plot_gat_simple(analysis_name, subjects_list, fig_name, score_field='GAT', folder_name='GAT', sensors=['all_chans'],
+                    vmin=-0.1, vmax=.1):
+    GAT_all = []
+    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    count = 0
+    for subject in subjects_list:
+        count += 1
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, analysis_name + '.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        print(op.join(SVM_path, analysis_name + '.npy'))
+        times = GAT_results['times']
+        GAT_all.append(GAT_results[score_field])
+
+    gat_plot(np.mean(GAT_all, axis=0), times,vmin=vmin,vmax=vmax)
+    plt.gcf().save(fig_path+fig_name)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
+
+    return plt.gcf()
 
 
 #['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
+config.subjects_list = ['sub01-pa_190002',
+ 'sub02-ch_180036',
+ 'sub03-mr_190273',
+ 'sub05-cr_170417',
+ 'sub06-kc_160388',
+ 'sub07-jm_100109',
+ 'sub09-ag_170045',
+ 'sub10-gp_190568',
+ 'sub11-fr_190151',
+ 'sub12-lg_170436',
+ 'sub13-lq_180242',
+ 'sub14-js_180232',
+ 'sub15-ev_070110',
+ 'sub17-mt_170249',
+ 'sub18-eo_190576',
+ 'sub19-mg_190180']
+
 
 for residual_analysis in [False,True]:
     if residual_analysis:
         suffix = 'resid_'
     else:
         suffix = 'full_data_'
-    config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-    config.subjects_list.sort()
     for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        ABseq_func.SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,suffix+name,score_field='score',plot_per_sequence=False,
-                                      plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
+        plot_gat_simple(anal_name,config.subjects_list,suffix+name,score_field='score'
+                                     ,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 # ___________________________________________________________________________

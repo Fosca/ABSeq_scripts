@@ -1375,6 +1375,24 @@ class AveragePerEvent(TransformerMixin):
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+def plot_gat_simple(analysis_name,subjects_list,fig_name,score_field='GAT',folder_name = 'GAT',sensors = ['all_chans'],vmin=-0.1,vmax=.1):
+    GAT_all = []
+    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    count = 0
+    for subject in subjects_list:
+        count += 1
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, analysis_name + '.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        print(op.join(SVM_path, analysis_name + '.npy'))
+        times = GAT_results['times']
+        GAT_all.append(GAT_results[score_field])
+
+    plot_GAT_SVM(np.mean(GAT_all,axis=0), times, sens=sensors, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
+
+    return plt.gcf()
 
 def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
 
