@@ -99,7 +99,6 @@ subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04
 
 exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
 # sub04 & sub08: very bad EEG data
-# /!\ not sure if "exclude_subjects" is used so they were simply removed from subjects_list /!\
 
 
 # ``runs`` : list of str
@@ -580,7 +579,7 @@ l_freq = 0.10
 #   The high-frequency cut-off in the lowpass filtering step.
 #   Keep it None if no lowpass filtering should be applied.
 
-h_freq = 200  # meaningless since we downsample at 250Hz? We cannot exploit frequencies below 250/2?
+h_freq = 40  # NEW ! (changed by SP)
 
 ###############################################################################
 # MAXFILTER PARAMETERS
@@ -1023,14 +1022,14 @@ if not os.path.isdir(subjects_dir):
 # ADVANCED
 # --------
 #
-# ``l_trans_bandwidth`` : float | 'auto'
+# ``l_trans_bandwidth`` : float |'auto'
 #    A float that specifies the transition bandwidth of the
 #    highpass filter. By default it's `'auto'` and uses default mne
 #    parameters.
 
 l_trans_bandwidth = 'auto'
 
-#  ``h_trans_bandwidth`` : float | 'auto'
+#  ``h_trans_bandwidth`` : float |'auto'
 #    A float that specifies the transition bandwidth of the
 #    lowpass filter. By default it's `'auto'` and uses default mne
 #    parameters.

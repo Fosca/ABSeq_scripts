@@ -478,7 +478,7 @@ def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmi
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
-    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu', vmin=vmin, vmax=vmax)
+    plt.imshow(GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='bwr', vmin=vmin, vmax=vmax)
     # -----# ADD LINES ?
     plt.axvline(0, linestyle='-', color='black', linewidth=1)
     plt.axhline(0, linestyle='-', color='black', linewidth=1)
@@ -1415,7 +1415,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         print('plotting for subject:%s'%subject)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
-                        plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                        plot_GAT_SVM(-GAT_results, times, sens=sens, save_path=sub_fig_path,
                                      figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all

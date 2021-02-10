@@ -57,20 +57,19 @@ plt.show()
 vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
 vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
-residual_analysis = True
+for residual_analysis in [False,True]:
+    if residual_analysis:
+        suffix = 'resid_'
+    else:
+        suffix = 'full_data_'
+    #['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
 
-if residual_analysis:
-    suffix = 'resid_'
-else:
-    suffix = 'full_data_'
-#['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
-
-config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-config.subjects_list.sort()
-for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
-    anal_name = 'feature_decoding/'+suffix+name
-    ABseq_func.SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,suffix+name,score_field='score',plot_per_sequence=False,
-                                  plot_individual_subjects=True,sensors = ['all_chans'],vmin=vmin[ii],vmax=vmax[ii])
+    config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+    config.subjects_list.sort()
+    for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
+        anal_name = 'feature_decoding/'+suffix+name
+        ABseq_func.SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,suffix+name,score_field='score',plot_per_sequence=False,
+                                      plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 # ___________________________________________________________________________

@@ -527,8 +527,6 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         # Running AutoReject (https://autoreject.github.io)
         epochs.load_data()
         ar = AutoReject()
-        # epochs = ar.fit_transform(epochs)
-        # reject_log = ar.get_reject_log(epochs)
         epochs, reject_log = ar.fit_transform(epochs, return_log=True)
 
         # Save epochs (after AutoReject)
@@ -541,7 +539,6 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
         epochs.save(epochs_fname, overwrite=True)
-        # epochs.save(epochs_fname)
 
         # Save autoreject reject_log
         pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))

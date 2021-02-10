@@ -52,7 +52,7 @@ def run_filter(subject):
         if not op.exists(raw_fname_in):
             warn('Run %s not found for subject %s ' %
                  (raw_fname_in, subject))
-            continue
+            # continue  ## SyntaxError: 'continue' not properly in loop
 
         raw = mne.io.read_raw_fif(raw_fname_in,
                                   allow_maxshield=config.allow_maxshield,
@@ -76,10 +76,10 @@ def run_filter(subject):
         if config.rename_channels is not None:
             raw.rename_channels(config.rename_channels)
 
-        # Interpolating bad channels
-        print("WARNING - interpolating bad channels: ")
-        print(*bads, sep=", ")
-        raw.interpolate_bads()
+        # # Interpolating bad channels
+        # print("WARNING - interpolating bad channels: ")
+        # print(*bads, sep=", ")
+        # raw.interpolate_bads()
 
         # Band-pass the data channels (MEG and EEG)
         print("Filtering data between %s and %s (Hz)" %
