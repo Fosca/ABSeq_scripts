@@ -146,7 +146,7 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
 
     if clean:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
-        if op.exists(metadata_path):
+        if op.exists(metadata_path) and not recompute:
             with open(metadata_path, 'rb') as fid:
                 metadata = pickle.load(fid)
         else:
@@ -498,7 +498,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
                             reject=None)
         epochs.metadata = metadata_pandas[metadata_pandas['StimPosition'] == 1.0]
     else:
-        config.tmin = -0.100
+        config.tmin = -0.050
         config.tmax = 0.600
         config.baseline = (config.tmin, 0)
         if baseline is None:
