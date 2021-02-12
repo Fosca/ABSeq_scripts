@@ -76,7 +76,7 @@ def run_filter(subject):
         if config.rename_channels is not None:
             raw.rename_channels(config.rename_channels)
 
-        # # Interpolating bad channels
+        # # Interpolating bad channels // DONE BY MAXFILTER FOR MEG, AFTER MAGFILTER FOR EEG
         # print("WARNING - interpolating bad channels: ")
         # print(*bads, sep=", ")
         # raw.interpolate_bads()
