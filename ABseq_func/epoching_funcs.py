@@ -524,10 +524,10 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     # epochs.save(epochs_fname)
 
     if config.autoreject:
-        # Running AutoReject (https://autoreject.github.io)
+        # Running AutoReject "local" (https://autoreject.github.io)
         epochs.load_data()
         ar = AutoReject()
-        epochs, reject_log = ar.fit_transform(epochs, return_log=True)
+        epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
 
         # Save epochs (after AutoReject)
         print('  Writing cleaned epochs to disk')
@@ -538,12 +538,21 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             extension = subject + '_clean_epo'
         epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
-        epochs.save(epochs_fname, overwrite=True)
+        epochsAR.save(epochs_fname, overwrite=True)
 
         # Save autoreject reject_log
-        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))
+        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_local_log.obj', 'wb'))
         # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
 
+        # Alternative: run autoreject "global" -> just get the thresholds
+        from autoreject import get_rejection_threshold
+        reject = get_rejection_threshold(epochs, ch_types=['mag', 'grad', 'eeg'])
+        pickle.dump(reject, open(epochs_fname[:-4] + '_ARglob_thresholds.obj', 'wb'))
+        epochsARglob = epochs.drop_bad(reject=reject)
+        extension = subject + '_ARglob_epo'
+        epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+        print("Output: ", epochs_fname)
+        epochsARglob.save(epochs_fname, overwrite=True)
 
 
 # ______________________________________________________________________________________________________________________
