@@ -154,7 +154,9 @@ def automatic_identification_of_components(subject):
                     ica[ch_type].find_bads_ecg(ecg_epochs, method='ctps',
                                       threshold=config.ica_ctps_ecg_threshold)
                 del ecg_epochs
-                params = dict(exclude=ecg_inds, show=config.plot)
+                # params = dict(exclude=ecg_inds, show=config.plot)
+                params = dict(show=config.plot)  # The exclude parameter is deprecated and will be removed in version 0.20; specify excluded components using the ICA.exclude attribute instead.
+                ica[ch_type].exclude = ecg_inds
 
                 # == == == == == == == ==  plots appended to report = == == == == == == == == == == ==
                 # Plot r score
@@ -194,7 +196,9 @@ def automatic_identification_of_components(subject):
                 eog_average = eog_epochs.average()
                 eog_inds, scores = ica[ch_type].find_bads_eog(eog_epochs, threshold=3.0)
                 del eog_epochs
-                params = dict(exclude=eog_inds, show=config.plot)
+                # params = dict(exclude=eog_inds, show=config.plot)
+                params = dict(show=config.plot)  # The exclude parameter is deprecated and will be removed in version 0.20; specify excluded components using the ICA.exclude attribute instead.
+                ica[ch_type].exclude = eog_inds
 
                 # == == == == == == == ==  plots appended to report = == == == == == == == == == == ==
                 # Plot r score
@@ -234,8 +238,10 @@ def automatic_identification_of_components(subject):
         report.save(report_fname_html, overwrite=True, open_browser=False)
         report.save(report_fname, overwrite=True)
 
-
+# make less parallel runs to limit memory usage
+N_JOBS = max(config.N_JOBS // 3, 1)
+print('N_JOBS=' + str(N_JOBS))
 
 if config.use_ica:
-    parallel, run_func, _ = parallel_func(automatic_identification_of_components, n_jobs=config.N_JOBS)
+    parallel, run_func, _ = parallel_func(automatic_identification_of_components, n_jobs=N_JOBS)
     parallel(run_func(subject) for subject in config.subjects_list)

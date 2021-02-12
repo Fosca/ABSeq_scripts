@@ -67,6 +67,12 @@ def run_maxwell_filter(subject):
             origin=config.mf_head_origin,
             destination=destination)
 
+        # Interpolating bad EEG channels (bad MEG channels were already recontructed by Maxfilter)
+        print("Interpolating bad EEG channels: ")
+        print(raw_sss.info['bads'])
+        raw_sss.interpolate_bads(reset_bads=True, method=dict(eeg="spline"))
+
+        # Save
         raw_sss.save(raw_fname_out, overwrite=True)
 
         config.plot = False

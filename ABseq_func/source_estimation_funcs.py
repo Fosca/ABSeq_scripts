@@ -96,6 +96,9 @@ def compute_noise_cov(subject):
 
     # NOISE COVARIANCE FROM BASELINE OF ALL THE (LONG) EPOCHS
     epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True)
+    if not epochs.baseline:
+        print('Epochs were not baseline corrected! Applying (-0.200, 0.0) baseline...')
+        epochs = epochs.apply_baseline((-0.200, 0))
     cov = mne.compute_covariance(epochs, tmax=0, method=['empirical', 'shrunk'], rank='info')
     # To check:
     # fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')

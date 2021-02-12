@@ -5,31 +5,33 @@ import numpy as np
 print('jaime les tomates')
 
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
+cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub10-gp_190568'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
+# cluster_funcs.create_qsub('SVM_features_stimID', 'stimID', 'stimID', queue='Nspin_bigM')# ok
+
 # rerun this once autoreject has cleaned the epochs
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('SVM_analysis', 'hab', 'hab', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
 
-#cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
 
-# cluster_funcs.create_qsub('SVM_1', 'svm1111', 'svm1111', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM') -- ok sauf pour subject 16
+# cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
 
-# cluster_funcs.create_qsub('SVM_features', 'svm_f', 'svm_coucou', queue='Nspin_long')
-#cluster_funcs.create_qsub('SVM_1', 'svm1', 'svm1', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
-cluster_funcs.create_qsub('autoreject_marmouset', 'ar_marmouset', 'ar_marmouset', queue='Nspin_bigM', sublist_subjects=['whatever'])
-#cluster_funcs.create_qsub('SVM_2', 'svm2', 'svm2', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_analysis', 'svm', 'svm', queue='Nspin_bigM')
+#cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
+#cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
+
+# cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_long')
+# # cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
+# # cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_withinchunk', 'chunkpos', 'chunkpos', queue='Nspin_bigM')# ok
+# cluster_funcs.create_qsub('SVM_features_withinchunk_train_quads_test_others', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features_chunkrev', 'rev', 'rev', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'OpenPar', 'OpenPar', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_long') # ok
+
 
 
 # cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_bigM')

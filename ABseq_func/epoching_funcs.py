@@ -132,7 +132,7 @@ def update_metadata_rejected(subject, epochs_items):
 
 # ====================== change 31/3/2020 ========================
 
-def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None):
+def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=False):
     """
     This function appends data to the metadata
     :param subject:
@@ -146,7 +146,7 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
 
     if clean:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
-        if op.exists(metadata_path):
+        if op.exists(metadata_path) and not recompute:
             with open(metadata_path, 'rb') as fid:
                 metadata = pickle.load(fid)
         else:
@@ -156,7 +156,7 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
             metadata = epochs_items_cleaned.metadata
     else:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item.pkl')
-        if op.exists(metadata_path):
+        if op.exists(metadata_path) and not recompute:
             with open(metadata_path,'rb') as fid:
                 metadata = pickle.load(fid)
         else:
@@ -498,7 +498,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
                             reject=None)
         epochs.metadata = metadata_pandas[metadata_pandas['StimPosition'] == 1.0]
     else:
-        config.tmin = -0.100
+        config.tmin = -0.050
         config.tmax = 0.600
         config.baseline = (config.tmin, 0)
         if baseline is None:
@@ -524,12 +524,10 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     # epochs.save(epochs_fname)
 
     if config.autoreject:
-        # Running AutoReject (https://autoreject.github.io)
+        # Running AutoReject "local" (https://autoreject.github.io)
         epochs.load_data()
         ar = AutoReject()
-        # epochs = ar.fit_transform(epochs)
-        # reject_log = ar.get_reject_log(epochs)
-        epochs, reject_log = ar.fit_transform(epochs, return_log=True)
+        epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
 
         # Save epochs (after AutoReject)
         print('  Writing cleaned epochs to disk')
@@ -540,13 +538,21 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             extension = subject + '_clean_epo'
         epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
-        epochs.save(epochs_fname, overwrite=True)
-        # epochs.save(epochs_fname)
+        epochsAR.save(epochs_fname, overwrite=True)
 
         # Save autoreject reject_log
-        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))
+        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_local_log.obj', 'wb'))
         # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
 
+        # Alternative: run autoreject "global" -> just get the thresholds
+        from autoreject import get_rejection_threshold
+        reject = get_rejection_threshold(epochs, ch_types=['mag', 'grad', 'eeg'])
+        pickle.dump(reject, open(epochs_fname[:-4] + '_ARglob_thresholds.obj', 'wb'))
+        epochsARglob = epochs.drop_bad(reject=reject)
+        extension = subject + '_ARglob_epo'
+        epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+        print("Output: ", epochs_fname)
+        epochsARglob.save(epochs_fname, overwrite=True)
 
 
 # ______________________________________________________________________________________________________________________
