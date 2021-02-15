@@ -45,7 +45,7 @@ def run_autoreject(subject, epoch_on_first_element):
     # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
 
 
-def ar_log_summary(subject, epoch_on_first_element):
+def ar_log_summary(subject, epoch_on_first_element, make_figures=False):
     # reject_log content ===>
     # bad_epochs : array-like, shape (n_epochs,)
     #     The boolean array with entries True for epochs that
@@ -58,25 +58,62 @@ def ar_log_summary(subject, epoch_on_first_element):
 
     meg_subject_dir = op.join(config.meg_dir, subject)
     if epoch_on_first_element:
-        arlog_name = op.join(meg_subject_dir, subject + '_1st_element_clean_epo_reject_log.obj')
+        arlog_name = op.join(meg_subject_dir, subject + '_1st_element_clean_epo_reject_local_log.obj')
         save_path = op.join(config.fig_path, 'AutoReject_fullsequences_epochs', subject)
     else:
-        arlog_name = op.join(meg_subject_dir, subject + '_clean_epo_reject_log.obj')
+        arlog_name = op.join(meg_subject_dir, subject + '_clean_epo_reject_local_log.obj')
         save_path = op.join(config.fig_path, 'AutoReject_items_epochs', subject)
 
     reject_log = pickle.load(open(arlog_name, 'rb'))
 
+    Nepochs = reject_log.labels.shape[0]
+    Nsegments = reject_log.labels.shape[0]*reject_log.labels.shape[1]
+    Nbad_segments = sum(sum(reject_log.labels >= 1))
+    Ninterp_segments = sum(sum(reject_log.labels == 2))
+    Nrej = sum(reject_log.bad_epochs == True)
+
     if epoch_on_first_element:
-        Nrej = sum(reject_log.bad_epochs == True)
-        Nepochs = 46 * 7 * 2
-        print('%s, fullsequence epochs: %d/%d rejected bad epochs items = %.2f%%' % (subject, Nrej, Nepochs, Nrej / Nepochs * 100))
+        print('%s;fullsequence epochs;Nepo=;%d; rejepo=;%d; Nsegments = ;%d; Nbad_segments = ;%d; Ninterp_segments = ;%d;' % (subject, Nepochs, Nrej, Nsegments, Nbad_segments, Ninterp_segments))
     else:
-        Nrej = sum(reject_log.bad_epochs == True)
-        Nepochs = 16 * 46 * 7 * 2
-        print('%s, items epochs: %d/%d rejected bad epochs items = %.2f%%' % (subject, Nrej, Nepochs, Nrej / Nepochs * 100))
+        print('%s;items epochs;Nepo=;%d; rejepo=;%d; Nsegments = ;%d; Nbad_segments = ;%d; Ninterp_segments = ;%d;' % (subject, Nepochs, Nrej, Nsegments, Nbad_segments, Ninterp_segments))
 
     # Plots
-    reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
+    if make_figures:
+        reject_log_plot(reject_log, subject, save_path=save_path, fig_name='AutoReject')
+
+def arGlob_thesholds_summary(subject, epoch_on_first_element, count_epochs=False):
+    """
+    If count_epochs is True, will load epochs before and after just to get their number:
+    not very efficient...
+    Otherwise, just print the thresholds
+    """
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    if epoch_on_first_element:
+        arlog_name = op.join(meg_subject_dir, subject + '_1st_element_ARglob_epo_ARglob_thresholds.obj')
+        fname_before = op.join(meg_subject_dir, subject+'_1st_element_epo.fif')
+        fname_after = op.join(meg_subject_dir, subject+'_1st_element_ARglob_epo.fif')
+    else:
+        arlog_name = op.join(meg_subject_dir, subject + '_ARglob_epo_ARglob_thresholds.obj')
+        fname_before = op.join(meg_subject_dir, subject+'_epo.fif')
+        fname_after = op.join(meg_subject_dir, subject+'_ARglob_epo.fif')
+
+    reject_thresholds = pickle.load(open(arlog_name, 'rb'))
+    if count_epochs:
+        epochs_before = mne.read_epochs(fname_before, preload=True)
+        epochs_after = mne.read_epochs(fname_after, preload=True)
+        Nepochs_before = len(epochs_before)
+        Nepochs_after = len(epochs_after)
+
+    if epoch_on_first_element:
+        if count_epochs:
+            print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+        else:
+            print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
+    else:
+        if count_epochs:
+            print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+        else:
+            print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
 
 
 def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
