@@ -181,7 +181,7 @@ def plot_gfp_full_sequence_standard(epochs_full_sequence, subject, h_freq=30,ch_
             fig_name = fig_path + op.sep + 'GFP_7sequences_standard_full_trials_GRAD.png'
         ax = axes.ravel()[::1]
         for x, seq_num in enumerate(list_sequences):
-            standards = epochs_full_sequence['SequenceID == "' + str(seq_num) + '" and ViolationInSequence == "0"'].average()
+            standards = epochs_full_sequence['SequenceID == ' + str(seq_num) + ' and ViolationInSequence == 0'].average()
             standards = standards.filter(h_freq=h_freq, l_freq=None)
             times = standards.times * 1000
             ax[x].axvline(0, linestyle='-', color='black', linewidth=2)
@@ -243,13 +243,13 @@ def plot_gfp_full_sequence_deviants_4pos(epochs_items, subject, h_freq=30,ch_typ
         ax = axes.ravel()[::1]
         for x, num_seq in enumerate(list_sequences):
             # Select only the trials with a violation (for one sequence)
-            seqEpochs = epochs_items['SequenceID == "' + str(num_seq) + '" and ViolationInSequence > 0'].copy()
+            seqEpochs = epochs_items['SequenceID == ' + str(num_seq) + ' and ViolationInSequence > 0'].copy()
             # Create 'Evoked' object that will contain the evoked response for each of the 4 deviant positions (of one sequence)
             data4pos = []
             all_devpos = np.unique(seqEpochs.metadata.ViolationInSequence)  # Position of deviants
             for devpos in range(len(all_devpos)):
                 data4pos.append(
-                    seqEpochs['ViolationInSequence == "' + str(all_devpos[devpos]) + '"'].average().filter(h_freq=h_freq, l_freq=None))
+                    seqEpochs['ViolationInSequence == ' + str(all_devpos[devpos])].average().filter(h_freq=h_freq, l_freq=None))
 
             # -------
             times = seqEpochs.times * 1000
