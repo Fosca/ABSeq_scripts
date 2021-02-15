@@ -312,11 +312,14 @@ def convert_csv_info_to_metadata(csv_path):
     return metadata
 
 
-def load_epochs_items(subject, cleaned=True):
+def load_epochs_items(subject, cleaned=True, AR_type='local'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     if cleaned:
-        extension = subject + '_clean_epo'
+        if AR_type == 'local':
+            extension = subject + '_clean_epo'
+        elif AR_type == 'global':
+            extension = subject + '_ARglob_epo'
     else:
         extension = subject + '_epo'
         warnings.warn('\nLoading pre-autoreject epochs for subject ' + subject)
@@ -335,11 +338,14 @@ def load_resid_epochs_items(subject, resid_epochs_type='reg_repeataltern_surpris
     return epochs
 
 
-def load_epochs_full_sequence(subject, cleaned=True):
+def load_epochs_full_sequence(subject, cleaned=True, AR_type='local'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     if cleaned:
-        extension = subject + '_1st_element_clean_epo'
+        if AR_type == 'local':
+            extension = subject + '_1st_element_clean_epo'
+        elif AR_type == 'global':
+            extension = subject + '_1st_element_ARglob_epo'
     else:
         extension = subject + '_1st_element_epo'
         warnings.warn('\nLoading pre-autoreject epochs for subject ' + subject)
