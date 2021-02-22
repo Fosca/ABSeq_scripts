@@ -1036,7 +1036,7 @@ h_trans_bandwidth = 'auto'
 #  ``N_JOBS`` : int
 #    An integer that specifies how many subjects you want to run in parallel.
 
-N_JOBS = 20
+N_JOBS = 4
 
 # ``random_state`` : None | int | np.random.RandomState
 #    To specify the random generator state. This allows to have

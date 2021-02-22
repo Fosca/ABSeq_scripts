@@ -478,7 +478,7 @@ def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmi
     minT = np.min(times) * 1000
     maxT = np.max(times) * 1000
     fig = plt.figure()
-    plt.imshow(GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='bwr', vmin=vmin, vmax=vmax)
+    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
     # -----# ADD LINES ?
     plt.axvline(0, linestyle='-', color='black', linewidth=1)
     plt.axhline(0, linestyle='-', color='black', linewidth=1)
@@ -1375,6 +1375,24 @@ class AveragePerEvent(TransformerMixin):
 
 
 # ---------------------------------------------------------------------------------------------------------------------
+def plot_gat_simple(analysis_name,subjects_list,fig_name,score_field='GAT',folder_name = 'GAT',sensors = ['all_chans'],vmin=-0.1,vmax=.1):
+    GAT_all = []
+    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    count = 0
+    for subject in subjects_list:
+        count += 1
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, analysis_name + '.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        print(op.join(SVM_path, analysis_name + '.npy'))
+        times = GAT_results['times']
+        GAT_all.append(GAT_results[score_field])
+
+    plot_GAT_SVM(np.mean(GAT_all,axis=0), times, sens=sensors, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
+
+    return plt.gcf()
 
 def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
 
@@ -1415,7 +1433,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         print('plotting for subject:%s'%subject)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
-                        plot_GAT_SVM(-GAT_results, times, sens=sens, save_path=sub_fig_path,
+                        plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
                                      figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all
@@ -1431,7 +1449,7 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                          vmin=vmin, vmax=vmax)
             plt.close('all')
         else:
-            plot_GAT_SVM(-np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+            plot_GAT_SVM(np.mean(GAT_sens_all[sens],axis=0), times, sens=sens, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
 

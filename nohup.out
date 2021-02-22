@@ -1,0 +1,1107 @@
+Traceback (most recent call last):
+  File "06-make_epochs.py", line 14, in <module>
+    from mne.parallel import parallel_func
+ImportError: No module named mne.parallel
+Processing subject: sub03-mr_190273
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub03-mr_190273/sub03-mr_190273_epo.fif
+Overwriting existing file.
+Loading data for 8832 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 4416 events and 163 original time points ...
+Processing subject: sub06-kc_160388
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub06-kc_160388/sub06-kc_160388_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub01-pa_190002
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub01-pa_190002/sub01-pa_190002_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub04-rf_190499
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Processing subject: sub05-cr_170417
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub05-cr_170417/sub05-cr_170417_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub08-cc_150418
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Warning: corrected an issue with subject08 run08 ica_raw data file...
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub08-cc_150418/sub08-cc_150418_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub07-jm_100109
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub07-jm_100109/sub07-jm_100109_epo.fif
+Overwriting existing file.
+Loading data for 9568 events and 163 original time points ...
+Processing subject: sub02-ch_180036
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub02-ch_180036/sub02-ch_180036_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub09-ag_170045
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub09-ag_170045/sub09-ag_170045_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+Processing subject: sub10-gp_190568
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub10-gp_190568/sub10-gp_190568_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 4416 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Splitting into 2 parts
+Loading data for 4784 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 5152 events and 163 original time points ...
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 4784 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub09-ag_170045/sub09-ag_170045_ARglob_epo.fif
+Overwriting existing file.
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub02-ch_180036/sub02-ch_180036_ARglob_epo.fif
+Overwriting existing file.
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub08-cc_150418/sub08-cc_150418_ARglob_epo.fif
+Overwriting existing file.
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub05-cr_170417/sub05-cr_170417_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Splitting into 2 parts
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub07-jm_100109/sub07-jm_100109_ARglob_epo.fif
+Splitting into 2 parts
+Splitting into 2 parts
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_ARglob_epo.fif
+Overwriting existing file.
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub10-gp_190568/sub10-gp_190568_ARglob_epo.fif
+Overwriting existing file.
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub01-pa_190002/sub01-pa_190002_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub03-mr_190273/sub03-mr_190273_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=32
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub07-jm_100109/sub07-jm_100109_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub11-fr_190151
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub11-fr_190151/sub11-fr_190151_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub11-fr_190151/sub11-fr_190151_ARglob_epo.fif
+Overwriting existing file.
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.20 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub10-gp_190568/sub10-gp_190568_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub12-lg_170436
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub12-lg_170436/sub12-lg_170436_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub12-lg_170436/sub12-lg_170436_ARglob_epo.fif
+Overwriting existing file.
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.90 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.20 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo.fif
+Overwriting existing file.
+Processing subject: sub13-lq_180242
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub13-lq_180242/sub13-lq_180242_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub13-lq_180242/sub13-lq_180242_ARglob_epo.fif
+Splitting into 2 parts
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.70 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=1
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub09-ag_170045/sub09-ag_170045_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub14-js_180232
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub14-js_180232/sub14-js_180232_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub14-js_180232/sub14-js_180232_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub06-kc_160388/sub06-kc_160388_ARglob_epo.fif
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.60 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=32
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.90 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub06-kc_160388/sub06-kc_160388_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub15-ev_070110
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub15-ev_070110/sub15-ev_070110_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub15-ev_070110/sub15-ev_070110_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=1
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub03-mr_190273/sub03-mr_190273_clean_epo.fif
+Overwriting existing file.
+Processing subject: sub16-ma_190185
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/sub16-ma_190185_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+2 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5151 events and 163 original time points ...
+Loading data for 5151 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/sub16-ma_190185_ARglob_epo.fif
+Overwriting existing file.
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=1
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=32
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=32
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub08-cc_150418/sub08-cc_150418_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub17-mt_170249
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub17-mt_170249/sub17-mt_170249_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub17-mt_170249/sub17-mt_170249_ARglob_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=1
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.90 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub01-pa_190002/sub01-pa_190002_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub18-eo_190576
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub18-eo_190576/sub18-eo_190576_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub18-eo_190576/sub18-eo_190576_ARglob_epo.fif
+Overwriting existing file.
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.70 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub02-ch_180036/sub02-ch_180036_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Processing subject: sub19-mg_190180
+  Loading raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+  Downsampling raw data
+Concatenating runs
+Saving concatenated runs
+  Epoching
+  Writing epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub19-mg_190180/sub19-mg_190180_epo.fif
+Overwriting existing file.
+Loading data for 10304 events and 163 original time points ...
+0 bad epochs dropped
+Loading data for 1 events and 163 original time points ...
+Splitting into 2 parts
+Loading data for 5152 events and 163 original time points ...
+Loading data for 5152 events and 163 original time points ...
+Estimating rejection dictionary for mag
+Estimating rejection dictionary for grad
+Estimating rejection dictionary for eeg
+  Writing "AR global" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub19-mg_190180/sub19-mg_190180_ARglob_epo.fif
+Overwriting existing file.
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.70 and n_interpolate=32
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub11-fr_190151/sub11-fr_190151_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.60 and n_interpolate=1
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=32
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.60 and n_interpolate=32
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub17-mt_170249/sub17-mt_170249_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=1
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.60 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub15-ev_070110/sub15-ev_070110_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.70 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.90 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub14-js_180232/sub14-js_180232_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=32
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub12-lg_170436/sub12-lg_170436_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.80 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub18-eo_190576/sub18-eo_190576_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub19-mg_190180/sub19-mg_190180_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.60 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub05-cr_170417/sub05-cr_170417_clean_epo.fif
+Overwriting existing file.
+Splitting into 2 parts
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=4
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.30 and n_interpolate=4
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub13-lq_180242/sub13-lq_180242_clean_epo.fif
+Overwriting existing file.
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+Running autoreject on ch_type=grad
+
+
+
+
+Estimated consensus=0.40 and n_interpolate=1
+Running autoreject on ch_type=mag
+
+
+
+
+Estimated consensus=0.50 and n_interpolate=1
+Running autoreject on ch_type=eeg
+
+
+
+
+Estimated consensus=0.10 and n_interpolate=4
+  Writing "AR local" cleaned epochs to disk
+Output:  /neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/sub16-ma_190185_clean_epo.fif
+Overwriting existing file.
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)
+/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/ABseq_func/epoching_funcs.py:456: RuntimeWarning: An average reference projection was already added. The data has been left untouched.
+  raw.set_eeg_reference(projection=True)

@@ -1,5 +1,6 @@
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
 import os.path as op
 import config
 import numpy as np
@@ -12,6 +13,7 @@ import os.path as op
 from importlib import reload
 from mne.parallel import parallel_func
 from scipy.signal import savgol_filter
+
 
 
 
@@ -57,24 +59,137 @@ plt.show()
 vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
 vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
+from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
+
+# ---------------------------------------------------------------------------------------------------------------------
+def check_exists(analysis_name, subjects_list):
+    import os
+    count_subjects = 0
+    for subject in subjects_list:
+        SVM_path = op.join(config.SVM_path, subject)
+        if os.path.exists(op.join(SVM_path, analysis_name + '.npy')):
+            count_subjects += 1
+        else:
+            print("%s doesn t exist for subject %s"%(analysis_name,subject))
+
+    print("Overall %i participants out of %i have %s"%(count_subjects,len(subjects_list),analysis_name))
+    print("\n")
+    print("\n")
+
+
+
+def plot_gat_simple(analysis_name, subjects_list, fig_name, score_field='GAT', folder_name='GAT', sensors=['all_chans'],
+                    vmin=-0.1, vmax=.1):
+    GAT_all = []
+    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+
+    count = 0
+    for subject in subjects_list:
+        count += 1
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, analysis_name + '.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        print(op.join(SVM_path, analysis_name + '.npy'))
+        times = GAT_results['times']
+        GAT_all.append(GAT_results[score_field])
+
+    gat_plot(np.mean(GAT_all, axis=0), times,vmin=vmin,vmax=vmax)
+    plt.gcf().save(fig_path+fig_name)
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
+
+
+    return plt.gcf()
+
+
+#['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
+
 for residual_analysis in [False,True]:
     if residual_analysis:
         suffix = 'resid_'
     else:
         suffix = 'full_data_'
-    #['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
-
-    config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-    config.subjects_list.sort()
     for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        ABseq_func.SVM_funcs.plot_all_subjects_results_SVM(anal_name,config.subjects_list,suffix+name,score_field='score',plot_per_sequence=False,
-                                      plot_individual_subjects=True,sensors = ['all_chans'],vmin=None,vmax=None)
+        check_exists(anal_name, config.subjects_list)
+
+
+        plot_gat_simple(anal_name,config.subjects_list,suffix+name,score_field='score'
+                                     ,sensors = ['all_chans'],vmin=None,vmax=None)
 
 
 # ___________________________________________________________________________
 # ======= plot the decoder predictions for the 16 item sequences ============
 # ___________________________________________________________________________
+
+def compute_regression_complexity(epochs_name):
+    """
+    This function computes the regression for each participant of the data as a function of complexity
+    :param epochs_name:
+    :return:
+    """
+
+    from sklearn.linear_model import LinearRegression
+    complexities = np.asarray([4,6,6,6,12,14,28])
+
+    Constant_coeff = []
+    Complexity_coeff = []
+
+    for nsubj, subject in enumerate(config.subjects_list):
+        epoch = mne.read_epochs(op.join(config.meg_dir, subject, epochs_name))
+        n_times = len(epoch.times)
+        coeff_constant = []
+        coeff_complexity = []
+        data = []
+        for seqID in range(1, 8):
+            data.append(np.mean(epoch['SequenceID == "' + str(seqID) + '" and ViolationInSequence == 0'].get_data(),axis=0))
+        data = np.squeeze(np.asarray(data))
+        for tt in range(n_times):
+            data_reg = data[:,tt]
+            reg = LinearRegression().fit(complexities.reshape(-1,1), np.squeeze(data_reg))
+            coeff_constant.append(np.squeeze(reg.coef_))
+            coeff_complexity.append(np.squeeze(reg.intercept_))
+        Constant_coeff.append(coeff_constant)
+        Complexity_coeff.append(coeff_complexity)
+
+    return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
+
+
+config.subjects_list = ['sub01-pa_190002',
+ 'sub02-ch_180036',
+ 'sub03-mr_190273',
+ 'sub05-cr_170417',
+ 'sub06-kc_160388',
+ 'sub07-jm_100109',
+ 'sub09-ag_170045',
+ 'sub10-gp_190568',
+ 'sub11-fr_190151',
+ 'sub12-lg_170436',
+ 'sub13-lq_180242',
+ 'sub14-js_180232',
+ 'sub15-ev_070110',
+ 'sub17-mt_170249',
+ 'sub18-eo_190576',
+ 'sub19-mg_190180']
+
+suf = 'SW_train_test_different_blocks'
+constant_hab, complexity_hab = compute_regression_complexity('mag' + suf + '_SVM_on_16_items_habituation_window-epo.fif')
+constant_test, complexity_test = compute_regression_complexity('mag' + suf + '_SVM_on_16_items_test_window-epo.fif')
+p_hab = stats_funcs.stats(complexity_hab,tail = 0)
+p_test = stats_funcs.stats(complexity_test,tail = 0)
+
+plt.plot(np.mean(complexity_hab,axis=0))
+plt.plot(np.mean(complexity_test,axis=0))
+plt.show()
+
+plt.plot(p_hab)
+plt.show()
+
+# ==================================== useful function ====================================
+
 
 # ===== LOAD DATA ===== #
 
