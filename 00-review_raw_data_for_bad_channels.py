@@ -16,8 +16,8 @@ def raw_diag_plots(meg_subject_dir, run_number):
     raw.set_eeg_reference('average', projection=True)  # set EEG average reference
 
     # remove stim, eog, ecg...
-    picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=False, eog=False, ecg=False)
-    # picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, ecg=False)
+    # picks = mne.pick_types(raw.info, meg=True, eeg=True, stim=False, eog=False, ecg=False)
+    picks = mne.pick_types(raw.info, meg=False, eeg=True, stim=False, eog=False, ecg=False)
     raw.pick_channels([raw.ch_names[pick] for pick in picks])
 
     # notch filter (power-line) ?

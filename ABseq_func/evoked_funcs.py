@@ -329,9 +329,9 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
 
     for x in list_sequences:
         if apply_baseline:
-            evokeds_per_seq[x] = (epochs_first_item['SequenceID == "' + str(x) + '" and ViolationInSequence == "0"'].apply_baseline().average())
+            evokeds_per_seq[x] = (epochs_first_item['SequenceID == ' + str(x) + ' and ViolationInSequence == 0'].apply_baseline().average())
         else:
-            evokeds_per_seq[x] = (epochs_first_item['SequenceID == "' + str(x) + '" and ViolationInSequence == "0"'].average())
+            evokeds_per_seq[x] = (epochs_first_item['SequenceID == ' + str(x) + ' and ViolationInSequence == 0'].average())
     # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
     ts_args = dict(gfp=True, time_unit='s', ylim=ylim)

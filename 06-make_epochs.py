@@ -16,8 +16,8 @@ from ABseq_func import epoching_funcs
 from ABseq_func import autoreject_funcs
 
 # make less parallel runs to limit memory usage
-# N_JOBS = max(config.N_JOBS // 4, 1)
-N_JOBS = config.N_JOBS
+# N_JOBS = max(config.N_JOBS // 3, 1)
+N_JOBS = 10
 
 # Here we use fewer N_JOBS to prevent potential memory problems
 parallel, run_func, _ = parallel_func(epoching_funcs.run_epochs, n_jobs=N_JOBS)
@@ -26,30 +26,36 @@ epoch_on_first_element = True
 parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list)
 
 epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element, baseline=None) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, baseline=False) for subject in config.subjects_list)
 
 
-# ______________________________________________________________________________________
+# # ______________________________________________________________________________________
+# # ====== RUN THE AUTOREJECT ALGORITHM TO INTERPOLATE OR REMOVE THE BAD EPOCHS ==========  /// NOW INCLUDED IN epoching_funcs.run_epochs
+# # ______________________________________________________________________________________
+#
+#
+# # AutoReject function parallel
+# parallel, run_func, _ = parallel_func(autoreject_funcs.run_autoreject, n_jobs=N_JOBS)
+#
+# # Run the AutoReject function on "full_sequence" epochs
+# epoch_on_first_element = True
+# parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
+#
+# # Run the AutoReject function on "items" epochs
+# epoch_on_first_element = False
+# parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
 
-# ====== RUN THE AUTOREJECT ALGORITHM TO INTERPOLATE OR REMOVE THE BAD EPOCHS ==========
-# ______________________________________________________________________________________
-
-
-# AutoReject function parallel
-parallel, run_func, _ = parallel_func(autoreject_funcs.run_autoreject, n_jobs=N_JOBS)
-
-# Run the AutoReject function on "full_sequence" epochs
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
-
-# Run the AutoReject function on "items" epochs
-epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
-
-# AutoReject plot function parallel
+# AutoReject "local" plot/print log function parallel
 parallel, run_func, _ = parallel_func(autoreject_funcs.ar_log_summary, n_jobs=config.N_JOBS)
 epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
 epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
+
+# AutoReject "global" print threshold function parallel
+parallel, run_func, _ = parallel_func(autoreject_funcs.arGlob_thesholds_summary, n_jobs=config.N_JOBS)
+epoch_on_first_element = False
+parallel(run_func(subject, epoch_on_first_element, count_epochs=True) for subject in config.subjects_list)
+epoch_on_first_element = True
+parallel(run_func(subject, epoch_on_first_element, count_epochs=True) for subject in config.subjects_list)
 

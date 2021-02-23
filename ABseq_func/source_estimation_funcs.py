@@ -181,7 +181,7 @@ def compute_sources_from_evoked(subject, evoked, morph_sources=True):
     return stc
 
 
-def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=False, lowpass_evoked=True, morph_sources=True):
+def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=False, lowpass_evoked=True, morph_sources=True, fake_nave=False):
     """
 
     :param subject: subject name
@@ -221,6 +221,9 @@ def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not
     fname_inv = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     inverse_operator = mne.minimum_norm.read_inverse_operator(fname_inv)
 
+    if fake_nave:
+        evoked.nave = 100
+
     # Source estimates: apply inverse
     snr = 3.0
     lambda2 = 1.0 / snr ** 2
@@ -234,12 +237,12 @@ def load_evoked_with_sources(subject, evoked_filter_name=None, evoked_filter_not
         stc = stc_fsaverage
 
     # Sanity check (high peak value)
-    m = np.round(np.max(abs(stc.data)), 0)
-    if m > 200:
-        raise ValueError('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
-    if m > 80:
-        import warnings
-        warnings.warn('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
+    # m = np.round(np.max(abs(stc.data)), 0)
+    # if m > 200:
+    #     raise ValueError('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
+    # if m > 80:
+    #     import warnings
+    #     warnings.warn('/!\ Probable issue with sources ' + evoked_filter_name + ' for subject ' + subject + ': max value = ' + str(m))
 
     return evoked, stc
 

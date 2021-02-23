@@ -99,7 +99,6 @@ subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04
 
 exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
 # sub04 & sub08: very bad EEG data
-# /!\ not sure if "exclude_subjects" is used so they were simply removed from subjects_list /!\
 
 
 # ``runs`` : list of str
@@ -580,7 +579,7 @@ l_freq = 0.10
 #   The high-frequency cut-off in the lowpass filtering step.
 #   Keep it None if no lowpass filtering should be applied.
 
-h_freq = 200  # meaningless since we downsample at 250Hz? We cannot exploit frequencies below 250/2?
+h_freq = 40  # NEW ! (changed by SP)
 
 ###############################################################################
 # MAXFILTER PARAMETERS
@@ -884,30 +883,27 @@ ica_decim = 10
 def default_reject_comps():
     return dict(meg=[], eeg=[])
 
-
+# VERSION 12/02/2021
 rejcomps_man = defaultdict(default_reject_comps)
-rejcomps_man['sub01-pa_190002'] = dict(eeg=[0], meg=[3, 2])
-rejcomps_man['sub02-ch_180036'] = dict(eeg=[0, 1, 11], meg=[7, 0, 63])
-rejcomps_man['sub03-mr_190273'] = dict(eeg=[1, 4], meg=[23, 2, 24])
-rejcomps_man['sub04-rf_190499'] = dict(eeg=[15, 0, 7, 9], meg=[25, 19, 7, 16, 0, 71])
-rejcomps_man['sub05-cr_170417'] = dict(eeg=[0, 19], meg=[25, 0])
-rejcomps_man['sub06-kc_160388'] = dict(eeg=[1, 19], meg=[57, 12, 9])
-rejcomps_man['sub07-jm_100109'] = dict(eeg=[1, 3], meg=[0, 1])
-rejcomps_man['sub08-cc_150418'] = dict(eeg=[5, 9], meg=[2, 12])
-rejcomps_man['sub09-ag_170045'] = dict(eeg=[4, 5], meg=[16, 30, 45])
-rejcomps_man['sub10-gp_190568'] = dict(eeg=[1, 6], meg=[0, 2, 3, 20])
-rejcomps_man['sub11-fr_190151'] = dict(eeg=[0, 16, 2, 12], meg=[7, 15, 22, 46])
-rejcomps_man['sub12-lg_170436'] = dict(eeg=[2, 8], meg=[6, 0, 39])
-rejcomps_man['sub13-lq_180242'] = dict(eeg=[1, 2], meg=[9, 0, 6])
-rejcomps_man['sub14-js_180232'] = dict(eeg=[], meg=[0, 11, 30])
-rejcomps_man['sub15-ev_070110'] = dict(eeg=[0], meg=[44, 5])
-rejcomps_man['sub16-ma_190185'] = dict(eeg=[0, 12], meg=[10, 15, 0, 18])
-rejcomps_man['sub17-mt_170249'] = dict(eeg=[18, 0, 10], meg=[32, 39, 8, 37])
-rejcomps_man['sub18-eo_190576'] = dict(eeg=[3, 1], meg=[24, 23, 4])
-rejcomps_man['sub19-mg_190180'] = dict(eeg=[1], meg=[29, 12, 6])
-
-# 'sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04-rf_190499', 'sub05-cr_170417', 'sub06-kc_160388'
-# 'sub07-jm_100109', 'sub08-cc_150418', 'sub09-ag_170045'
+rejcomps_man['sub01-pa_190002'] = dict(eeg=[9, 0, 6, 19], meg=[2, 67, 7, 69])
+rejcomps_man['sub02-ch_180036'] = dict(eeg=[0, 1, 15], meg=[1, 0, 26])
+rejcomps_man['sub03-mr_190273'] = dict(eeg=[1, 12, 0, 10], meg=[45, 24, 2, 38])
+rejcomps_man['sub04-rf_190499'] = dict(eeg=[0, 7], meg=[14, 6, 28])
+rejcomps_man['sub05-cr_170417'] = dict(eeg=[0, 15], meg=[18, 0])
+rejcomps_man['sub06-kc_160388'] = dict(eeg=[1, 18], meg=[16, 40, 5, 31])
+rejcomps_man['sub07-jm_100109'] = dict(eeg=[1, 3], meg=[0, 5])
+rejcomps_man['sub08-cc_150418'] = dict(eeg=[5, 8], meg=[19, 25, 3])
+rejcomps_man['sub09-ag_170045'] = dict(eeg=[0, 3, 7], meg=[4, 10, 8, 40])
+rejcomps_man['sub10-gp_190568'] = dict(eeg=[1, 6], meg=[0, 5, 1, 19])
+rejcomps_man['sub11-fr_190151'] = dict(eeg=[2, 9], meg=[16, 17, 22])
+rejcomps_man['sub12-lg_170436'] = dict(eeg=[1, 11], meg=[11, 0, 13])
+rejcomps_man['sub13-lq_180242'] = dict(eeg=[0, 12], meg=[9, 26, 0, 11])
+rejcomps_man['sub14-js_180232'] = dict(eeg=[0, 1, 2], meg=[9, 15, 0, 14])
+rejcomps_man['sub15-ev_070110'] = dict(eeg=[], meg=[31, 9])
+rejcomps_man['sub16-ma_190185'] = dict(eeg=[11, 0, 12], meg=[12, 15, 0, 13])
+rejcomps_man['sub17-mt_170249'] = dict(eeg=[13, 1, 8], meg=[19, 36, 4])
+rejcomps_man['sub18-eo_190576'] = dict(eeg=[19, 1, 18], meg=[7, 14])
+rejcomps_man['sub19-mg_190180'] = dict(eeg=[0, 1], meg=[13, 26, 7])
 
 # ``ica_ctps_ecg_threshold``: float
 #    The threshold parameter passed to `find_bads_ecg` method.
@@ -1023,14 +1019,14 @@ if not os.path.isdir(subjects_dir):
 # ADVANCED
 # --------
 #
-# ``l_trans_bandwidth`` : float | 'auto'
+# ``l_trans_bandwidth`` : float |'auto'
 #    A float that specifies the transition bandwidth of the
 #    highpass filter. By default it's `'auto'` and uses default mne
 #    parameters.
 
 l_trans_bandwidth = 'auto'
 
-#  ``h_trans_bandwidth`` : float | 'auto'
+#  ``h_trans_bandwidth`` : float |'auto'
 #    A float that specifies the transition bandwidth of the
 #    lowpass filter. By default it's `'auto'` and uses default mne
 #    parameters.
@@ -1040,7 +1036,7 @@ h_trans_bandwidth = 'auto'
 #  ``N_JOBS`` : int
 #    An integer that specifies how many subjects you want to run in parallel.
 
-N_JOBS = 1
+N_JOBS = 4
 
 # ``random_state`` : None | int | np.random.RandomState
 #    To specify the random generator state. This allows to have

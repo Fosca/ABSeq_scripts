@@ -312,11 +312,14 @@ def convert_csv_info_to_metadata(csv_path):
     return metadata
 
 
-def load_epochs_items(subject, cleaned=True):
+def load_epochs_items(subject, cleaned=True, AR_type='local'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     if cleaned:
-        extension = subject + '_clean_epo'
+        if AR_type == 'local':
+            extension = subject + '_clean_epo'
+        elif AR_type == 'global':
+            extension = subject + '_ARglob_epo'
     else:
         extension = subject + '_epo'
         warnings.warn('\nLoading pre-autoreject epochs for subject ' + subject)
@@ -335,11 +338,14 @@ def load_resid_epochs_items(subject, resid_epochs_type='reg_repeataltern_surpris
     return epochs
 
 
-def load_epochs_full_sequence(subject, cleaned=True):
+def load_epochs_full_sequence(subject, cleaned=True, AR_type='local'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     if cleaned:
-        extension = subject + '_1st_element_clean_epo'
+        if AR_type == 'local':
+            extension = subject + '_1st_element_clean_epo'
+        elif AR_type == 'global':
+            extension = subject + '_1st_element_ARglob_epo'
     else:
         extension = subject + '_1st_element_epo'
         warnings.warn('\nLoading pre-autoreject epochs for subject ' + subject)
@@ -524,28 +530,38 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     # epochs.save(epochs_fname)
 
     if config.autoreject:
-        # Running AutoReject (https://autoreject.github.io)
         epochs.load_data()
+
+        # Running AutoReject "global" (https://autoreject.github.io) -> just get the thresholds
+        from autoreject import get_rejection_threshold
+        reject = get_rejection_threshold(epochs, ch_types=['mag', 'grad', 'eeg'])
+        epochsARglob = epochs.copy().drop_bad(reject=reject)
+        print('  Writing "AR global" cleaned epochs to disk')
+        if epoch_on_first_element:
+            extension = subject + '_1st_element_ARglob_epo'
+        else:
+            extension = subject + '_ARglob_epo'
+        epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+        print("Output: ", epochs_fname)
+        epochsARglob.save(epochs_fname, overwrite=True)
+        # Save autoreject thresholds
+        pickle.dump(reject, open(epochs_fname[:-4] + '_ARglob_thresholds.obj', 'wb'))
+
+        # Running AutoReject "local" (https://autoreject.github.io)
         ar = AutoReject()
-        # epochs = ar.fit_transform(epochs)
-        # reject_log = ar.get_reject_log(epochs)
-        epochs, reject_log = ar.fit_transform(epochs, return_log=True)
-
-        # Save epochs (after AutoReject)
-        print('  Writing cleaned epochs to disk')
-
+        epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
+        print('  Writing "AR local" cleaned epochs to disk')
         if epoch_on_first_element:
             extension = subject + '_1st_element_clean_epo'
         else:
             extension = subject + '_clean_epo'
         epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
-        epochs.save(epochs_fname, overwrite=True)
-        # epochs.save(epochs_fname)
-
+        epochsAR.save(epochs_fname, overwrite=True)
         # Save autoreject reject_log
-        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_log.obj', 'wb'))
+        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_local_log.obj', 'wb'))
         # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
+
 
 
 

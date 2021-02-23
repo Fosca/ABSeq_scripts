@@ -89,6 +89,8 @@ for residual_analysis in [False,True]:
 # ===== LOAD DATA ===== #
 
 suf = 'SW_train_test_different_blocks'
+# suf = 'train_test_different_blocks'
+
 epochs_16_items_mag_test_window = []; epochs_16_items_grad_test_window = []; epochs_16_items_eeg_test_window = [];epochs_16_items_all_chans_test_window = [];
 epochs_16_items_mag_habituation_window = []; epochs_16_items_grad_habituation_window = []; epochs_16_items_eeg_habituation_window = [];epochs_16_items_all_chans_habituation_window = [];
 for subject in config.subjects_list:
@@ -101,6 +103,8 @@ for subject in config.subjects_list:
         epochs_16_items_grad_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'grad'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
         epochs_16_items_eeg_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'eeg'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
         epochs_16_items_all_chans_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'all_chans'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
+
+
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')
 utils.create_folder(save_folder)
@@ -109,8 +113,7 @@ utils.create_folder(save_folder)
 epochs_list = {}
 vminvmax = {'all_chans':2,'mag':1,'grad':1,'eeg':1.5}
 
-for sens in ['mag']:
-# for sens in ['all_chans','mag', 'grad', 'eeg']:
+for sens in ['all_chans','mag', 'grad', 'eeg']:
     if sens == 'mag':
         epochs_list['hab'] = epochs_16_items_mag_habituation_window
         epochs_list['test'] = epochs_16_items_mag_test_window

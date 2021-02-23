@@ -10,8 +10,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
-cluster_funcs.create_qsub('SVM_generate_all_sequences', 'train_GAT', 'train_GAT', queue='Nspin_bigM')# ok
-cluster_funcs.create_qsub('SVM_generate_different_sequences', 'train_seq', 'train_seq', queue='Nspin_bigM')# ok
+# cluster_funcs.create_qsub('SVM_features_stimID', 'stimID', 'stimID', queue='Nspin_bigM')# ok
 
 # rerun this once autoreject has cleaned the epochs
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')

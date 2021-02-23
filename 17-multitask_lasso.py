@@ -199,13 +199,18 @@ for alpha in [0.3, 0.5, 0.8]:
     np.save(save_lasso_res_path + '/stcs_alpha0%i.npy' % int(alpha * 10), stcs)
     # sstcs = np.load(save_lasso_res_path+'/stcs_alpha0%i.npy'%int(alpha*10),allow_pickle=True)
 
-# ############################################
-# # Visualize stcs
-# alpha = 0.3
-# stcs = np.load(save_lasso_res_path+'/stcs_alpha0%i.npy'%int(alpha*10), allow_pickle=True)
+############################################
+# Visualize stcs
+save_lasso_res_path = config.result_path + '/groupmne/lasso/'
+alpha = 0.8
+stcs = np.load(save_lasso_res_path+'/stcs_alpha0%i.npy'%int(alpha*10), allow_pickle=True)
 # data = np.average([s.data for s in stcs], axis=0)
-# stc = mne.SourceEstimate(data, stcs[0].vertices, stcs[0].tmin, stcs[0].tstep, stcs[0].subject)
-# stc.plot(subjects_dir=subjects_dir, backend='auto', hemi='rh')
+data = np.average([abs(s.data) for s in stcs], axis=0)  # with absolute values !!
+stc = mne.SourceEstimate(data, stcs[0].vertices, stcs[0].tmin, stcs[0].tstep, stcs[0].subject)
+stc.plot(subjects_dir=subjects_dir, backend='pyvista', hemi='split', time_viewer=True, views='lat', initial_time=0.170)  #backend‘auto’ | ‘mayavi’ | ‘pyvista’ | ‘matplotlib’
+stcs[1].plot(subjects_dir=subjects_dir, backend='pyvista', hemi='split', time_viewer=True, views='lat', initial_time=0.170)  #backend‘auto’ | ‘mayavi’ | ‘pyvista’ | ‘matplotlib’
+
+stc.get_peak()
 
 # ############################################
 # # Let's visualize the N20 response. The stimulus was applied on the right
