@@ -4,11 +4,15 @@ import numpy as np
 
 print('jaime les tomates')
 
+cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepseq', 'sepseq', queue='Nspin_bigM')
+cluster_funcs.create_qsub('SVM_generate_all_sequences', 'GAT', 'GAT', queue='Nspin_bigM')
+
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub10-gp_190568'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
+
 
 # cluster_funcs.create_qsub('SVM_features_stimID', 'stimID', 'stimID', queue='Nspin_bigM')# ok
 
