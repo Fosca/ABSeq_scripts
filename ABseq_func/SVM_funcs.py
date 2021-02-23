@@ -303,7 +303,7 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
             training_inds , testing_inds = train_test_different_blocks(epochs_senso,return_per_seq = False)
             for k in range(2):
                 SVM_dec = SVM_decoder()
-                SVM_dec.fit(X_data[training_inds[k]], y_violornot[training_inds[k]])
+                SVM_dec.fit(X_data[training_inds[k],:,:], y_violornot[training_inds[k]])
                 All_SVM.append(SVM_dec)
         else:
             training_inds = []
@@ -378,8 +378,8 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
 
         train_test_dict = train_test_different_blocks(epochs_senso, return_per_seq=True)
         for seqID in range(1,8):
-            SVM_results[senso][seqID]['train_inds'] = train_test_dict[seqID]['train'][k]
-            SVM_results[senso][seqID]['test_inds'] = train_test_dict[seqID]['test'][k]
+            SVM_results[senso][seqID]['train_inds'] = train_test_dict[seqID]['train']
+            SVM_results[senso][seqID]['test_inds'] = train_test_dict[seqID]['test']
             SVM_results[senso][seqID]['epochs_seq'] = epochs_senso["SequenceID == %i"%seqID]
             for k in range(2):
                 SVM_dec = SVM_decoder()
@@ -391,8 +391,9 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
+
 # ______________________________________________________________________________________________________________________
-def GAT_SVM(subject, load_residuals_regression=False, score_or_decisionfunc='score', train_test_different_blocks=True,
+def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, score_or_decisionfunc='score', train_different_blocks=True,
             sliding_window=False):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
@@ -400,27 +401,28 @@ def GAT_SVM(subject, load_residuals_regression=False, score_or_decisionfunc='sco
     :param SVM_results: output of generate_SVM_all_sequences
     :return: GAT averaged over the 4 classification folds
     """
-    suf = ''
-
-    if sliding_window:
-        suf += 'SW_'
 
     saving_directory = op.join(config.SVM_path, subject)
-    n_folds = 4
+
+    # ----- build the right suffix to load the correct matrix -----
+    suf = ''
+    if sliding_window:
+        suf += 'SW_'
     if load_residuals_regression:
         suf = 'resid_'
-
-    if train_test_different_blocks:
-        suf += 'train_test_different_blocks'
+    if train_different_blocks:
+        suf += 'train_different_blocks'
         n_folds = 2
+    else:
+        n_folds = 4
 
+    # ---------- load the data ------------
     SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
+    # ----- initialize the results dictionnary ------
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
 
     for sens in ['eeg', 'mag', 'grad', 'all_chans']:
-        # for sens in ['eeg']:
-        print(sens)
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
 
@@ -428,29 +430,37 @@ def GAT_SVM(subject, load_residuals_regression=False, score_or_decisionfunc='sco
         n_times = epochs_sens.get_data().shape[-1]
         SVM_sens = SVM_results[sens]['SVM']
 
-        for k in range(1, 8):
-            print('The value of k is %i' % k)
+        for sequence_number in range(1, 8):
             seqID = 'SeqID_%i' % k
-            GAT_seq = np.zeros((4, n_times, n_times))
+            GAT_seq = np.zeros((n_folds, n_times, n_times))
+
             for fold_number in range(n_folds):
+
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
-                inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
-                        epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
-                inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == k) & (
-                        epochs_sens_test.metadata['ViolationOrNot'].values == 1))[0]
-                X = epochs_sens_test.get_data()
-                if score_or_decisionfunc == 'score':
-                    GAT_each_epoch = SVM_sens[fold_number].predict(X)
-                else:
-                    GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
-                GAT_seq[fold_number, :, :] = np.mean(
-                    GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
-                    GAT_each_epoch[inds_seq_viol, :, :], axis=0)
-                print('The shape of GAT_seq[fold_number, :, :] is')
-                print(GAT_seq[fold_number, :, :].shape)
+                epochs_sens_and_seq_test = epochs_sens_test["SequenceID == %i"%sequence_number]
+                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot'"].values
 
-            # now average across the 4 folds
+                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(y_sens_and_seq_test, epochs_sens_and_seq_test.get_data())
+
+                # inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
+                #         epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
+                # inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
+                #         epochs_sens_test.metadata['ViolationOrNot'].values == 1))[0]
+                # X = epochs_sens_test.get_data()
+
+                # if score_or_decisionfunc == 'score':
+                #     GAT_each_epoch = SVM_sens[fold_number].predict(X)
+                # else:
+                #     GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
+                #
+                # GAT_seq[fold_number, :, :] = np.mean(
+                #     GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
+                #     GAT_each_epoch[inds_seq_viol, :, :], axis=0)
+                # print('The shape of GAT_seq[fold_number, :, :] is')
+                # print(GAT_seq[fold_number, :, :].shape)
+
+            #  --------------- now average across the folds ---------------
             GAT_seq_avg = np.mean(GAT_seq, axis=0)
             GAT_per_sens_and_seq[seqID] = GAT_seq_avg
             GAT_all.append(GAT_seq_avg)
