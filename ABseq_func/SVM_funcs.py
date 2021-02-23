@@ -445,9 +445,9 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
                 epochs_sens_and_seq_test = epochs_sens_test["SequenceID == %i"%sequence_number]
-                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot'"].values
+                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot"].values
 
-                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(y_sens_and_seq_test, epochs_sens_and_seq_test.get_data())
+                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(epochs_sens_and_seq_test.get_data(),y_sens_and_seq_test)
 
                 # inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
                 #         epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
@@ -477,8 +477,6 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf + 'GAT_results.npy'), GAT_results)
-
-
 
 
 
@@ -527,9 +525,9 @@ def GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,
 
                 test_indices = test_inds[fold_number]
                 epochs_sens_and_seq_test = epochs_sens_and_seq[test_indices]
-                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot'"].values
+                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot"].values
 
-                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(y_sens_and_seq_test, epochs_sens_and_seq_test.get_data())
+                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(epochs_sens_and_seq_test.get_data(),y_sens_and_seq_test)
 
                 # inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
                 #         epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
