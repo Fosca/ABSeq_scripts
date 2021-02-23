@@ -10,7 +10,8 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
-# cluster_funcs.create_qsub('SVM_features_stimID', 'stimID', 'stimID', queue='Nspin_bigM')# ok
+cluster_funcs.create_qsub('SVM_generate_all_sequences', 'train_GAT', 'train_GAT', queue='Nspin_bigM')# ok
+cluster_funcs.create_qsub('SVM_generate_different_sequences', 'train_seq', 'train_seq', queue='Nspin_bigM')# ok
 
 # rerun this once autoreject has cleaned the epochs
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
@@ -22,15 +23,15 @@ print('jaime les tomates')
 #cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
 #cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
 
-cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
 # cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_withinchunk', 'chunkpos', 'chunkpos', queue='Nspin_bigM')# ok
-cluster_funcs.create_qsub('SVM_features_withinchunk_train_quads_test_others', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_features_chunkrev', 'rev', 'rev', queue='Nspin_long') # ok
-cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'OpenPar', 'OpenPar', queue='Nspin_long')
-cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_long') # ok
-cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_withinchunk', 'chunkpos', 'chunkpos', queue='Nspin_bigM')# ok
+# cluster_funcs.create_qsub('SVM_features_withinchunk_train_quads_test_others', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features_chunkrev', 'rev', 'rev', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'OpenPar', 'OpenPar', queue='Nspin_long')
+# cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_long') # ok
 
 
 

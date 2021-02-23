@@ -14,79 +14,7 @@ from importlib import reload
 from mne.parallel import parallel_func
 from scipy.signal import savgol_filter
 
-
-
-
-
-# ___________________________________________________________________________
-# ======= plot the GAT for all the sequences apart and together =============
-# ___________________________________________________________________________
-#GAT_sens_all, times = SVM_funcs.plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
-#                                                     'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
-#                                                     vmin=-0.1,vmax=0.1,analysis_type='perSeq')
-
-subjects_list = ['sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
-                  'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-                 'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185', 'sub17-mt_170249', 'sub18-eo_190576']
-
-for subject in subjects_list:
-    SVM_path = op.join(config.SVM_path, subject)
-    GAT_path = op.join(SVM_path,'SW_train_test_different_blocksGAT_results_score.npy')
-    GAT_results = np.load(GAT_path, allow_pickle=True).item()
-    times = GAT_results['times']
-    GAT = GAT_results['GAT']['all_chans']
-    # We concatenate the data from all the sequences for that participant =========
-    for seqID in range(1, 8):
-        if np.sum(np.isnan(GAT['SeqID_%i' % seqID]))!=0:
-            print("----------- there is no data for subject %s and sequence %i"%(subject,seqID))
-
-
-coeff_complexity = []
-coeff_constant = []
-for subject in subjects_list:
-    print(subject)
-    comp, const, times = SVM_funcs.SVM_GAT_linear_reg_sequence_complexity(subject)
-    coeff_complexity.append(comp)
-    coeff_constant.append(const)
-
-
-fig = ABseq_func.SVM_funcs.plot_GAT_SVM(np.mean(coeff_constant,axis=0), times, sens='all', save_path=config.fig_path+'/SVM/GAT/', figname='regression_const', vmin=-0.1, vmax=0.1)
-plt.show()
-
-# ___________________________________________________________________________
-# ======= plot the GAT for the different features =============
-# ___________________________________________________________________________
-vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
-vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
-
-from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
-
-# ---------------------------------------------------------------------------------------------------------------------
-def plot_gat_simple(analysis_name, subjects_list, fig_name, score_field='GAT', folder_name='GAT', sensors=['all_chans'],
-                    vmin=-0.1, vmax=.1):
-    GAT_all = []
-    fig_path = op.join(config.fig_path, 'SVM', folder_name)
-    count = 0
-    for subject in subjects_list:
-        count += 1
-        SVM_path = op.join(config.SVM_path, subject)
-        GAT_path = op.join(SVM_path, analysis_name + '.npy')
-        GAT_results = np.load(GAT_path, allow_pickle=True).item()
-        print(op.join(SVM_path, analysis_name + '.npy'))
-        times = GAT_results['times']
-        GAT_all.append(GAT_results[score_field])
-
-    gat_plot(np.mean(GAT_all, axis=0), times,vmin=vmin,vmax=vmax)
-    plt.gcf().save(fig_path+fig_name)
-
-    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
-
-    return plt.gcf()
-
-
-#['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']
-config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-config.subjects_list.sort()
+# ________________The list of participants (4,8 previously excluded and 16 has a problem)_______________________________
 
 config.subjects_list = ['sub01-pa_190002',
  'sub02-ch_180036',
@@ -105,16 +33,53 @@ config.subjects_list = ['sub01-pa_190002',
  'sub18-eo_190576',
  'sub19-mg_190180']
 
+# ___________________________________________________________________________
+# ============== GAT decoding Standard // Deviant ===========================
+# ___________________________________________________________________________
+
+GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
+                                                    'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
+                                                    vmin=-0.1,vmax=0.1,analysis_type='perSeq',compute_significance = [0,0.6])
+
+# subjects_list = ['sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
+#                   'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
+#                  'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185', 'sub17-mt_170249', 'sub18-eo_190576']
+
+
+analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT'
+
+# __________Linear regression of the GATs as a function of complexity____________________________________________
+SVM_funcs.check_missing_GAT_data(config.subjects_list)
+
+coeff_complexity = []
+coeff_constant = []
+for subject in config.subjects_list:
+    print(subject)
+    comp, const, times = SVM_funcs.SVM_GAT_linear_reg_sequence_complexity(subject)
+    coeff_complexity.append(comp)
+    coeff_constant.append(const)
+
+fig_const = ABseq_func.SVM_funcs.plot_GAT_SVM(np.mean(coeff_constant,axis=0), times, sens='all', save_path=config.fig_path+'/SVM/GAT/', figname='regression_const', vmin=-0.1, vmax=0.1)
+fig_complexity = ABseq_func.SVM_funcs.plot_GAT_SVM(np.mean(coeff_complexity,axis=0), times, sens='all', save_path=config.fig_path+'/SVM/GAT/', figname='regression_complexity', vmin=-0.1, vmax=0.1)
+plt.show()
+
+# ___________________________________________________________________________
+# ============== GAT for the different features ===========================
+# ___________________________________________________________________________
+
+
+vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
+vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
 for residual_analysis in [False,True]:
     if residual_analysis:
         suffix = 'resid_'
     else:
         suffix = 'full_data_'
-    for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict','WithinChunkPositionReverse_score_dict']):
+    chance = [0.5,0.5,0.25,0.5,0.25,0.25]
+    for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        plot_gat_simple(anal_name,config.subjects_list,suffix+name,score_field='score'
-                                     ,sensors = ['all_chans'],vmin=None,vmax=None)
+        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
 
 
 # ___________________________________________________________________________
@@ -124,8 +89,6 @@ for residual_analysis in [False,True]:
 # ===== LOAD DATA ===== #
 
 suf = 'SW_train_test_different_blocks'
-# suf = 'train_test_different_blocks'
-
 epochs_16_items_mag_test_window = []; epochs_16_items_grad_test_window = []; epochs_16_items_eeg_test_window = [];epochs_16_items_all_chans_test_window = [];
 epochs_16_items_mag_habituation_window = []; epochs_16_items_grad_habituation_window = []; epochs_16_items_eeg_habituation_window = [];epochs_16_items_all_chans_habituation_window = [];
 for subject in config.subjects_list:
@@ -138,8 +101,6 @@ for subject in config.subjects_list:
         epochs_16_items_grad_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'grad'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
         epochs_16_items_eeg_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'eeg'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
         epochs_16_items_all_chans_habituation_window.append(mne.read_epochs(op.join(config.meg_dir, subject, 'all_chans'+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
-
-
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')
 utils.create_folder(save_folder)
@@ -148,7 +109,8 @@ utils.create_folder(save_folder)
 epochs_list = {}
 vminvmax = {'all_chans':2,'mag':1,'grad':1,'eeg':1.5}
 
-for sens in ['all_chans','mag', 'grad', 'eeg']:
+for sens in ['mag']:
+# for sens in ['all_chans','mag', 'grad', 'eeg']:
     if sens == 'mag':
         epochs_list['hab'] = epochs_16_items_mag_habituation_window
         epochs_list['test'] = epochs_16_items_mag_test_window
@@ -165,7 +127,18 @@ for sens in ['all_chans','mag', 'grad', 'eeg']:
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
 
-    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)),vmin=-vminvmax[sens],vmax=vminvmax[sens])
+    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, compute_regression_complexity = True,sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)),vmin=-vminvmax[sens],vmax=vminvmax[sens])
+
+
+compute_regression_complexity = True;sensor_type=sens; save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)); vmin=-vminvmax[sens];vmax=vminvmax[sens]
+
+# ==== run regressions as a function of complexity on magnetometer data ====
+suf = 'SW_train_test_different_blocks'
+constant_hab, complexity_hab = SVM_funcs.compute_regression_complexity('mag' + suf + '_SVM_on_16_items_habituation_window-epo.fif')
+constant_test, complexity_test = SVM_funcs.compute_regression_complexity('mag' + suf + '_SVM_on_16_items_test_window-epo.fif')
+p_hab = stats_funcs.stats(complexity_hab,tail = 1)
+p_test = stats_funcs.stats(complexity_test,tail = 1)
+
 
 # ___________________________________________________________________________
 # ======= plot the GAT diagonal for each of the 7 sequences in the nice viridis colors ============

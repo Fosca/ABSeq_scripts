@@ -23,6 +23,8 @@ from sklearn.svm import SVC, LinearSVR
 from sklearn.model_selection import KFold
 import numpy as np
 import random
+from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
+from sklearn.linear_model import LinearRegression
 
 from sklearn.base import TransformerMixin
 
@@ -77,6 +79,50 @@ def train_quads_test_others(epochs, list_sequences):
     y_test = epochs["SequenceID != 4 "].events[:, 2]
 
     return [X_train], [y_train], [X_test], [y_test]
+
+# ----------------------------------------------------------------------------------------------------------------------
+def train_test_different_blocks(epochs,return_per_seq = False):
+
+    import random
+
+    """
+    For each sequence, check that there are two run_numbers for the sequence.
+    If there are 2, then randomly put one in the training set and the other one in the test set.
+    If there is just one, split the trials of that one into two sets, one for training the other for testing
+    :param epochs:
+    :return:
+    """
+
+    train_test_dict = {i:{'train':[],'test':[]} for i in range(1,8)}
+    train_inds = []
+    test_inds = []
+
+    for seqID in range(1,8):
+        epochs_Seq = epochs["SequenceID == %i "%seqID]
+        n_runs = np.unique(epochs_Seq.metadata['RunNumber'].values)
+        if len(n_runs) == 1:
+            print('There is only one run for sequence ID %i'%(seqID))
+            inds_seq = np.where(epochs.metadata['RunNumber'].values==n_runs)[0]
+            np.random.shuffle(inds_seq)
+            inds_train = inds_seq[:int(np.floor(len(inds_seq)/2))]
+            inds_test = inds_seq[int(np.floor(len(inds_seq)/2)):]
+        else:
+            pick_run = random.randint(0, 1)
+            run_train = n_runs[pick_run]
+            run_test = n_runs[1-pick_run]
+            inds_train = np.where(epochs.metadata['RunNumber'].values==run_train)[0]
+            inds_test = np.where(epochs.metadata['RunNumber'].values==run_test)[0]
+
+        train_inds.append(inds_train)
+        test_inds.append(inds_test)
+        train_test_dict[seqID]['train']= inds_train
+        train_test_dict[seqID]['test']= inds_test
+
+    if return_per_seq:
+        return train_test_dict
+    else:
+        return np.concatenate(train_inds), np.concatenate(test_inds)
+
 
 
 # ______________________________________________________________________________________________________________________
@@ -202,7 +248,7 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences):
 
 
 # ______________________________________________________________________________________________________________________
-def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_test_different_blocks=True,
+def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
                                sliding_window=False):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
@@ -213,18 +259,24 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_t
     :return:
     """
 
-    epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-    epochs.pick_types(meg=True, eeg=True, stim=False)
-
-    suf = ''
-    if load_residuals_regression:
-        epochs = epoching_funcs.load_resid_epochs_items(subject)
-        suf = 'resid_'
-
+    # ----------- set the directories ----------
     saving_directory = op.join(config.SVM_path, subject)
     utils.create_folder(saving_directory)
 
+    # ----------- load the epochs ---------------
+    suf = ''
+    if load_residuals_regression:
+        epochs = epoching_funcs.load_resid_epochs_items(subject)
+        epochs.pick_types(meg=True, eeg=True, stim=False)
+        suf = 'resid_'
+    else:
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        epochs.pick_types(meg=True, eeg=True, stim=False)
+
+    # ----------- balance the position of the standard and the deviants -------
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
+
+    # ----------- do a sliding window to smooth the data if neeeded -------
     if sliding_window:
         epochs_balanced = epoching_funcs.sliding_window(epochs_balanced)
         suf += 'SW_'
@@ -234,28 +286,25 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_t
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
     epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
     epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
     epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
     sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
     SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
 
-    for l in range(4):
-        senso = sensor_types[l]
+    for l, senso in enumerate(sensor_types):
         epochs_senso = epochs_all[l]
         X_data = epochs_senso.get_data()
-        # ======= create the 4 SVM spatial filters ========
+
         All_SVM = []
 
-        if train_test_different_blocks:
-            run_numbers = epochs_senso.metadata['RunNumber'].values
-            training_inds = [np.where(run_numbers < 8)[0], np.where(run_numbers >= 8)[0]]
-            testing_inds = [np.where(run_numbers >= 8)[0], np.where(run_numbers < 8)[0]]
+        if train_different_blocks:
+            training_inds , testing_inds = train_test_different_blocks(epochs_senso,return_per_seq = False)
             for k in range(2):
                 SVM_dec = SVM_decoder()
                 SVM_dec.fit(X_data[training_inds[k]], y_violornot[training_inds[k]])
                 All_SVM.append(SVM_dec)
-
         else:
             training_inds = []
             testing_inds = []
@@ -264,11 +313,8 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_t
                 int(metadata_epochs['SequenceID'].values[i] * 1000 + metadata_epochs['StimPosition'].values[i] * 10 +
                     metadata_epochs['ViolationOrNot'].values[i]) for i in range(len(epochs_balanced))]
             for train, test in StratifiedKFold(n_splits=4).split(X_data, y_tmp):
-                # we split in training and testing sets using y_tmp because it allows us to balance with respect to all our constraints
                 SVM_dec = SVM_decoder()
-                # Fit and store the spatial filters
                 SVM_dec.fit(X_data[train], y_violornot[train])
-                # Store filters for future plotting
                 All_SVM.append(SVM_dec)
                 training_inds.append(train)
                 testing_inds.append(test)
@@ -276,8 +322,72 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_t
         SVM_results[senso] = {'SVM': All_SVM, 'train_ind': training_inds, 'test_ind': testing_inds,
                               'epochs': epochs_all[l]}
 
-    if train_test_different_blocks:
-        suf += 'train_test_different_blocks'
+    if train_different_blocks:
+        suf += 'train_different_blocks'
+    np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
+
+
+# ______________________________________________________________________________________________________________________
+def generate_SVM_separate_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
+                               sliding_window=False):
+    """
+    Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
+    in order to be flexible for the later analyses.
+
+    :param epochs:
+    :param saving_directory:
+    :return:
+    """
+
+    # ----------- set the directories ----------
+    saving_directory = op.join(config.SVM_path, subject)
+    utils.create_folder(saving_directory)
+
+    # ----------- load the epochs ---------------
+    suf = ''
+    if load_residuals_regression:
+        epochs = epoching_funcs.load_resid_epochs_items(subject)
+        epochs.pick_types(meg=True, eeg=True, stim=False)
+        suf = 'resid_'
+    else:
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        epochs.pick_types(meg=True, eeg=True, stim=False)
+
+    # ----------- balance the position of the standard and the deviants -------
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
+
+    # ----------- do a sliding window to smooth the data if neeeded -------
+    if sliding_window:
+        epochs_balanced = epoching_funcs.sliding_window(epochs_balanced)
+        suf += 'SW_'
+    # =============================================================================================
+    epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
+    epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
+    epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
+    epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+
+    # ==============================================================================================
+    y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
+    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
+    sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
+    SVM_results = {senso:{i:{'SVM':[],'train_inds':[],'test_inds':[],'epochs_seq':[]} for i in range(1,8)} for senso in sensor_types}
+
+    for l, senso in enumerate(sensor_types):
+        epochs_senso = epochs_all[l]
+        X_data = epochs_senso.get_data()
+
+        train_test_dict = train_test_different_blocks(epochs_senso, return_per_seq=True)
+        for seqID in range(1,8):
+            SVM_results[senso][seqID]['train_inds'] = train_test_dict[seqID]['train'][k]
+            SVM_results[senso][seqID]['test_inds'] = train_test_dict[seqID]['test'][k]
+            SVM_results[senso][seqID]['epochs_seq'] = epochs_senso["SequenceID == %i"%seqID]
+            for k in range(2):
+                SVM_dec = SVM_decoder()
+                SVM_dec.fit(X_data[train_test_dict[seqID]['train'][k]], y_violornot[train_test_dict[seqID]['train'][k]])
+                SVM_results[senso][seqID]['SVM'].append(SVM_dec)
+
+    if train_different_blocks:
+        suf += 'train_different_blocks_and_sequences'
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
@@ -474,23 +584,27 @@ def SVM_applied_to_epochs(SVM_results, sequenceID=None):
 
 
 # ______________________________________________________________________________________________________________________
-def plot_GAT_SVM(GAT_avg, times, sens='mag', save_path=None, figname='GAT_', vmin=None, vmax=None):
-    minT = np.min(times) * 1000
-    maxT = np.max(times) * 1000
-    fig = plt.figure()
-    plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
-    # -----# ADD LINES ?
-    plt.axvline(0, linestyle='-', color='black', linewidth=1)
-    plt.axhline(0, linestyle='-', color='black', linewidth=1)
-    plt.plot([minT, maxT], [minT, maxT], linestyle='--', color='black', linewidth=1)
-    # -----#
-    plt.ylabel('Training time (ms)')  # NO TRANSPOSE
-    plt.xlabel('Testing time (ms)')  # NO TRANSPOSE
-    plt.colorbar()
+def plot_GAT_SVM(GAT_avg,chance,times, sens='mag', save_path=None, figname='GAT_', vmin=None, vmax=None,sig=None):
+
+    pretty_gat(-GAT_avg,chance=chance,times=times,sig=sig,clim=[vmin,vmax])
+
+    #
+    # minT = np.min(times) * 1000
+    # maxT = np.max(times) * 1000
+    # fig = plt.figure()
+    # plt.imshow(-GAT_avg, origin='lower', extent=[minT, maxT, minT, maxT], cmap='RdBu_r', vmin=vmin, vmax=vmax)
+    # # -----# ADD LINES ?
+    # plt.axvline(0, linestyle='-', color='black', linewidth=1)
+    # plt.axhline(0, linestyle='-', color='black', linewidth=1)
+    # plt.plot([minT, maxT], [minT, maxT], linestyle='--', color='black', linewidth=1)
+    # # -----#
+    # plt.ylabel('Training time (ms)')  # NO TRANSPOSE
+    # plt.xlabel('Testing time (ms)')  # NO TRANSPOSE
+    # plt.colorbar()
     if save_path is not None:
         plt.savefig(op.join(save_path, figname + sens), dpi=300)
 
-    return fig
+    return plt.gcf()
 
 
 # ______________________________________________________________________________________________________________________
@@ -931,12 +1045,19 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_regression_complexity = False, window_CBPT_violation = None):
+    import matplotlib.colors as mcolors
+
+    colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
+    cmapsig = mcolors.LinearSegmentedColormap.from_list('significance_cmpa', colors, N=5)
+
     # window info, just for figure title
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0] * 1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0] * 1000
-
-    fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
+    n_plots = 7
+    if compute_regression_complexity:
+        n_plots = 8
+    fig, axes = plt.subplots(n_plots, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
     fig.suptitle('SVM %s - window %d-%dms; N subjects = %d' % (
         sensor_type, win_tmin, win_tmax, len(epochs_list['test'])), fontsize=12)
     ax = axes.ravel()[::1]
@@ -947,6 +1068,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     ax[4].set_title('Pairs+Alt', loc='left', weight='bold')
     ax[5].set_title('Shrinking', loc='left', weight='bold')
     ax[6].set_title('Complex', loc='left', weight='bold')
+
     seqtxtXY = ['xxxxxxxxxxxxxxxx',
                 'xYxYxYxYxYxYxYxY',
                 'xxYYxxYYxxYYxxYY',
@@ -955,39 +1077,80 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xxxxYYYYxxYYxYxY',
                 'xYxxxYYYYxYYxxxY']
 
+    if compute_regression_complexity:
+        ax[7].set_title('Beta_complexity', loc='left', weight='bold')
+        seqtxtXY.append('')
+
     print("vmin = %0.02f, vmax = %0.02f" % (vmin, vmax))
 
     n = 0
 
-    for seqID in range(1, 8):
+    violation_significance = {i:[] for i in range(1, 8)}
+    epochs_data_hab_allseq = []
+    epochs_data_test_allseq = []
 
+    for seqID in range(1, 8):
         #  this provides us with the position of the violations and the times
         epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
         times = epochs_seq_subset.times
         times = times + 0.3
         violpos_list = np.unique(epochs_seq_subset.metadata['ViolationInSequence'])
+        violation_significance[seqID] = {'times':times,'window_significance':window_CBPT_violation}
 
-        # Average data from habituation trials
-        y_list = []
+        #  ----------- habituation trials -----------
+        epochs_data_hab_seq = []
+        y_list_epochs_hab = []
         data_mean = []
+        mean_alpha = []
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-            y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
-            # y_list.append(np.squeeze(epochs_subset.savgol_filter(20).average(picks='SVM').data))
-            # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
-        mean_hab = np.mean(y_list, axis=0)
+            avg_epo = np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+            y_list_epochs_hab.append(avg_epo)
+            epochs_data_hab_seq.append(avg_epo)
+        epochs_data_hab_allseq.append(epochs_data_hab_seq)
+        mean_hab = np.mean(y_list_epochs_hab, axis=0)
         data_mean.append(mean_hab)
+        mean_alpha.append(np.zeros(mean_hab.shape))
 
-        # Average data from other trials
+        #  ----------- test trials -----------
+        epochs_data_test_seq = []
+
         for viol_pos in violpos_list:
             y_list = []
+            y_list_alpha = []
+            contrast_viol_pos = []
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
                     'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                y_list.append(np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0))
-                # y_list.append(np.squeeze(epochs_subset.average(picks='SVM').data))
+                avg_epo = np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+                y_list.append(avg_epo)
+                if viol_pos==0:
+                    avg_epo_standard = np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+                    epochs_data_test_seq.append(avg_epo_standard)
+                    y_list_alpha.append(np.zeros(avg_epo_standard.shape))
+                if viol_pos !=0 and window_CBPT_violation is not None:
+                    epochs_standard = epochs[
+                        'SequenceID == "' + str(seqID) + '" and ViolationInSequence == 0']
+                    avg_epo_standard = np.mean(np.squeeze(epochs_standard.savgol_filter(20).get_data()), axis=0)
+                    contrast_viol_pos.append(avg_epo - avg_epo_standard)
+
+            # --------------- CBPT to test for significance ---------------
+            if window_CBPT_violation is not None and viol_pos !=0:
+                time_start_viol = 0.250 * (viol_pos - 1)
+                time_stop_viol = time_start_viol + window_CBPT_violation
+                inds_stats = np.where(np.logical_and(times>time_start_viol,times<=time_stop_viol))
+                contrast_viol_pos = np.asarray(contrast_viol_pos)
+                p_vals = np.asarray([1]*contrast_viol_pos.shape[1])
+                p_values = stats_funcs.stats(contrast_viol_pos[:,inds_stats[0]],tail=1)
+                p_vals[inds_stats[0]] = p_values
+                violation_significance[seqID][int(viol_pos)] = p_vals
+                y_list_alpha.append(1*(p_vals<0.05))
+
             mean = np.mean(y_list, axis=0)
+            mean_alpha_seq = np.mean(y_list_alpha, axis=0)
             data_mean.append(mean)
+            mean_alpha.append(mean_alpha_seq)
+        epochs_data_test_allseq.append(epochs_data_test_seq)
 
         width = 75
         # Add vertical lines, and "xY"
@@ -999,8 +1162,16 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         # return data_mean
         im = ax[n].imshow(data_mean, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
                           vmin=vmin, vmax=vmax)
-        # ax[n].set_xlim(-500, 4250)
-        # ax[n].legend(loc='upper left', fontsize=10)
+        # add colorbar
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
+        cb.ax.yaxis.set_offset_position('left')
+        cb.set_label('a. u.')
+        if window_CBPT_violation:
+            masked = np.ma.masked_where(mean_alpha == 0, mean_alpha)
+            im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
+                              vmin=vmin, vmax=vmax,alpha=0.9)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
         ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3],
                                'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1],
@@ -1015,14 +1186,30 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             y2 = (4 - 1 - k) * width
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
-        # add colorbar
+
+        n += 1
+
+    if compute_regression_complexity:
+        epochs_data_hab_allseq = np.asarray(epochs_data_hab_allseq)
+        epochs_data_test_allseq = np.asarray(epochs_data_test_allseq)
+        coeff_const_hab, coeff_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
+        coeff_const_test, coeff_complexity_test = compute_regression_complexity(epochs_data_test_allseq)
+
+        for xx in range(16):
+            ax[7].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
+
+        # return data_mean
+        im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                          vmin=-0.5, vmax=0.5)
         fmt = ticker.ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((0, 0))
-        # cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.5, pad=.2, aspect=10)
         cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
         cb.ax.yaxis.set_offset_position('left')
-        cb.set_label('a. u.')
-        n += 1
+        width = width*3
+        ax[7].set_yticks(np.arange(width / 2, 2 * width, width))
+        ax[7].set_yticklabels(['Standard', 'Habituation'])
+        ax[7].axvline(0, linestyle='-', color='black', linewidth=2)
+
     axes.ravel()[-1].set_xlabel('Time (ms)')
 
     figure = plt.gcf()
@@ -1394,7 +1581,7 @@ def plot_gat_simple(analysis_name,subjects_list,fig_name,score_field='GAT',folde
 
     return plt.gcf()
 
-def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type=''):
+def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type='',compute_significance=None):
 
     GAT_sens_all = {sens: [] for sens in sensors}
 
@@ -1422,10 +1609,10 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         GAT_sens_all[sens][key].append(GAT_results[sens][key])
                         # ================ Plot & save each subject / each sequence figures ???
                         if plot_individual_subjects:
-                            plot_GAT_SVM(GAT_results[sens][key], times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
+                            plot_GAT_SVM(GAT_results[sens][key],0, times, sens=sens, save_path=sub_fig_path, figname=fig_name+key); plt.close('all')
                     # ================ Plot & save each subject / average of all sequences figures ???
                     GAT_sens_all[sens]['average_all_sequences'].append(GAT_results[sens]['average_all_sequences'])
-                    plot_GAT_SVM(GAT_results[sens]['average_all_sequences'], times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
+                    plot_GAT_SVM(GAT_results[sens]['average_all_sequences'],0, times, sens=sens, save_path=sub_fig_path, figname=fig_name+'_all_seq',vmin=vmin,vmax=vmax)
                     plt.close('all')
                 else:
                     GAT_sens_all[sens].append(GAT_results)
@@ -1433,18 +1620,32 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
                         print('plotting for subject:%s'%subject)
                         print("the shape of the GAT result is ")
                         print(GAT_results.shape)
-                        plot_GAT_SVM(GAT_results, times, sens=sens, save_path=sub_fig_path,
+                        plot_GAT_SVM(GAT_results,0, times, sens=sens, save_path=sub_fig_path,
                                      figname=fig_name,vmin=vmin,vmax=vmax)
                         plt.close('all')
         # return GAT_sens_all
 
+        plt.close('all')
         print("plotting in %s"%config.fig_path)
         if plot_per_sequence:
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
-                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0), times, sens=sens, save_path=fig_path,
+                sig_all = None
+                if compute_significance is not None:
+                    GAT_all = np.asarray(GAT_sens_all[sens][key])
+                    tmin_sig = compute_significance[0]
+                    tmax_sig = compute_significance[1]
+                    times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
+                    sig_all = np.ones(GAT_all[0].shape)
+                    GAT_all_for_sig = GAT_all[:, times_sig, :]
+                    GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
+                    sig = stats_funcs.stats(GAT_all_for_sig, tail=-1)
+                    sig_all = replace_submatrix(sig_all, times_sig, times_sig, sig)
+
+                plot_GAT_SVM(np.nanmean(GAT_sens_all[sens][key],axis=0),0, times, sens=sens, save_path=fig_path,sig=sig_all<0.05,
                              figname=fig_name+key,vmin=vmin, vmax=vmax)
                 plt.close('all')
-            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0), times, sens=sens,
+
+            plot_GAT_SVM(np.nanmean(GAT_sens_all[sens]['average_all_sequences'],axis=0),0,  times, sens=sens,
                          save_path=fig_path, figname=fig_name + '_all_seq' + '_',
                          vmin=vmin, vmax=vmax)
             plt.close('all')
@@ -1460,15 +1661,28 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
             GAT_avg_sens = GAT_sens_all[sens]
             for seqID in range(1, 8):
                 GAT_avg_sens_seq = GAT_avg_sens['SeqID_%i' % seqID]
-                GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
-                plot_GAT_SVM(GAT_avg_sens_seq_groupavg, times, sens=sens,
-                             save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                             figname=suf + 'GAT_' + str(seqID) + '_allparticipants_')
+                if compute_significance is not None:
+                    GAT_all = np.asarray(GAT_avg_sens_seq)
+                    tmin_sig = compute_significance[0]
+                    tmax_sig = compute_significance[1]
+                    times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
+                    sig_all = np.ones(GAT_all[0].shape)
+                    GAT_all_for_sig = GAT_all[:, times_sig, :]
+                    GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
+                    sig = stats_funcs.stats(GAT_all_for_sig, tail=-1)
+                    sig_all = replace_submatrix(sig_all, times_sig, times_sig, sig)
+                    plot_GAT_SVM(np.mean(GAT_all,axis=0),0, times, sens=sens, save_path=fig_path,sig=sig_all,
+                                 figname= 'GAT_' + str(seqID) +'_allparticipants_',vmin=vmin, vmax=vmax)
+                else:
+                    GAT_avg_sens_seq_groupavg = np.mean(GAT_avg_sens_seq, axis=0)
+                    plot_GAT_SVM(GAT_avg_sens_seq_groupavg,0, times, sens=sens,
+                                 save_path=op.join(config.fig_path, 'SVM', 'GAT'),
+                                 figname='GAT_' + str(seqID) + '_allparticipants_')
                 plt.close('all')
             GAT_avg_sens_allseq_groupavg = np.mean(GAT_avg_sens['average_all_sequences'], axis=0)
-            plot_GAT_SVM(GAT_avg_sens_allseq_groupavg, times, sens=sens,
+            plot_GAT_SVM(GAT_avg_sens_allseq_groupavg,0, times, sens=sens,
                          save_path=op.join(config.fig_path, 'SVM', 'GAT'),
-                         figname=suf + 'GAT_all_seq'  + '_allparticipants_')
+                         figname= 'GAT_all_seq'  + '_allparticipants_',vmin=vmin, vmax=vmax)
 
     return GAT_sens_all, times
 
@@ -1505,10 +1719,124 @@ def SVM_GAT_linear_reg_sequence_complexity(subject):
     return coeff_complexity, coeff_constant, times
 
 
+def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
+    GAT_all = []
+    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    count = 0
+    for subject in subjects_list:
+        count += 1
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, analysis_name + '.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        print(op.join(SVM_path, analysis_name + '.npy'))
+        times = GAT_results['times']
+        GAT_all.append(GAT_results[score_field])
+
+    if compute_significance is not None:
+        GAT_all = np.asarray(GAT_all)
+        tmin_sig = compute_significance[0]
+        tmax_sig = compute_significance[1]
+        times_sig = np.where(np.logical_and(times<=tmax_sig,times>tmin_sig))[0]
+        sig_all = np.ones(GAT_all[0].shape)
+        GAT_all_for_sig = GAT_all[:,times_sig,:]
+        GAT_all_for_sig = GAT_all_for_sig[:,:,times_sig]
+        sig = stats_funcs.stats(GAT_all_for_sig-chance,tail=1)
+        sig_all= replace_submatrix(sig_all, times_sig, times_sig, sig)
+
+    if vmin is not None:
+        if compute_significance is not None:
+            pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance, clim=[vmin, vmax],sig=sig_all<0.05)
+        else:
+            pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance, clim=[vmin, vmax])
+    else:
+        if compute_significance is not None:
+            pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance, sig=1*(sig_all<0.05))
+        else:
+            pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance)
+
+    plt.gcf().savefig(fig_path+'/'+fig_name)
+    plt.close('all')
+
+    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
+
+    return plt.gcf()
+
+def replace_submatrix(mat, ind1, ind2, mat_replace):
+  for i, index in enumerate(ind1):
+    mat[index, ind2] = mat_replace[i, :]
+  return mat
+
+def check_missing_GAT_data(subjects):
+    for subject in subjects:
+        SVM_path = op.join(config.SVM_path, subject)
+        GAT_path = op.join(SVM_path, 'SW_train_test_different_blocksGAT_results_score.npy')
+        GAT_results = np.load(GAT_path, allow_pickle=True).item()
+        times = GAT_results['times']
+        GAT = GAT_results['GAT']['all_chans']
+        # We concatenate the data from all the sequences for that participant =========
+        for seqID in range(1, 8):
+            if np.sum(np.isnan(GAT['SeqID_%i' % seqID])) != 0:
+                print("----------- there is no data for subject %s and sequence %i" % (subject, seqID))
 
 
 
+def compute_regression_complexity(data):
+    """
+    Data has to be obtained as the mean over the epochs for each participant for the different sequences in the same order as
+    the corresponding complexities
+    :param
+    :return:
+    """
+    complexities = np.asarray([4,6,6,6,12,14,28])
+    n_times = data.shape[2]
+
+    Constant_coeff = []
+    Complexity_coeff = []
+
+    for ii in range(data.shape[1]):
+        data_reg_subject = data[:,ii,:]
+        coeff_constant = [0]*n_times
+        coeff_complexity = [0]*n_times
+        for tt in range(n_times):
+            data_reg = data_reg_subject[:,tt]
+            reg = LinearRegression().fit(complexities.reshape(-1,1), data_reg)
+            coeff_constant[tt] = reg.coef_[0]
+            coeff_complexity[tt] = reg.intercept_
+        Constant_coeff.append(coeff_constant)
+        Complexity_coeff.append(coeff_complexity)
+
+    return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
 
 
 
+def compute_regression_complexity_epochs(epochs_name):
+    """
+    This function computes the regression for each participant of the data as a function of complexity
+    :param epochs_name:
+    :return:
+    """
 
+    from sklearn.linear_model import LinearRegression
+    complexities = np.asarray([4,6,6,6,12,14,28])
+
+    Constant_coeff = []
+    Complexity_coeff = []
+
+    for nsubj, subject in enumerate(config.subjects_list):
+        epoch = mne.read_epochs(op.join(config.meg_dir, subject, epochs_name))
+        n_times = len(epoch.times)
+        coeff_constant = np.zeros((1,n_times))
+        coeff_complexity = np.zeros((1,n_times))
+        data = []
+        for seqID in range(1, 8):
+            data.append(epoch['SequenceID == "' + str(seqID) + '" and ViolationInSequence == 0'])
+        data = np.asarray(data)
+        for tt in range(n_times):
+            data_reg = data[:,tt]
+            reg = LinearRegression().fit(complexities.reshape(-1,1), data_reg)
+            coeff_constant[tt] = reg.coef_
+            coeff_complexity[tt] = reg.intercept_
+        Constant_coeff.append(coeff_constant)
+        Complexity_coeff.append(coeff_complexity)
+
+    return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
