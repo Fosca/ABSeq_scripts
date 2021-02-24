@@ -1263,7 +1263,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         if window_CBPT_violation:
             masked = np.ma.masked_where(mean_alpha == 0, mean_alpha)
             im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
-                              vmin=vmin, vmax=vmax,alpha=0.3)
+                              vmin=vmin, vmax=vmax,alpha=0.7)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
         ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3],
                                'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1],
