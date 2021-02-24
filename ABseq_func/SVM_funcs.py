@@ -1137,7 +1137,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_regression_complexity = False, window_CBPT_violation = None):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None):
     import matplotlib.colors as mcolors
 
     colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
@@ -1147,7 +1147,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0] * 1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0] * 1000
     n_plots = 7
-    if compute_regression_complexity:
+    if compute_reg_complexity:
         n_plots = 8
     fig, axes = plt.subplots(n_plots, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
     fig.suptitle('SVM %s - window %d-%dms; N subjects = %d' % (
@@ -1169,7 +1169,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xxxxYYYYxxYYxYxY',
                 'xYxxxYYYYxYYxxxY']
 
-    if compute_regression_complexity:
+    if compute_reg_complexity:
         ax[7].set_title('Beta_complexity', loc='left', weight='bold')
         seqtxtXY.append('')
 
@@ -1281,7 +1281,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
 
         n += 1
 
-    if compute_regression_complexity:
+    if compute_reg_complexity:
         epochs_data_hab_allseq = np.asarray(epochs_data_hab_allseq)
         epochs_data_test_allseq = np.asarray(epochs_data_test_allseq)
         coeff_const_hab, coeff_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
