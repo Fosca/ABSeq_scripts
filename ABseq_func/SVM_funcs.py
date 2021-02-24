@@ -518,7 +518,7 @@ def GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,
         for sequence_number in range(1, 8):
 
             epochs_sens_and_seq_test = SVM_results[sens][sequence_number]['epochs_seq_test']
-            n_times = epochs_sens_and_seq_test.get_data().shape[-1]
+            n_times = epochs_sens_and_seq_test[0].get_data().shape[-1]
             SVM_sens = SVM_results[sens][sequence_number]['SVM']
 
             seqID = 'SeqID_%i' % sequence_number
