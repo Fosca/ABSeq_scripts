@@ -384,9 +384,13 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
 
         train_test_dict = train_test_different_blocks(epochs_senso, return_per_seq=True)
         for seqID in range(1,8):
+            train_inds = train_test_dict[seqID]['train']
+            test_inds = train_test_dict[seqID]['test']
             SVM_results[senso][seqID]['train_inds'] = train_test_dict[seqID]['train']
             SVM_results[senso][seqID]['test_inds'] = train_test_dict[seqID]['test']
-            SVM_results[senso][seqID]['epochs_seq'] = epochs_senso["SequenceID == %i"%seqID]
+            SVM_results[senso][seqID]['epochs_seq_train'] = [epochs_senso[train_inds[k]] for k in range(2)]
+            SVM_results[senso][seqID]['epochs_seq_test'] = [epochs_senso[test_inds[k]] for k in range(2)]
+
             for k in range(2):
                 SVM_dec = SVM_decoder()
                 SVM_dec.fit(X_data[train_test_dict[seqID]['train'][k]], y_violornot[train_test_dict[seqID]['train'][k]])
@@ -513,21 +517,16 @@ def GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,
 
         for sequence_number in range(1, 8):
 
-            epochs_sens_and_seq = SVM_results[sens][sequence_number]['epochs_seq']
-            test_inds = SVM_results[sens][sequence_number]['test_inds']
-            n_times = epochs_sens_and_seq.get_data().shape[-1]
+            epochs_sens_and_seq_test = SVM_results[sens][sequence_number]['epochs_seq_test']
+            n_times = epochs_sens_and_seq_test.get_data().shape[-1]
             SVM_sens = SVM_results[sens][sequence_number]['SVM']
 
             seqID = 'SeqID_%i' % sequence_number
             GAT_seq = np.zeros((n_folds, n_times, n_times))
 
             for fold_number in range(n_folds):
-
-                test_indices = test_inds[fold_number]
-                epochs_sens_and_seq_test = epochs_sens_and_seq[test_indices]
-                y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot"].values
-
-                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(epochs_sens_and_seq_test.get_data(),y_sens_and_seq_test)
+                y_sens_and_seq_test = epochs_sens_and_seq_test[fold_number].metadata["ViolationOrNot"].values
+                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(epochs_sens_and_seq_test[fold_number].get_data(),y_sens_and_seq_test)
 
                 # inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
                 #         epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
@@ -553,7 +552,7 @@ def GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,
 
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
-        times = epochs_sens_test.times
+        times = epochs_sens_and_seq_test.times
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf + 'GAT_results.npy'), GAT_results)

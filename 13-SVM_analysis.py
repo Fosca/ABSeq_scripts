@@ -13,6 +13,7 @@ import os.path as op
 from importlib import reload
 from mne.parallel import parallel_func
 from scipy.signal import savgol_filter
+from jr.plot import pretty_gat
 
 # ________________The list of participants (4,8 previously excluded and 16 has a problem)_______________________________
 
@@ -36,6 +37,80 @@ config.subjects_list = ['sub01-pa_190002',
 # ___________________________________________________________________________
 # ============== GAT decoding Standard // Deviant ===========================
 # ___________________________________________________________________________
+
+load_path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/SVM/sub02-ch_180036/SW_train_different_blocksGAT_results.npy"
+
+data = np.load(load_path,allow_pickle=True).item()
+
+data_GAT = data['GAT']
+times = data['times']
+
+def results_SVM_standard_deviant(fname,subjects_list):
+
+    results = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
+
+    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+        results[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        for subject in subjects_list:
+
+            load_path = config.result_path+'/SVM/'+subject+'/'+fname
+            data = np.load(load_path, allow_pickle=True).item()
+            # Load the results
+            data_GAT_sens = data['GAT'][sens]
+            times = data['times']
+
+            for seqID in range(1,8):
+                results[sens]["SeqID_"+str(seqID)].append(data_GAT_sens["SeqID_"+str(seqID)])
+
+    return results, times
+
+results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
+
+def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks'):
+
+    for chans in results.keys():
+        res_chan = results[chans]
+        for seqID in res_chan.keys():
+            res_chan_seq = np.asarray(res_chan[seqID])
+            sig_all = None
+            # ---- compute significance ----
+            if compute_significance is not None:
+                tmin_sig = compute_significance[0]
+                tmax_sig = compute_significance[1]
+                times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
+                sig_all = np.ones(res_chan_seq[0].shape)
+                GAT_all_for_sig = res_chan_seq[:, times_sig, :]
+                GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
+                sig = stats_funcs.stats(GAT_all_for_sig-0.5, tail=1)
+                sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
+
+            # -------- plot the gat --------
+            pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5)
+            plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.png')
+            plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
+            plt.close('all')
+
+
+plot_results_GAT(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks')
+
+
+
+
+
+
+
+data = np.load(load_path,allow_pickle=True).item()
+
+GAT_results = np.load(GAT_path, allow_pickle=True).item()
+print(op.join(SVM_path, analysis_name + '.npy'))
+times = GAT_results['times']
+GAT_results = GAT_results[score_field]
+fig_path = op.join(config.fig_path, 'SVM', folder_name)
+sub_fig_path = op.join(fig_path, subject)
+utils.create_folder(sub_fig_path)
+
+
+
 
 GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
                                                     'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
