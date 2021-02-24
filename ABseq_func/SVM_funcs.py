@@ -552,7 +552,7 @@ def GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,
 
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
-        times = epochs_sens_and_seq_test.times
+        times = epochs_sens_and_seq_test[0].times
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf + 'GAT_results.npy'), GAT_results)
@@ -1778,11 +1778,11 @@ def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_
 
     return GAT_sens_all, times
 
-def SVM_GAT_linear_reg_sequence_complexity(subject):
+def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_different_blocksGAT_results_score.npy'):
 
     # load the participants GAT results for the decoding of standard VS deviant for all the different sequences =========
     SVM_path = op.join(config.SVM_path, subject)
-    GAT_path = op.join(SVM_path,'SW_train_test_different_blocksGAT_results_score.npy')
+    GAT_path = op.join(SVM_path,suffix)
     GAT_results = np.load(GAT_path, allow_pickle=True).item()
     times = GAT_results['times']
     GAT = GAT_results['GAT']['all_chans']

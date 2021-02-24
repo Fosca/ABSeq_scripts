@@ -93,6 +93,7 @@ def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix=
 
 
 plot_results_GAT(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks')
+plot_results_GAT(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq')
 
 
 
@@ -190,15 +191,6 @@ for sens in ['all_chans','mag', 'grad', 'eeg']:
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
 
     SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, compute_reg_complexity = True,window_CBPT_violation = 0.7,sensor_type=sens, save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)),vmin=-vminvmax[sens],vmax=vminvmax[sens])
-
-compute_regression_complexity = True;sensor_type=sens; save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims.png' % ( sens, win_tmin, win_tmax)); vmin=-vminvmax[sens];vmax=vminvmax[sens]
-
-# ==== run regressions as a function of complexity on magnetometer data ====
-suf = 'SW_train_test_different_blocks'
-constant_hab, complexity_hab = SVM_funcs.compute_regression_complexity('mag' + suf + '_SVM_on_16_items_habituation_window-epo.fif')
-constant_test, complexity_test = SVM_funcs.compute_regression_complexity('mag' + suf + '_SVM_on_16_items_test_window-epo.fif')
-p_hab = stats_funcs.stats(complexity_hab,tail = 1)
-p_test = stats_funcs.stats(complexity_test,tail = 1)
 
 
 # ___________________________________________________________________________
