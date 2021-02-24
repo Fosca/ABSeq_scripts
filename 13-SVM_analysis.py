@@ -65,6 +65,7 @@ def results_SVM_standard_deviant(fname,subjects_list):
     return results, times
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
+results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
 
 def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks'):
 
