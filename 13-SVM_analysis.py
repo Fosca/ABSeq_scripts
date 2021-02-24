@@ -95,23 +95,6 @@ plot_results_GAT(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='S
 
 
 
-
-
-
-
-data = np.load(load_path,allow_pickle=True).item()
-
-GAT_results = np.load(GAT_path, allow_pickle=True).item()
-print(op.join(SVM_path, analysis_name + '.npy'))
-times = GAT_results['times']
-GAT_results = GAT_results[score_field]
-fig_path = op.join(config.fig_path, 'SVM', folder_name)
-sub_fig_path = op.join(fig_path, subject)
-utils.create_folder(sub_fig_path)
-
-
-
-
 GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
                                                     'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
                                                     vmin=-0.1,vmax=0.1,analysis_type='perSeq',compute_significance = [0,0.6])

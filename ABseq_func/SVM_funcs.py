@@ -27,7 +27,7 @@ from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
 from sklearn.linear_model import LinearRegression
 
 from sklearn.base import TransformerMixin
-
+from ABseq_func import stats_funcs
 
 # ______________________________________________________________________________________________________________________
 def SVM_decoder():
