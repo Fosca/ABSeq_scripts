@@ -65,9 +65,29 @@ def results_SVM_standard_deviant(fname,subjects_list):
     return results, times
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
-results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
+results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list,clim=None,tail=1)
 
-def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks'):
+
+def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None,tail=1):
+    if compute_significance is not None:
+        tmin_sig = compute_significance[0]
+        tmax_sig = compute_significance[1]
+        times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
+        sig_all = np.ones(results[0].shape)
+        GAT_all_for_sig = results[:, times_sig, :]
+        GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
+        sig = stats_funcs.stats(GAT_all_for_sig-chance, tail=tail)
+        sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
+
+        # -------- plot the gat --------
+    pretty_gat(np.mean(results,axis=0),times=times,sig=sig_all<0.05,chance = chance,clim=clim)
+    plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.png')
+    plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.svg')
+    plt.close('all')
+
+
+
+def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5):
 
     for chans in results.keys():
         res_chan = results[chans]
@@ -82,7 +102,7 @@ def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix=
                 sig_all = np.ones(res_chan_seq[0].shape)
                 GAT_all_for_sig = res_chan_seq[:, times_sig, :]
                 GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
-                sig = stats_funcs.stats(GAT_all_for_sig-0.5, tail=1)
+                sig = stats_funcs.stats(GAT_all_for_sig-chance, tail=1)
                 sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
 
             # -------- plot the gat --------
@@ -92,8 +112,8 @@ def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix=
             plt.close('all')
 
 
-plot_results_GAT(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks')
-plot_results_GAT(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq')
+plot_results_GAT_chans_seqID(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks')
+plot_results_GAT_chans_seqID(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq')
 
 
 
@@ -111,17 +131,25 @@ analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_sub
 # __________Linear regression of the GATs as a function of complexity____________________________________________
 SVM_funcs.check_missing_GAT_data(config.subjects_list)
 
+coeff_complexity_sepseq = []
 coeff_complexity = []
 coeff_constant = []
+coeff_constant_sepseq = []
 for subject in config.subjects_list:
     print(subject)
-    comp, const, times = SVM_funcs.SVM_GAT_linear_reg_sequence_complexity(subject)
+    comp, const, times = SVM_funcs.SVM_GAT_linear_reg_sequence_complexity(subject,suffix='SW_train_different_blocksGAT_results.npy')
+    comp_sepseq, const_sepseq, times = SVM_funcs.SVM_GAT_linear_reg_sequence_complexity(subject,suffix='SW_train_different_blocks_and_sequencesGAT_results.npy')
     coeff_complexity.append(comp)
+    coeff_complexity_sepseq.append(comp_sepseq)
     coeff_constant.append(const)
+    coeff_constant_sepseq.append(const_sepseq)
 
-fig_const = ABseq_func.SVM_funcs.plot_GAT_SVM(np.mean(coeff_constant,axis=0), times, sens='all', save_path=config.fig_path+'/SVM/GAT/', figname='regression_const', vmin=-0.1, vmax=0.1)
-fig_complexity = ABseq_func.SVM_funcs.plot_GAT_SVM(np.mean(coeff_complexity,axis=0), times, sens='all', save_path=config.fig_path+'/SVM/GAT/', figname='regression_complexity', vmin=-0.1, vmax=0.1)
-plt.show()
+
+plot_GAT(np.asarray(coeff_complexity),times,save_folder='/SVM/GAT/',suffix = 'regression_complexity_SW_train_different_blocks',compute_significance=[0,0.6],chance = 0,tail=-1,clim=[-0.005,0.005])
+plot_GAT(np.asarray(coeff_constant),times,save_folder='/SVM/GAT/',suffix = 'regression_const_SW_train_different_blocks',compute_significance=[0,0.6],chance = 0,tail=-1)
+plot_GAT(np.asarray(coeff_complexity_sepseq),times,save_folder='/SVM/GAT/',suffix = 'regression_complexity_SW_train_different_blocks_and_sequences',compute_significance=[0,0.6],chance = 0,tail=-1,clim=[-0.005,0.005])
+plot_GAT(np.asarray(coeff_constant_sepseq),times,save_folder='/SVM/GAT/',suffix = 'regression_const_SW_train_different_blocks_and_sequences',compute_significance=[0,0.6],chance=0,tail=-1)
+
 
 # ___________________________________________________________________________
 # ============== GAT for the different features ===========================
