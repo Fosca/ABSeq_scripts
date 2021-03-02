@@ -12,6 +12,7 @@ import mne
 import os.path as op
 from importlib import reload
 from mne.parallel import parallel_func
+import pandas as pd
 from scipy.signal import savgol_filter
 from jr.plot import pretty_gat
 
@@ -38,12 +39,6 @@ config.subjects_list = ['sub01-pa_190002',
 # ============== GAT decoding Standard // Deviant ===========================
 # ___________________________________________________________________________
 
-load_path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/SVM/sub02-ch_180036/SW_train_different_blocksGAT_results.npy"
-
-data = np.load(load_path,allow_pickle=True).item()
-
-data_GAT = data['GAT']
-times = data['times']
 
 def results_SVM_standard_deviant(fname,subjects_list):
 
@@ -64,6 +59,7 @@ def results_SVM_standard_deviant(fname,subjects_list):
 
     return results, times
 
+<<<<<<< HEAD
 results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
 results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list,clim=None,tail=1)
 
@@ -88,6 +84,14 @@ def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_trai
 
 
 def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5):
+=======
+results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
+
+
+results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
+
+def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks'):
+>>>>>>> 0d7e392ce569ff1de9b58e10ab7f498f2417169a
 
     for chans in results.keys():
         res_chan = results[chans]

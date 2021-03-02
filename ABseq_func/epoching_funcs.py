@@ -379,12 +379,17 @@ def balance_epochs_violation_positions(epochs,balance_violation_standards=True):
         epochs_seq_noviol = epochs_seq["ViolationInSequence == 0"]
         epochs_seq_viol = epochs_seq["ViolationInSequence > 0 and ViolationOrNot ==1"]
 
-        epochs_balanced_allseq.append([epochs_seq_noviol, epochs_seq_viol])
+        epochs_balanced_allseq.append(epochs_seq_noviol)
+        epochs_balanced_allseq.append(epochs_seq_viol)
         print('We appended the balanced epochs for SeqID%i' % seqID)
 
+<<<<<<< HEAD
         events_IDS.append([[seqID*1000+dev*100,seqID*1000+dev*100+10]  for dev in devpos])
 
     epochs_balanced = mne.concatenate_epochs(list(np.hstack(epochs_balanced_allseq)))
+=======
+    epochs_balanced = mne.concatenate_epochs(epochs_balanced_allseq)
+>>>>>>> 0d7e392ce569ff1de9b58e10ab7f498f2417169a
 
     events_IDS = np.concatenate(events_IDS)
 
@@ -394,6 +399,7 @@ def balance_epochs_violation_positions(epochs,balance_violation_standards=True):
         metadata_epochs = epochs_balanced.metadata
         events = [int(metadata_epochs['SequenceID'].values[i] * 10000 + metadata_epochs['StimPosition'].values[i] * 100 +
                      metadata_epochs['ViolationOrNot'].values[i]*10 + metadata_epochs['StimID'].values[i]) for i in range(len(epochs_balanced))]
+
         epochs_balanced.events[:, 2] = events
         epochs_balanced.event_id = {'%i'%i:i for i in np.unique(events)}
         epochs_balanced.equalize_event_counts(epochs_balanced.event_id)    # ===== to train the filter do not consider the habituation trials to later test on them separately ================
