@@ -166,12 +166,8 @@ def GAT_SVM_separate_seq(subject):
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
 def SVM_generate_different_sequences(subject):
-<<<<<<< HEAD
     # SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
-=======
-    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
->>>>>>> 4e2dbe6518ee5312f16b69bc87ad7e7c0daf1393
 
 def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
@@ -265,6 +261,9 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=True):
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7], crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'ChunkEnd' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
+
+def ord_code_16items(subject,load_residuals_regression=False):
+    SVM_funcs.SVM_ordinal_code_train_quads_test_others(subject, load_residuals_regression=load_residuals_regression)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------

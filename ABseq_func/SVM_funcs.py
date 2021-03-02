@@ -130,6 +130,68 @@ def train_test_different_blocks(epochs,return_per_seq = False):
         return [np.concatenate(train_inds_fold1),np.concatenate(train_inds_fold2)], [np.concatenate(test_inds_fold1),np.concatenate(test_inds_fold2)]
 
 
+def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=False, SVM_dec=SVM_decoder(),decim=1,sliding_window=True,crop=[0.1,0.3]):
+    """
+    Train on the quads sequences (trials coming from the standards of the  test part), remove the first, second, 15th and 16th item of quads.
+    Test on all the other sequences. It makes especially sense for 2 pairs, shrink, complex
+    :param subject:
+    :param load_residuals_regression:
+    :param SVM_dec: The classifier type
+    :param decim:
+    :return:
+    """
+
+    ordinal_code_projection_decision_axis = {'SeqID_%i'%i:{} for i in [1,2,3,5,6,7]}
+
+    # ==================================================================================================================
+    # --------------------------------------- select the training epochs : quads ---------------------------------------
+    # ==================================================================================================================
+    suffix = ''
+    if load_residuals_regression:
+        epochs_train = epoching_funcs.load_resid_epochs_items(subject)
+        suffix = 'resid_'
+    else:
+        epochs_train = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                                  recompute=True)
+        epochs_train.metadata = metadata
+    epochs_train = epochs_train["SequenceID == 4 and StimPosition > 2 and StimPosition < 15 and TrialNumber > 10 and ViolationInSequence == 0 "]
+    if sliding_window:
+        epochs_train = epoching_funcs.sliding_window(epochs_train)
+    if decim is not None:
+        epochs_train.decimate(decim)
+    if crop is not None:
+        epochs_train.crop(crop[0], crop[1])
+
+    # ==================================================================================================================
+    # --------------------------------------------------- Fit the decoder  ---------------------------------------------
+    # ==================================================================================================================
+
+    SVM_dec.fit(epochs_train.get_data(), epochs_train.metadata['WithinChunkPosition'].values)
+
+    # ==================================================================================================================
+    # --------------------------------- Apply it to the 16 item sequences  ---------------------------------------------
+    # ==================================================================================================================
+
+    epochs_test = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
+    epochs_test = epochs_test["ViolationInSequence == 0 and TrialNumber > 10"]
+
+    if sliding_window:
+        epochs_test = epoching_funcs.sliding_window(epochs_test)
+
+    for SeqID in [1,2,3,5,6,7]:
+        epochs_test_seq = epochs_test["SequenceID == %i"%SeqID]
+        proj = SVM_dec.decision_function(epochs_test_seq.get_data())
+        ordinal_code_projection_decision_axis['SeqID_%i'%SeqID] = {'projection':proj,'times':epochs_test_seq.times}
+
+    # ==================================================================================================================
+    # ----------------------------------------------- Save it ! --------------------------------------------------------
+    # ==================================================================================================================
+
+    save_path = config.result_path+'/SVM/ordinal_code_16items/'+subject+'/'
+    utils.create_folder(save_path)
+    np.save(save_path+'/'+suffix + 'ordinal_code_quads_tested_others.npy',ordinal_code_projection_decision_axis)
+
 
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
@@ -360,7 +422,7 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
         epochs.pick_types(meg=True, eeg=True, stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs)
 
     # ----------- do a sliding window to smooth the data if neeeded -------
     if sliding_window:

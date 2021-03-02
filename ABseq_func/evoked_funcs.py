@@ -498,7 +498,7 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
     epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
     epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
     epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items, balance_violation_standards=False)
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
     epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
     for k in range(1, 8):
