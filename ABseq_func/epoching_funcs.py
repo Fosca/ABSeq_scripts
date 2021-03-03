@@ -355,54 +355,63 @@ def load_epochs_full_sequence(subject, cleaned=True, AR_type='local'):
     return epochs
 
 
-def balance_epochs_violation_positions(epochs,balance_violation_standards=True):
+def balance_epochs_violation_positions(epochs,balance_param='local_position_sequence'):
     """
-    This function balances violations and standards by position for each sequence
+    This function balances violations and standards by position for each sequence.
+    When the data has been cleaned, some epochs may be removed and lead to the fact that, for a given sequence type,
+    there are less epochs corresponding to a violation position (for standard, or deviant)
+    In this case, there are several ways to balance the epochs.
+    - 'local' - Just make sure we have the same amount of standards and deviants for a given position. This may end up with
+    3 standards/deviants for position 9 and 4 for the others.
+    - 'position' - Make sure that the total number of standard/deviants, given the sequence, is the same whatever the position of
+    the violation.
+    - 'sequence' - Make sure that there are the same numbers of standard/deviant epochs per sequences.
+    Note here that we don't care about the stimulus ID (if the stim was sound A or B).
+
     :param epochs:
+    :param balance_param:
     :return:
     """
 
-    epochs_balanced_allseq = []
-
-    events_IDS = []
+    epochs_all_seq = []
     for seqID in range(1, 8):
-
-
+        # --- loop across each sequence ---
         epochs_seq = epochs['SequenceID == "' + str(seqID) + '" and TrialNumber>10'].copy()
         tmp = epochs_seq['ViolationOrNot == "1"']  # Deviant trials
-        devpos = np.unique(tmp.metadata.StimPosition)  # Position of deviants
+        devpos = np.unique(tmp.metadata.StimPosition)  # Find the position of deviants
+
         epochs_seq = epochs_seq['StimPosition == "' + str(devpos[0]) +
                                 '" or StimPosition == "' + str(devpos[1]) +
                                 '" or StimPosition == "' + str(devpos[2]) +
                                 '" or StimPosition == "' + str(devpos[3]) + '"']
 
-        epochs_seq_noviol = epochs_seq["ViolationInSequence == 0"]
-        epochs_seq_viol = epochs_seq["ViolationInSequence > 0 and ViolationOrNot ==1"]
+        if 'local' in balance_param :
+            # ---- we make sure that there are as many standards and violations for a given position ---
+            epo = []
+            for dev in devpos:
+                epochs_seq_pos = epochs_seq['StimPosition == "' + str(dev)+ '"']
+                epochs_seq_pos.events[:,2] = epochs_seq_pos.metadata["ViolationOrNot"].values
+                epochs_seq_pos.event_id = {'standard':0,'violation':1}
+                epochs_seq_pos.equalize_event_counts(epochs_seq_pos.event_id)
+                epo.append(epochs_seq_pos)
+            epochs_seq = mne.concatenate_epochs(epo)
 
-        epochs_balanced_allseq.append(epochs_seq_noviol)
-        epochs_balanced_allseq.append(epochs_seq_viol)
-        print('We appended the balanced epochs for SeqID%i' % seqID)
+        if 'position' in balance_param :
+            # ---- we make sure that there are as many events for each position
+            epochs_seq.events[:,2] = epochs_seq.metadata['StimPosition'].values*10 + epochs_seq.metadata['ViolationOrNot'].values
+            epochs_seq.event_id = {'%i'%i:i for i in np.unique(epochs_seq.events[:,2])}
+            epochs_seq.equalize_event_counts(epochs_seq.event_id)
 
-<<<<<<< HEAD
-        events_IDS.append([[seqID*1000+dev*100,seqID*1000+dev*100+10]  for dev in devpos])
+        epochs_all_seq.append(epochs_seq)
 
-    epochs_balanced = mne.concatenate_epochs(list(np.hstack(epochs_balanced_allseq)))
-=======
-    epochs_balanced = mne.concatenate_epochs(epochs_balanced_allseq)
->>>>>>> 0d7e392ce569ff1de9b58e10ab7f498f2417169a
+    epochs_balanced = mne.concatenate_epochs(epochs_all_seq)
 
-    events_IDS = np.concatenate(events_IDS)
-
-    all_combinations = [list(zip(each_permutation, list2)) for each_permutation in itertools.permutations(list1, len(list2))]
-    if balance_violation_standards:
-        print("we are balancing the number of standards and of violations")
-        metadata_epochs = epochs_balanced.metadata
-        events = [int(metadata_epochs['SequenceID'].values[i] * 10000 + metadata_epochs['StimPosition'].values[i] * 100 +
-                     metadata_epochs['ViolationOrNot'].values[i]*10 + metadata_epochs['StimID'].values[i]) for i in range(len(epochs_balanced))]
-
-        epochs_balanced.events[:, 2] = events
-        epochs_balanced.event_id = {'%i'%i:i for i in np.unique(events)}
-        epochs_balanced.equalize_event_counts(epochs_balanced.event_id)    # ===== to train the filter do not consider the habituation trials to later test on them separately ================
+    if 'sequence' in balance_param:
+        # ------ this enforces that there are the same number of trials per sequence type ----
+        epochs_balanced.events[:, 2] = epochs_balanced.metadata['SequenceID'].values*100 +\
+                                       epochs_balanced.metadata['StimPosition'].values*10 + epochs_balanced.metadata['ViolationOrNot'].values
+        epochs_balanced.event_id = {'%i' % i: i for i in np.unique(epochs_balanced.events[:,2])}
+        epochs_balanced.equalize_event_counts(epochs_balanced.event_id)
 
     return epochs_balanced
 
