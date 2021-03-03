@@ -163,9 +163,9 @@ plot_GAT(np.asarray(coeff_constant_sepseq),times,save_folder='/SVM/GAT/',suffix 
 vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
 vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
-for residual_analysis in [False,True]:
+for residual_analysis in [True]:
     if residual_analysis:
-        suffix = 'resid_'
+        suffix = 'resid_cv4_'
     else:
         suffix = 'full_data_'
     chance = [0.5,0.5,0.25,0.5,0.25,0.25]
@@ -270,3 +270,66 @@ for sens in sensors:
     ax.set_xlim(0, 250)
     fig.set_figwidth(5)
     plt.savefig(op.join(config.fig_path, 'SVM', 'All_sequences_diff_%s_crop.png' % sens), dpi=300)
+
+# ___________________________________________________________________________________________________________
+# ======= plot the Ordinal code when training on quads and testing on the 16 items of the others ============
+# ___________________________________________________________________________________________________________
+
+fname = 'ordinal_code_quads_tested_others.npy'
+# ---- load ----
+avg_subj = {'%i'%i:[] for i in [1,2,3,5,6,7]}
+for subject in config.subjects_list:
+    data_path = config.result_path + '/SVM/ordinal_code_16items/' + subject + '/' + fname
+    print("loading data from %s"%subject)
+    ord_16 = np.load(data_path, allow_pickle=True).item()
+    for seq in [1,2,3,5,6,7]:
+        avg_subj['%i'%seq].append(np.mean(np.mean(ord_16['SeqID_%i'%seq]['projection'],axis=0),axis=0))
+    times = ord_16['SeqID_%i'%seq]['times']
+
+#----- plot -----
+predictions = np.asarray(avg_subj['5'])
+
+
+def plot_ordinal_code_sequences(data_ord16):
+
+    labelsize = 6
+    fontsize = 6
+    linewidth = 0.7
+    linewidth_zero = 1
+    linewidth_other = 0.5
+    n_cat = 4
+
+    fig, axes = plt.subplots(6, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
+    fig.suptitle("Projection on the decision axis", fontsize=12)
+    ax = axes.ravel()[::1]
+    ax[0].set_title('Repeat', loc='left', weight='bold')
+    ax[1].set_title('Alternate', loc='left', weight='bold')
+    ax[2].set_title('Pairs', loc='left', weight='bold')
+    ax[3].set_title('Pairs+Alt', loc='left', weight='bold')
+    ax[4].set_title('Shrinking', loc='left', weight='bold')
+    ax[5].set_title('Complex', loc='left', weight='bold')
+
+    for n, seq in enumerate([1,2,3,5,6,7]):
+
+        predictions = np.asarray(avg_subj['%i'%seq])
+        mean_plot = np.mean(predictions, axis=0)
+        sem_plot = np.std(predictions, axis=0) / np.sqrt(predictions.shape[0])
+
+        # ============== And now, let's plot ============================
+        for k in range(n_cat):
+            ax[n].plot(times, mean_plot[:, k], linewidth=linewidth)
+            # ax[n] = plt.gca()
+            # ax.set_ylim(ylim)
+            ax[n].fill_between(times, mean_plot[:, k] - sem_plot[:, k], mean_plot[:, k] + sem_plot[:, k], alpha=0.6)
+
+        ax[n].axvline(0, 0, 200, color='k', linewidth=linewidth_zero)
+        ax[n].set_xticks([np.round(0.250 * xx, 2) for xx in range(17)])
+        for ti in [0.250 * xx for xx in range(16)]:
+            ax[n].axvline(ti, 0, 200, color='k', linewidth=linewidth_other)
+        ax[n].xaxis.set_ticks_position('bottom')
+        ax[n].tick_params(axis='both', which='major', labelsize=labelsize)
+        # ax[n].set_ylabel('Probability ordinal position', fontsize=fontsize)
+
+    ax[5].set_xlabel('Testing Time (s)', fontsize=fontsize)
+
+    plt.show()
