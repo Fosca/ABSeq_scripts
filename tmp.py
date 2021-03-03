@@ -1,3 +1,26 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
+from autoreject import AutoReject
+import pickle
+import numpy as np
+import mne
+
+path_log = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_reject_local_log.obj'
+log = pickle.load(open(path,'rb'))
+
+path_epoch = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_epo.fif'
+epochs = mne.read_epochs(path_epoch)
+path_epoch_clean = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo.fif"
+epochs_clean = mne.read_epochs(path_epoch_clean)
+
+epochs_rejected_ar = epochs[log.bad_epochs]
+epochs_rejected_ar.average().plot_joint()
+
+epochs_clean.average().plot_joint()
+
+
+
 import csv
 import os
 import numpy as np

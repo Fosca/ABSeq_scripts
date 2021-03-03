@@ -159,15 +159,27 @@ def SVM_generate_different_sequences(subject):
     SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
+<<<<<<< HEAD
+=======
+def SVM_generate_all_sequences(subject):
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+>>>>>>> 354b933fcbf507e04bea0d90530a856ba3a140b1
 def GAT_SVM_all_seq(subject):
     SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
 def GAT_SVM_separate_seq(subject):
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
+<<<<<<< HEAD
 def SVM_generate_different_sequences(subject):
     # SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+=======
+
+def SVM_generate_different_sequences(subject):
+    # SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
+>>>>>>> 354b933fcbf507e04bea0d90530a856ba3a140b1
 
 
 def SVM_GAT_all_sequences(subject):

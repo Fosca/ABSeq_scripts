@@ -229,7 +229,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         epochs.metadata = metadata
 
 
-    epochs = epoching_funcs.sliding_window(epochs)
+    epochs = epoching_funcs.sliding_window(epochs,sliding_window_step=2)
 
     if decim is not None:
         epochs.decimate(decim)
