@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+
 from . import epoching_funcs
 from . import evoked_funcs
 from . import GFP_funcs

@@ -146,7 +146,7 @@ if DoFirstLevel:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             if use_balanced_epochs:
-                epochs = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=False)
+                epochs = epoching_funcs.balance_epochs_violation_positions(epochs)
             if lowpass_epochs:
                 print('Low pass filtering...')
                 epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)

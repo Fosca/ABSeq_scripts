@@ -155,9 +155,20 @@ def autoreject_marmouset(subject):
 # ----------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------- DECODING FUNCTIONS FOR THE CLUSTER ------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
+def SVM_generate_different_sequences(subject):
+    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
 def SVM_generate_all_sequences(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+
+def GAT_SVM_all_seq(subject):
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True)
+
+def GAT_SVM_separate_seq(subject):
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
+
 
 def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=False,sliding_window=True)

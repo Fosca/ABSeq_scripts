@@ -155,102 +155,128 @@ def autoreject_marmouset(subject):
 # ----------------------------------------------------------------------------------------------------------------------
 # ---------------------------------------- DECODING FUNCTIONS FOR THE CLUSTER ------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
+def SVM_generate_different_sequences(subject):
+    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
 
+<<<<<<< HEAD
+=======
 def SVM_generate_all_sequences(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+>>>>>>> 354b933fcbf507e04bea0d90530a856ba3a140b1
+def GAT_SVM_all_seq(subject):
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+
+def GAT_SVM_separate_seq(subject):
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+
+<<<<<<< HEAD
+def SVM_generate_different_sequences(subject):
+    # SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+=======
+
+def SVM_generate_different_sequences(subject):
+    # SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
+>>>>>>> 354b933fcbf507e04bea0d90530a856ba3a140b1
+
 
 def SVM_GAT_all_sequences(subject):
-    SVM_funcs.GAT_SVM(subject, load_residuals_regression=False,sliding_window=True)
+    SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
 
 def SVM_full_sequences_16items(subject):
     # ----- We test on the 16 items sequences. We average the predictions of the decoders between 140 and 180 ms -----
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
 
-def SVM_features_repeatalter(subject,load_residuals_regression=False):
+def SVM_features_repeatalter(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'RepeatAlter',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'RepeatAlter' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
-def SVM_features_stimID(subject,load_residuals_regression=False):
+def SVM_features_stimID(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID',load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,eeg=False,decim=4)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID',load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],cross_val_func=None,eeg=False,decim=4)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'StimID' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
-def SVM_features_stimID_eeg(subject,load_residuals_regression=False):
+def SVM_features_stimID_eeg(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,meg=False)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'StimID', load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],cross_val_func=None,meg=False)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'StimID' + '_EEGONLY_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
-def SVM_features_withinchunk(subject,load_residuals_regression=False):
+def SVM_features_withinchunk(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=load_residuals_regression, list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=load_residuals_regression, list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'WithinChunkPosition' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
-def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regression=False):
+def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
     score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=load_residuals_regression,list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.train_quads_test_others,balance_features=False)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'WithinChunkPosition_train_Quads_test_others' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
-def SVM_features_withinchunkrev(subject,load_residuals_regression=False):
+def SVM_features_withinchunkrev(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPositionReverse',load_residuals_regression=load_residuals_regression,list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPositionReverse',load_residuals_regression=load_residuals_regression,list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'WithinChunkPositionReverse' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences ? ----
-def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=False):
+def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'OpenedChunks',SVM_dec=SVM_funcs.regression_decoder(),load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out,balance_features=False,distance=False)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'OpenedChunks',SVM_dec=SVM_funcs.regression_decoder(),load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=None,balance_features=False,distance=False)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'Number_Open_Chunks' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences pour chunk opening ? ----
-def SVM_features_chunkBeg(subject,load_residuals_regression=False):
+def SVM_features_chunkBeg(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7],crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'ChunkBeg' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 
 # ----- quelles séquences pour chunk closing ? ----
-def SVM_features_chunkEnd(subject,load_residuals_regression=False):
+def SVM_features_chunkEnd(subject,load_residuals_regression=True):
     if load_residuals_regression:
-        resid_suffix = 'resid_'
+        resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
 
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7], crop = [-0.1,0.4],cross_val_func=SVM_funcs.leave_one_sequence_out)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,list_sequences=[3,4,5,6,7], crop = [-0.1,0.4],cross_val_func=None)
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'ChunkEnd' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
+
+def ord_code_16items(subject,load_residuals_regression=False):
+    SVM_funcs.SVM_ordinal_code_train_quads_test_others(subject, load_residuals_regression=load_residuals_regression)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
