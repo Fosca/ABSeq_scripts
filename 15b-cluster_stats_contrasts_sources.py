@@ -10,11 +10,20 @@ import pickle
 from mne.stats import (spatio_temporal_cluster_1samp_test, summarize_clusters_stc)
 from scipy.signal import savgol_filter
 from scipy.stats import sem
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+# Exclude some subjects
+# config.exclude_subjects.append('sub10-gp_190568')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
 
 analysis_main_name = 'Viol_vs_Stand'  # Viol_vs_Stand
 subjects_list = config.subjects_list
 # subjects_list = [config.subjects_list[i] for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16]]  # only subjects with available sources data
 fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
+
 
 # =========================================================== #
 # Options
@@ -24,7 +33,7 @@ DoROIplots = True
 RunStats = True
 use_baseline = True  # option to apply a baseline to the evokeds before running the contrast/extracting the sources
 lowpass_evoked = True  # option to filter evoked with  30Hz lowpass filter
-resid_epochs = True  # use epochs/evoked created by regressing out surprise effects, instead of original epochs
+resid_epochs = False  # use epochs/evoked created by regressing out surprise effects, instead of original epochs
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
 
@@ -273,9 +282,9 @@ if DoROIplots:
                                                                                  lowpass_evoked=lowpass_evoked, morph_sources=False)
             else:
                 evoked1, stc1 = source_estimation_funcs.load_evoked_with_sources(subject, evoked_filter_name=analysis_name + '_cond1', evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=use_baseline,
-                                                                                 lowpass_evoked=lowpass_evoked, morph_sources=False)
+                                                                                 lowpass_evoked=lowpass_evoked, morph_sources=False, fake_nave=False)
                 evoked2, stc2 = source_estimation_funcs.load_evoked_with_sources(subject, evoked_filter_name=analysis_name + '_cond2', evoked_filter_not=None, evoked_path='evoked_cleaned', apply_baseline=use_baseline,
-                                                                                 lowpass_evoked=lowpass_evoked, morph_sources=False)
+                                                                                 lowpass_evoked=lowpass_evoked, morph_sources=False, fake_nave=False)
             src = mne.read_source_spaces(op.join(config.meg_dir, subject, subject + '_oct6-inv.fif'))
             for label_name in label_names:
                 anat_label = mne.read_labels_from_annot(subject, parc='aparc', subjects_dir=fsMRI_dir, regexp=label_name)[0]
