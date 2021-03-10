@@ -155,6 +155,8 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
         metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
                                                   recompute=True)
         epochs_train.metadata = metadata
+
+    # --- for training: quad sequences without the first 2 and last 2 positions. Bon
     epochs_train = epochs_train["SequenceID == 4 and StimPosition > 2 and StimPosition < 15 and TrialNumber > 10 and ViolationInSequence == 0 "]
     if sliding_window:
         epochs_train = epoching_funcs.sliding_window(epochs_train)

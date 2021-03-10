@@ -408,7 +408,7 @@ def balance_epochs_violation_positions(epochs,balance_param='local_position_sequ
 
     if 'sequence' in balance_param:
         # ------ this enforces that there are the same number of trials per sequence type ----
-        epochs_balanced.events[:, 2] = epochs_balanced.metadata['SequenceID'].values*100 +\
+        epochs_balanced.events[:, 2] = epochs_balanced.metadata['SequenceID'].values*1000 +\
                                        epochs_balanced.metadata['StimPosition'].values*10 + epochs_balanced.metadata['ViolationOrNot'].values
         epochs_balanced.event_id = {'%i' % i: i for i in np.unique(epochs_balanced.events[:,2])}
         epochs_balanced.equalize_event_counts(epochs_balanced.event_id)
