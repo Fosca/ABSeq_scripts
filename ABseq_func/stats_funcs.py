@@ -18,7 +18,10 @@ def run_cluster_permutation_test_1samp(data, ch_type='eeg', nperm=2 ** 12, thres
     # (only valid when using an t-statistic).
 
     # compute connectivity
-    connectivity = mne.channels.find_ch_connectivity(data.info, ch_type=ch_type)[0]
+    if mne.__version__ == '0.22.0':
+        adjacency = mne.channels.find_ch_adjacency(data.info, ch_type=ch_type)[0]
+    else:
+        connectivity = mne.channels.find_ch_connectivity(data.info, ch_type=ch_type)[0]
 
     # subset of the data, as array
     if ch_type == 'eeg':
@@ -30,9 +33,14 @@ def run_cluster_permutation_test_1samp(data, ch_type='eeg', nperm=2 ** 12, thres
     data_array_chtype = np.transpose(np.squeeze(data_array_chtype), (0, 2, 1))  # transpose for clustering
 
     # stat func
-    cluster_stats = permutation_cluster_1samp_test(data_array_chtype, threshold=threshold, n_jobs=n_jobs, verbose=True,
-                                                   tail=tail, n_permutations=nperm, connectivity=connectivity,
-                                                   out_type='indices')
+    if mne.__version__ == '0.22.0':
+        cluster_stats = permutation_cluster_1samp_test(data_array_chtype, threshold=threshold, n_jobs=n_jobs, verbose=True,
+                                                       tail=tail, n_permutations=nperm, adjacency=adjacency,
+                                                       out_type='indices')
+    else:
+        cluster_stats = permutation_cluster_1samp_test(data_array_chtype, threshold=threshold, n_jobs=n_jobs, verbose=True,
+                                                       tail=tail, n_permutations=nperm, connectivity=connectivity,
+                                                       out_type='indices')
     return cluster_stats, data_array_chtype, ch_type
 
 
@@ -176,11 +184,12 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         T_obs_map = cluster_info['T_obs'][cinfo['time_inds'], ...].mean(axis=0)
         mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
         mask[cinfo['channels_cluster'], :] = True
-
         fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-        # image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head',  mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
-        image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
-
+        if (mne.__version__ == '0.22.0') & (ch_type != 'grad'):
+            # issue when plotting grad (pairs) when there is a mask ??!
+            image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head',  mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+        else:
+            image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
         divider = make_axes_locatable(ax_topo)
         # add axes for colorbar
         ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
