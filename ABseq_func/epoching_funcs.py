@@ -376,20 +376,20 @@ def balance_epochs_violation_positions(epochs,balance_param='local_position_sequ
     epochs_all_seq = []
     for seqID in range(1, 8):
         # --- loop across each sequence ---
-        epochs_seq = epochs['SequenceID == "' + str(seqID) + '" and TrialNumber>10'].copy()
-        tmp = epochs_seq['ViolationOrNot == "1"']  # Deviant trials
+        epochs_seq = epochs['SequenceID == ' + str(seqID) + ' and TrialNumber>10'].copy()
+        tmp = epochs_seq['ViolationOrNot == 1']  # Deviant trials
         devpos = np.unique(tmp.metadata.StimPosition)  # Find the position of deviants
 
-        epochs_seq = epochs_seq['StimPosition == "' + str(devpos[0]) +
-                                '" or StimPosition == "' + str(devpos[1]) +
-                                '" or StimPosition == "' + str(devpos[2]) +
-                                '" or StimPosition == "' + str(devpos[3]) + '"']
+        epochs_seq = epochs_seq['StimPosition == ' + str(devpos[0]) +
+                                ' or StimPosition == ' + str(devpos[1]) +
+                                ' or StimPosition == ' + str(devpos[2]) +
+                                ' or StimPosition == ' + str(devpos[3])]
 
-        if 'local' in balance_param :
+        if 'local' in balance_param:
             # ---- we make sure that there are as many standards and violations for a given position ---
             epo = []
             for dev in devpos:
-                epochs_seq_pos = epochs_seq['StimPosition == "' + str(dev)+ '"']
+                epochs_seq_pos = epochs_seq['StimPosition == ' + str(dev)]
                 epochs_seq_pos.events[:,2] = epochs_seq_pos.metadata["ViolationOrNot"].values
                 epochs_seq_pos.event_id = {'standard':0,'violation':1}
                 epochs_seq_pos.equalize_event_counts(epochs_seq_pos.event_id)
