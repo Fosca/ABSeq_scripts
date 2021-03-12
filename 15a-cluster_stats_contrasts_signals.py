@@ -19,8 +19,8 @@ from matplotlib import pyplot as plt
 from importlib import reload
 import pickle
 
-# Exclude some subjects
-config.exclude_subjects.append('sub10-gp_190568')
+# Exclude some subjects ?
+# config.exclude_subjects.append('sub10-gp_190568')
 config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
 config.subjects_list.sort()
 
@@ -31,12 +31,12 @@ cleaned = True  # epochs cleaned with autoreject or not, only when using origina
 resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
 use_balanced_epochs = True  # option to use only standard epochs with positions matched with the positions of deviants
 use_baseline = True  # option to apply a baseline to the evokeds before running the contrast
-lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
+lowpass_epochs = False  # option to filter epochs with  30Hz lowpass filter
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
 DoFirstLevel = True  # To compute the contrasts (delta 2 conditions) and evoked for each subject
-DoSecondLevel = True  # Run the group level statistics
+DoSecondLevel = False  # Run the group level statistics
 # analyses_to_do = ['OddEven', 'PairsOpen', 'PairsClose', 'QuadOpen', 'QuadClose',  'QuadOpenBis', 'QuadCloseBis',
 #                   'ChunkBeginning', 'ChunkBeginningBis', 'RepeatAlter']
 analyses_to_do = ['Viol_vs_Stand']
@@ -146,7 +146,8 @@ if DoFirstLevel:
                     epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                     epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             if use_balanced_epochs:
-                epochs = epoching_funcs.balance_epochs_violation_positions(epochs)
+                epochs = epoching_funcs.balance_epochs_violation_positions(epochs, 'local')
+                print('    ' + str(len(epochs)) + ' epochs remain after balancing')
             if lowpass_epochs:
                 print('Low pass filtering...')
                 epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
@@ -177,8 +178,8 @@ if DoFirstLevel:
             # --- Then each seq
             for seqID in range(1, 8):
                 # Add seqID to the condition filter
-                cond_filters_seq = [cond_filters[0] + ' and SequenceID == "' + str(seqID) + '"',
-                                    cond_filters[1] + ' and SequenceID == "' + str(seqID) + '"']
+                cond_filters_seq = [cond_filters[0] + ' and SequenceID == ' + str(seqID),
+                                    cond_filters[1] + ' and SequenceID == ' + str(seqID)]
                 # Compute evoked
                 if use_baseline:
                     print('Baseline correction...')
