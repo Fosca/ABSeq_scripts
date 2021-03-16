@@ -231,7 +231,7 @@ def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regr
         resid_suffix = 'resid_cv_'
     else:
         resid_suffix='full_data_'
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=load_residuals_regression,list_sequences=[4,5,6],crop = [-0.1,0.4],cross_val_func=SVM_funcs.train_quads_test_others,balance_features=False)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],cross_val_func=SVM_funcs.train_quads_test_others,balance_features=False,filter_from_metadata="StimPosition > 2 and StimPosition < 15")
     save_name = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + 'WithinChunkPosition_train_Quads_test_others' + '_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 

@@ -130,7 +130,7 @@ def train_test_different_blocks(epochs,return_per_seq = False):
         return [np.concatenate(train_inds_fold1),np.concatenate(train_inds_fold2)], [np.concatenate(test_inds_fold1),np.concatenate(test_inds_fold2)]
 
 
-def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=False, SVM_dec=SVM_decoder(),decim=1,sliding_window=True,crop=[0.1,0.3]):
+def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=False, SVM_dec=SVM_decoder(),decim=1,sliding_window=True,crop=[0.1,0.3],dobaseline=True):
     """
     Train on the quads sequences (trials coming from the standards of the  test part), remove the first, second, 15th and 16th item of quads.
     Test on all the other sequences. It makes especially sense for 2 pairs, shrink, complex
@@ -155,6 +155,11 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
         metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
                                                   recompute=True)
         epochs_train.metadata = metadata
+
+    if dobaseline:
+        print("--- we baselined the data from %i ms to 0 ----"%(int(epochs_train.tmin*1000)))
+        epochs_train.apply_baseline()
+        suffix += 'baselined_training_'
 
     # --- for training: quad sequences without the first 2 and last 2 positions. Bon
     epochs_train = epochs_train["SequenceID == 4 and StimPosition > 2 and StimPosition < 15 and TrialNumber > 10 and ViolationInSequence == 0 "]
