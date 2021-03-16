@@ -4,7 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
-# cluster_funcs.create_qsub('ord_code_16items', 'ord_16', 'ord_16', queue='Nspin_bigM')
+cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_generate_all_sequences', 'all', 'all', queue='Nspin_bigM')

@@ -210,10 +210,10 @@ def SVM_features_stimID_eeg(subject,load_residuals_regression=True):
 
 def SVM_quad_ordpos(subject):
 
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=True, list_sequences=[4],crop = [-0.1,0.4],cross_val_func=None)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=True, list_sequences=[4],crop = [-0.1,0.4],cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15")
     save_name = config.SVM_path + subject + '/feature_decoding/' + 'resid_'+ 'WithinChunkPosition' + '_quads_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
-    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=False, list_sequences=[4],crop = [-0.1,0.4],cross_val_func=None)
+    score, distance, times = SVM_funcs.SVM_decode_feature(subject, 'WithinChunkPosition',load_residuals_regression=False, list_sequences=[4],crop = [-0.1,0.4],cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15")
     save_name = config.SVM_path + subject + '/feature_decoding/' + 'full_data_'+ 'WithinChunkPosition' + '_quads_score_dict.npy'
     np.save(save_name, {'score': score, 'times': times, 'distance':distance})
 

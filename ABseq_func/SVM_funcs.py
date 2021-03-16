@@ -198,7 +198,7 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
                        list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
-                       balance_features=True, meg=True, eeg=True, distance=True):
+                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None):
 
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
@@ -240,6 +240,8 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
 
     # We remove the habituation trials
     epochs = epochs["TrialNumber>10 and ViolationOrNot == 0"]
+    if filter_from_metadata is not None:
+        epochs = epochs[filter_from_metadata]
     # remove the stim channel from decoding
     epochs.pick_types(meg=meg, eeg=eeg, stim=False)
 
