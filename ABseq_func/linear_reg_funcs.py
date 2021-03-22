@@ -11,6 +11,11 @@ import numpy as np
 import config
 from ABseq_func import *
 from sklearn.preprocessing import scale
+import os
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import r2_score
+from sklearn import linear_model
+
 
 def run_linear_regression(subject, cleaned=True):
 
@@ -161,20 +166,60 @@ def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False, cross_val
 
    # ============== define the output paths ======
 
+   out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
+   if with_complexity:
+       out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity_complexity',
+                          subject)
+   utils.create_folder(out_path)
 
-    # Save surprise regression results
-    out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
-    if with_complexity:
-        out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity_complexity', subject)
 
-    utils.create_folder(out_path)
-    lin_reg['Intercept'].beta.save(op.join(out_path, 'beta_intercept-ave.fif'))
-    lin_reg['surprise_299'].beta.save(op.join(out_path, 'beta_surpriseN-ave.fif'))
-    lin_reg['Surprisenp1'].beta.save(op.join(out_path, 'beta_surpriseNp1-ave.fif'))
-    lin_reg['RepeatAlternp1'].beta.save(op.join(out_path, 'beta_RepeatAlternp1-ave.fif'))
-    lin_reg['RepeatAlter'].beta.save(op.join(out_path, 'beta_RepeatAlter-ave.fif'))
-    if with_complexity:
-        lin_reg['Complexity'].beta.save(op.join(out_path, 'beta_Complexity-ave.fif'))
+   # ------------------- implementing the 4 folds CV -----------------
+
+   if cross_validate:
+       from sklearn.model_selection import StratifiedKFold
+       skf = StratifiedKFold(n_splits=4)
+       y_balancing = epochs.metadata["SequenceID"].values*100+epochs.metadata["StimPosition"].values
+
+       Intercept = []
+       surprise_299 = []
+       Surprisenp1 = []
+       RepeatAlternp1 = []
+       RepeatAlter = []
+       Complexity = []
+
+       for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
+           print("======= running a new fold =======")
+           lin_reg_cv = linear_regression(epochs[train_index], epochs[train_index].metadata[names], names=names)
+           # score with cross validation
+           Intercept.append(lin_reg_cv['Intercept'].beta)
+           surprise_299.append(lin_reg_cv['surprise_299'].beta)
+           Surprisenp1.append(lin_reg_cv['Surprisenp1'].beta)
+           RepeatAlternp1.append(lin_reg_cv['RepeatAlternp1'].beta)
+           RepeatAlter.append(lin_reg_cv['RepeatAlter'].beta)
+           if with_complexity:
+               Complexity.append(lin_reg_cv['Complexity'].beta)
+       lin_reg_cv['Intercept'].beta = np.asarray(np.mean(Intercept,axis=0))
+       lin_reg_cv['surprise_299'].beta = np.asarray(np.mean(surprise_299,axis=0))
+       lin_reg_cv['Surprisenp1'].beta = np.asarray(np.mean(Surprisenp1,axis=0))
+       lin_reg_cv['RepeatAlternp1'].beta = np.asarray(np.mean(RepeatAlternp1,axis=0))
+       lin_reg_cv['RepeatAlter'].beta = np.asarray(np.mean(RepeatAlter,axis=0))
+       if with_complexity:
+           lin_reg_cv['Complexity'].beta = np.asarray(np.mean(Complexity, axis=0))
+       lin_reg = lin_reg_cv
+
+   # ------ end of the CV option -------
+
+   else:
+       lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
+       # Save surprise regression results
+
+   lin_reg['Intercept'].beta.save(op.join(out_path, 'beta_intercept-ave.fif'))
+   lin_reg['surprise_299'].beta.save(op.join(out_path, 'beta_surpriseN-ave.fif'))
+   lin_reg['Surprisenp1'].beta.save(op.join(out_path, 'beta_surpriseNp1-ave.fif'))
+   lin_reg['RepeatAlternp1'].beta.save(op.join(out_path, 'beta_RepeatAlternp1-ave.fif'))
+   lin_reg['RepeatAlter'].beta.save(op.join(out_path, 'beta_RepeatAlter-ave.fif'))
+   if with_complexity:
+       lin_reg['Complexity'].beta.save(op.join(out_path, 'beta_Complexity-ave.fif'))
 
    # save the residuals epoch in the same folder
 
@@ -207,4 +252,139 @@ def repeat_alternate_from_metadata(metadata):
 
     metadata["RepeatAlter"] = np.asarray(ra)
     return metadata
+
+
+def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
+
+    # remove old files
+    meg_subject_dir = op.join(config.meg_dir, subject)
+    metadata_path = op.join(meg_subject_dir, 'metadata_item.pkl')
+    if op.exists(metadata_path):
+        os.remove(metadata_path)
+    metadata_path = op.join(meg_subject_dir, 'metadata_item_clean.pkl')
+    if op.exists(metadata_path):
+        os.remove(metadata_path)
+
+    list_omegas = np.logspace(-1, 2, 50)
+    TP_funcs.from_epochs_to_surprise(subject, list_omegas)
+    TP_funcs.append_surprise_to_metadata_clean(subject)
+
+
+    # =========== correction of the metadata with the surprise for the clean epochs ============
+    # TP_funcs.append_surprise_to_metadata_clean(subject)  # already done above
+
+    # ====== load the data , remove the first item for which the surprise is not computed ==========
+    epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
+    metadata = epoching_funcs.update_metadata(subject, clean=True, new_field_name=None, new_field_values=None)
+    metadata["surprise_100"] = metadata["surprise_100.00000"]  # "rename" the variable
+    # metadata.to_csv(r'tmp.csv')
+
+    # ============ build the repeatAlter and the surprise 100 for n+1 ==================
+    metadata_notclean = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    metadata_notclean["surprise_100"] = metadata_notclean["surprise_100.00000"]  # "rename" the variable
+    RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
+    RepeatAlternp1_notclean.append(np.nan)
+    Surprisenp1_notclean = metadata_notclean["surprise_100"].values[1:].tolist()
+    Surprisenp1_notclean.append(np.nan)
+    good_idx = np.where([len(epochs.drop_log[i]) == 0 for i in range(len(epochs.drop_log))])[0]
+    RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[good_idx]
+    Surprisenp1 = np.asarray(Surprisenp1_notclean)[good_idx]
+    # ======================================================================================
+
+    metadata = metadata.assign(Intercept=1)  # Add an intercept for later
+    metadata = metadata.assign(RepeatAlternp1=RepeatAlternp1)
+    metadata = metadata.assign(Surprisenp1=Surprisenp1)  # Add an intercept for later
+
+    epochs.metadata = metadata
+    epochs.pick_types(meg=True, eeg=True)
+
+    # np.unique(metadata[np.isnan(epochs.metadata['RepeatAlter'])]['StimPosition'].values)
+    # np.unique(metadata[np.isnan(epochs.metadata['surprise_100'])]['StimPosition'].values)
+    # np.unique(metadata[np.isnan(metadata['RepeatAlternp1'])]['StimPosition'].values)
+    # np.unique(metadata[np.isnan(metadata['Surprisenp1'])]['StimPosition'].values)
+
+    epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_100"].values))[0]]
+    epochs = epochs[np.where(1 - np.isnan(epochs.metadata["RepeatAlternp1"].values))[0]]
+
+    # =============== define the regressors =================
+    # Repetition and alternation for n (not defined for the 1st item of the 16)
+    # Repetition and alternation for n+1 (not defined for the last item of the 16)
+    # Omega infinity for n (not defined for the 1st item of the 16)
+    # Omega infinity for n+1 (not defined for the last item of the 16)
+
+    names = ["Intercept", "surprise_100", "Surprisenp1", "RepeatAlter", "RepeatAlternp1"]
+    for name in names:
+        print(name)
+        print(np.unique(epochs.metadata[name].values))
+
+    # ====== normalization ? ====== #
+    for name in names[1:]:  # all but intercept
+        epochs.metadata[name] = scale(epochs.metadata[name])
+
+    # ====== baseline correction ? ====== #
+    print('Baseline correction...')
+    epochs = epochs.apply_baseline(baseline=(-0.050, 0))
+
+    lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
+
+    if cross_validate:
+       #  ---- we replace the data in lin_reg ----
+
+       skf = StratifiedKFold(n_splits=4)
+       y_balancing = epochs.metadata["SequenceID"].values*100+epochs.metadata["StimPosition"].values
+
+       betas = []
+       scores = []
+
+       for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
+           print("======= running a new fold =======")
+           preds_matrix = np.asarray(epochs[train_index].metadata[names].values)
+           betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
+           scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
+           for tt in range(epochs.get_data().shape[2]):
+               print(tt)
+               reg = linear_model.LinearRegression()
+               data_train = epochs[train_index].get_data()
+               data_test = epochs[test_index].get_data()
+               reg.fit(y = data_train[:,:,tt], X = preds_matrix)
+               betas_matrix[:,:,tt] = reg.coef_.T
+               y_preds = reg.predict(np.asarray(epochs[test_index].metadata[names].values))
+               scores_cv[:,tt] = r2_score(data_test[:,:,tt],y_pred = y_preds)
+           betas.append(betas_matrix)
+           scores.append(scores_cv)
+
+
+       betas = np.mean(betas,axis=0)
+       scores = np.mean(scores,axis=0)
+       lin_reg['Intercept'].beta = np.asarray(betas[0,:,:])
+       lin_reg['surprise_100'].beta = np.asarray(betas[1,:,:])
+       lin_reg['Surprisenp1'].beta = np.asarray(betas[2,:,:])
+       lin_reg['RepeatAlternp1'].beta = np.asarray(betas[3,:,:])
+       lin_reg['RepeatAlter'].beta = np.asarray(betas[4,:,:])
+
+    # Save surprise regression results
+    out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
+    utils.create_folder(out_path)
+    lin_reg['Intercept'].beta.save(op.join(out_path, 'beta_intercept-ave.fif'))
+    lin_reg['surprise_100'].beta.save(op.join(out_path, 'beta_surpriseN-ave.fif'))
+    lin_reg['Surprisenp1'].beta.save(op.join(out_path, 'beta_surpriseNp1-ave.fif'))
+    lin_reg['RepeatAlternp1'].beta.save(op.join(out_path, 'beta_RepeatAlternp1-ave.fif'))
+    lin_reg['RepeatAlter'].beta.save(op.join(out_path, 'beta_RepeatAlter-ave.fif'))
+
+    if cross_validate:
+        np.save(op.join(out_path, 'scores_linear_reg_CV.npy'),scores)
+    # save the residuals epoch in the same folder
+
+    residuals = epochs.get_data() - lin_reg['Intercept'].beta.data
+    for nn in ["surprise_100", "Surprisenp1", "RepeatAlter", "RepeatAlternp1"]:
+        residuals = residuals - np.asarray([epochs.metadata[nn].values[i] * lin_reg[nn].beta._data for i in range(len(epochs))])
+
+    residual_epochs = epochs.copy()
+    residual_epochs._data = residuals
+
+    # save the residuals epoch in the same folder
+    residual_epochs.save(out_path + op.sep + 'residuals-epo.fif', overwrite=True)
+
+    evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
+
 
