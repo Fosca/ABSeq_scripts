@@ -1,19 +1,15 @@
 # This module contains all the functions related to the linear regression analyses
 from __future__ import division
-import mne
-from ABseq_func import *
-import config
-from mne.stats import linear_regression, fdr_correction, bonferroni_correction
-from mne.viz import plot_compare_evokeds
-from mne.parallel import parallel_func
-import os.path as op
-import pandas as pd
-import numpy as np
-from matplotlib import pyplot as plt
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 from scipy.io import loadmat
-import pickle
-from importlib import reload
-from scipy.stats import sem
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
+import os.path as op
+import numpy as np
+import config
+from ABseq_func import *
 from sklearn.preprocessing import scale
 
 def run_linear_regression(subject, cleaned=True):
@@ -116,55 +112,54 @@ def run_linear_regression_v2(analysis_name, regressor_names, subject, cleaned=Tr
     # OpenedChunks[0].plot_joint()
     # plt.close('all')
 
+def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False, cross_validate=True):
 
-def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False):
+   TP_funcs.append_surprise_to_metadata_clean(subject)
 
-    TP_funcs.append_surprise_to_metadata_clean(subject)
+   # ====== load the data , remove the first item for which the surprise is not computed ==========
+   epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
+   metadata = epoching_funcs.update_metadata(subject, clean=True, new_field_name=None, new_field_values=None)
 
-    # ====== load the data , remove the first item for which the surprise is not computed ==========
-    epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
-    metadata = epoching_funcs.update_metadata(subject, clean=True, new_field_name=None, new_field_values=None)
+   # ============ build the repeatAlter and the surprise 299 for n+1 ==================
+   metadata_notclean = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
 
-    # ============ build the repeatAlter and the surprise 299 for n+1 ==================
-    metadata_notclean = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+   # ====== attention il faut que je code à la main la présence de répétition ou d'alternance ===========
 
-    # ====== attention il faut que je code à la main la présence de répétition ou d'alternance ===========
-
-    metadata_notclean = repeat_alternate_from_metadata(metadata_notclean)
-    RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
-    RepeatAlternp1_notclean.append(np.nan)
-    Surprisenp1_notclean = metadata_notclean["surprise_299"].values[1:].tolist()
-    Surprisenp1_notclean.append(np.nan)
-    good_idx = np.where([len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))])[0]
-    RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[good_idx]
-    Surprisenp1= np.asarray(Surprisenp1_notclean)[good_idx]
-    # ======================================================================================
+   metadata_notclean = repeat_alternate_from_metadata(metadata_notclean)
+   RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
+   RepeatAlternp1_notclean.append(np.nan)
+   Surprisenp1_notclean = metadata_notclean["surprise_299"].values[1:].tolist()
+   Surprisenp1_notclean.append(np.nan)
+   good_idx = np.where([len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))])[0]
+   RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[good_idx]
+   Surprisenp1= np.asarray(Surprisenp1_notclean)[good_idx]
+   # ======================================================================================
 
 
-    metadata = metadata.assign(Intercept=1)  # Add an intercept for later
-    metadata = metadata.assign(RepeatAlternp1=RepeatAlternp1)
-    metadata = metadata.assign(Surprisenp1=Surprisenp1)  # Add an intercept for later
+   metadata = metadata.assign(Intercept=1)  # Add an intercept for later
+   metadata = metadata.assign(RepeatAlternp1=RepeatAlternp1)
+   metadata = metadata.assign(Surprisenp1=Surprisenp1)  # Add an intercept for later
 
-    epochs.metadata = metadata
-    epochs.pick_types(meg=True, eeg=True)
+   epochs.metadata = metadata
+   epochs.pick_types(meg=True, eeg=True)
 
-    epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_299"].values))[0]]
-    epochs = epochs[np.where(1 - np.isnan(epochs.metadata["RepeatAlternp1"].values))[0]]
+   epochs = epochs[np.where(1 - np.isnan(epochs.metadata["surprise_299"].values))[0]]
+   epochs = epochs[np.where(1 - np.isnan(epochs.metadata["RepeatAlternp1"].values))[0]]
 
-    # =============== define the regressors =================
-    # Repetition and alternation for n (not defined for the 1st item of the 16)
-    # Repetition and alternation for n+1 (not defined for the last item of the 16)
-    # Omega infinity for n (not defined for the 1st item of the 16)
-    # Omega infinity for n+1 (not defined for the last item of the 16)
+   # =============== define the regressors =================
+   # Repetition and alternation for n (not defined for the 1st item of the 16)
+   # Repetition and alternation for n+1 (not defined for the last item of the 16)
+   # Omega infinity for n (not defined for the 1st item of the 16)
+   # Omega infinity for n+1 (not defined for the last item of the 16)
 
-    names = ["Intercept", "surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]
-    if with_complexity:
-        names.append("Complexity")
-    for name in names:
-        print(name)
-        print(np.unique(epochs.metadata[name].values))
+   names = ["Intercept", "surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]
+   if with_complexity:
+       names.append("Complexity")
+   for name in names:
+       print(name)
+       print(np.unique(epochs.metadata[name].values))
 
-    lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
+   # ============== define the output paths ======
 
 
     # Save surprise regression results
@@ -181,21 +176,21 @@ def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False):
     if with_complexity:
         lin_reg['Complexity'].beta.save(op.join(out_path, 'beta_Complexity-ave.fif'))
 
-    # save the residuals epoch in the same folder
+   # save the residuals epoch in the same folder
 
-    residuals = epochs.get_data()-lin_reg['Intercept'].beta.data
-    for nn in ["surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]:
-        residuals = residuals - np.asarray([epochs.metadata[nn].values[i]*lin_reg[nn].beta._data for i in range(len(epochs))])
-    if with_complexity:
-        residuals = residuals - np.asarray([epochs.metadata["Complexity"].values[i]*lin_reg["Complexity"].beta._data for i in range(len(epochs))])
+   residuals = epochs.get_data()-lin_reg['Intercept'].beta.data
+   for nn in ["surprise_299","Surprisenp1","RepeatAlter","RepeatAlternp1"]:
+       residuals = residuals - np.asarray([epochs.metadata[nn].values[i]*lin_reg[nn].beta._data for i in range(len(epochs))])
+   if with_complexity:
+       residuals = residuals - np.asarray([epochs.metadata["Complexity"].values[i]*lin_reg["Complexity"].beta._data for i in range(len(epochs))])
 
-    residual_epochs = epochs.copy()
-    residual_epochs._data = residuals
+   residual_epochs = epochs.copy()
+   residual_epochs._data = residuals
 
-    # save the residuals epoch in the same folder
-    residual_epochs.save(out_path+op.sep+'residuals-epo.fif', overwrite=True)
+   # save the residuals epoch in the same folder
+   residual_epochs.save(out_path+op.sep+'residuals-epo.fif', overwrite=True)
 
-    return True
+   return True
 
 
 def repeat_alternate_from_metadata(metadata):

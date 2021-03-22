@@ -310,9 +310,9 @@ def surprise_omegas_analysis(subject):
     # TP_funcs.regress_out_optimal_omega_per_channel(subject)
 
 
-def simplified_linear_regression(subject):
+def simplified_linear_regression_latest(subject):
     from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject)
+    linear_reg_funcs.run_linear_reg_surprise_repeat_alt_latest(subject)
 
 
 def simplified_with_complexity(subject):
