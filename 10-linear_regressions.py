@@ -40,21 +40,25 @@ print('############------- Running analysis with ' + str(len(config.subjects_lis
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'StandMultiStructure'
-names = ['StimID', 'ChunkBeginning', 'ChunkEnd', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
-# names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
-exclude_Repeat_and_Alternate = True
+analysis_name = 'StandComplexity'
+# names = ['StimID', 'ChunkBeginning', 'ChunkEnd', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
+exclude_Repeat_and_Alternate = False
+cross_validate = True
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
+resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
 use_baseline = True  # apply baseline to the epochs before running the regression
 lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
+suffix = ''
+if cross_validate:
+    suffix = 'cv_'
 Do3Dplot = True
 RunStats = True
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
-DoFirstLevel = False  # To compute the regression and evoked for each subject
-DoSecondLevel = True  # Run the group level statistics
+DoFirstLevel = True  # To compute the regression and evoked for each subject
+DoSecondLevel = False  # Run the group level statistics
 
 # Filter (for each analysis_name) to keep or exclude some epochs
 filters = dict()
@@ -92,7 +96,7 @@ if DoFirstLevel:
         # Load epochs data (& update metadata in case new things were added)
         if resid_epochs and resid_epochs_type == 'reg_repeataltern_surpriseOmegainfinity':
             resid_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
-            fname_in = op.join(resid_path, 'residuals-epo.fif')
+            fname_in = op.join(resid_path, suffix + 'residuals-epo.fif')
             print("Input: ", fname_in)
             epochs = mne.read_epochs(fname_in, preload=True)
         elif resid_epochs:
@@ -215,9 +219,48 @@ if DoFirstLevel:
         regressors_names = ["Intercept"] + names
         res = linear_regression(epochs, epochs.metadata[regressors_names], names=regressors_names)
 
+        if cross_validate:
+            skf = StratifiedKFold(n_splits=4)
+            y_balancing = epochs.metadata["SequenceID"].values * 100 + epochs.metadata["StimPosition"].values
+
+            betas = []
+            scores = []
+
+            fold_number = 1
+            for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
+                print("======= running a new fold =======")
+
+                # predictor matrix
+                preds_matrix_train = np.asarray(epochs[train_index].metadata[regressors_names].values)
+                preds_matrix_test = np.asarray(epochs[test_index].metadata[regressors_names].values)
+                betas_matrix = np.zeros((len(regressors_names), epochs.get_data().shape[1], epochs.get_data().shape[2]))
+                scores_cv = np.zeros((epochs.get_data().shape[1], epochs.get_data().shape[2]))
+
+                for tt in range(epochs.get_data().shape[2]):
+                    # for each time-point, we run a regression for each channel
+                    reg = linear_model.LinearRegression()
+                    data_train = epochs[train_index].get_data()
+                    data_test = epochs[test_index].get_data()
+
+                    reg.fit(y=data_train[:, :, tt], X=preds_matrix_train)
+                    betas_matrix[:, :, tt] = reg.coef_.T
+                    y_preds = reg.predict(preds_matrix_test)
+                    scores_cv[:, tt] = r2_score(y_true=data_test[:, :, tt], y_pred=y_preds)
+
+                betas.append(betas_matrix)
+                scores.append(scores_cv)
+                fold_number += 1
+
+            # MEAN ACROSS CROSS-VALIDATION FOLDS
+            betas = np.mean(betas, axis=0)
+            scores = np.mean(scores, axis=0)
+
+            for ii, name_reg in enumerate(regressors_names):
+                res[name_reg].beta._data = np.asarray(betas[ii, :, :])
+
         # Save regression results
         for name in regressors_names:
-            res[name].beta.save(op.join(sub_results_path, name + '.fif'))
+            res[name].beta.save(op.join(sub_results_path, suffix + name + '.fif'))
 
         # ===== create evoked for each level of each regressor ===== #
         path_evo = op.join(config.meg_dir, subject, 'evoked')

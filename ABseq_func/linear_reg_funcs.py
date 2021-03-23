@@ -348,7 +348,7 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
             preds_matrix_test = np.asarray(epochs[test_index].metadata[names].values)
             betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
             scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
-
+            residuals_cv = np.zeros(epochs[test_index].get_data().shape)
             for tt in range(epochs.get_data().shape[2]):
                 # for each time-point, we run a regression for each channel
                 reg = linear_model.LinearRegression()
@@ -362,10 +362,10 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
 
                 # build the residuals by removing the betas computed on the training set to the data from the testing set
 
-                residuals_cv = data_test - y_preds
-                residual_epochs_cv = epochs[test_index].copy()
-                residual_epochs_cv._data = residuals_cv
-                residual_epochs_cv.save(out_path + op.sep + 'fold_' + str(fold_number) + 'residuals-epo.fif', overwrite=True)
+                residuals_cv[:,:,tt] = data_test[:,:,tt] - y_preds
+            residual_epochs_cv = epochs[test_index].copy()
+            residual_epochs_cv._data = residuals_cv
+            residual_epochs_cv.save(out_path + op.sep + 'fold_' + str(fold_number) + 'residuals-epo.fif', overwrite=True)
 
             betas.append(betas_matrix)
             scores.append(scores_cv)
