@@ -326,47 +326,63 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
     epochs = epochs.apply_baseline(baseline=(-0.050, 0))
 
     lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
+    out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
+    utils.create_folder(out_path)
 
     suffix = ''
     if cross_validate:
-       #  ---- we replace the data in lin_reg ----
-       suffix = '_cv'
-       skf = StratifiedKFold(n_splits=4)
-       y_balancing = epochs.metadata["SequenceID"].values*100+epochs.metadata["StimPosition"].values
+        #  ---- we replace the data in lin_reg ----
+        suffix = '_cv'
+        skf = StratifiedKFold(n_splits=4)
+        y_balancing = epochs.metadata["SequenceID"].values*100+epochs.metadata["StimPosition"].values
 
-       betas = []
-       scores = []
+        betas = []
+        scores = []
 
-       for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
-           print("======= running a new fold =======")
-           preds_matrix = np.asarray(epochs[train_index].metadata[names].values)
-           betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
-           scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
-           # for tt in range(5):
-           for tt in range(epochs.get_data().shape[2]):
-               print(tt)
-               reg = linear_model.LinearRegression()
-               data_train = epochs[train_index].get_data()
-               data_test = epochs[test_index].get_data()
-               reg.fit(y = data_train[:,:,tt], X = preds_matrix)
-               betas_matrix[:,:,tt] = reg.coef_.T
-               y_preds = reg.predict(np.asarray(epochs[test_index].metadata[names].values))
-               scores_cv[:,tt] = r2_score(data_test[:,:,tt],y_pred = y_preds)
-           betas.append(betas_matrix)
-           scores.append(scores_cv)
+        fold_number = 1
+        for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
+            print("======= running a new fold =======")
 
+            # predictor matrix
+            preds_matrix_train = np.asarray(epochs[train_index].metadata[names].values)
+            preds_matrix_test = np.asarray(epochs[test_index].metadata[names].values)
+            betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
+            scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
 
-       betas = np.mean(betas,axis=0)
-       scores = np.mean(scores,axis=0)
-       lin_reg['Intercept'].beta._data = np.asarray(betas[0,:,:])
-       lin_reg['surprise_100'].beta._data = np.asarray(betas[1,:,:])
-       lin_reg['Surprisenp1'].beta._data = np.asarray(betas[2,:,:])
-       lin_reg['RepeatAlternp1'].beta._data = np.asarray(betas[3,:,:])
-       lin_reg['RepeatAlter'].beta._data = np.asarray(betas[4,:,:])
+            for tt in range(epochs.get_data().shape[2]):
+                # for each time-point, we run a regression for each channel
+                reg = linear_model.LinearRegression()
+                data_train = epochs[train_index].get_data()
+                data_test = epochs[test_index].get_data()
+
+                reg.fit(y = data_train[:,:,tt], X = preds_matrix_train)
+                betas_matrix[:,:,tt] = reg.coef_.T
+                y_preds = reg.predict(preds_matrix_test)
+                scores_cv[:,tt] = r2_score(y_true = data_test[:,:,tt],y_pred = y_preds)
+
+                # build the residuals by removing the betas computed on the training set to the data from the testing set
+
+                residuals_cv = data_test - y_preds
+                residual_epochs_cv = epochs[test_index].copy()
+                residual_epochs_cv._data = residuals_cv
+                residual_epochs_cv.save(out_path + op.sep + 'fold_' + str(fold_number) + 'residuals-epo.fif', overwrite=True)
+
+            betas.append(betas_matrix)
+            scores.append(scores_cv)
+            fold_number += 1
+
+        # MEAN ACROSS CROSS-VALIDATION FOLDS
+        betas = np.mean(betas,axis=0)
+        scores = np.mean(scores,axis=0)
+
+        lin_reg['Intercept'].beta._data = np.asarray(betas[0,:,:])
+        lin_reg['surprise_100'].beta._data = np.asarray(betas[1,:,:])
+        lin_reg['Surprisenp1'].beta._data = np.asarray(betas[2,:,:])
+        lin_reg['RepeatAlternp1'].beta._data = np.asarray(betas[3,:,:])
+        lin_reg['RepeatAlter'].beta._data = np.asarray(betas[4,:,:])
 
     # Save surprise regression results
-    out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
-    utils.create_folder(out_path)
+
     lin_reg['Intercept'].beta.save(op.join(out_path,suffix+ 'beta_intercept-ave.fif'))
     lin_reg['surprise_100'].beta.save(op.join(out_path,suffix+ 'beta_surpriseN-ave.fif'))
     lin_reg['Surprisenp1'].beta.save(op.join(out_path,suffix+ 'beta_surpriseNp1-ave.fif'))
