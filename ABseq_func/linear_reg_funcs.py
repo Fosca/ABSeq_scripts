@@ -327,9 +327,10 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
 
     lin_reg = linear_regression(epochs, epochs.metadata[names], names=names)
 
+    suffix = ''
     if cross_validate:
        #  ---- we replace the data in lin_reg ----
-
+       suffix = '_cv'
        skf = StratifiedKFold(n_splits=4)
        y_balancing = epochs.metadata["SequenceID"].values*100+epochs.metadata["StimPosition"].values
 
@@ -365,11 +366,11 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
     # Save surprise regression results
     out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
     utils.create_folder(out_path)
-    lin_reg['Intercept'].beta.save(op.join(out_path, 'beta_intercept-ave.fif'))
-    lin_reg['surprise_100'].beta.save(op.join(out_path, 'beta_surpriseN-ave.fif'))
-    lin_reg['Surprisenp1'].beta.save(op.join(out_path, 'beta_surpriseNp1-ave.fif'))
-    lin_reg['RepeatAlternp1'].beta.save(op.join(out_path, 'beta_RepeatAlternp1-ave.fif'))
-    lin_reg['RepeatAlter'].beta.save(op.join(out_path, 'beta_RepeatAlter-ave.fif'))
+    lin_reg['Intercept'].beta.save(op.join(out_path,suffix+ 'beta_intercept-ave.fif'))
+    lin_reg['surprise_100'].beta.save(op.join(out_path,suffix+ 'beta_surpriseN-ave.fif'))
+    lin_reg['Surprisenp1'].beta.save(op.join(out_path,suffix+ 'beta_surpriseNp1-ave.fif'))
+    lin_reg['RepeatAlternp1'].beta.save(op.join(out_path,suffix+ 'beta_RepeatAlternp1-ave.fif'))
+    lin_reg['RepeatAlter'].beta.save(op.join(out_path, suffix+'beta_RepeatAlter-ave.fif'))
 
     if cross_validate:
         np.save(op.join(out_path, 'scores_linear_reg_CV.npy'),scores)
@@ -383,8 +384,8 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
     residual_epochs._data = residuals
 
     # save the residuals epoch in the same folder
-    residual_epochs.save(out_path + op.sep + 'residuals-epo.fif', overwrite=True)
+    residual_epochs.save(out_path + op.sep +suffix+ 'residuals-epo.fif', overwrite=True)
 
-    evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
+    # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
