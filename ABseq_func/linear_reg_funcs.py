@@ -342,6 +342,7 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
            preds_matrix = np.asarray(epochs[train_index].metadata[names].values)
            betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
            scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
+           # for tt in range(5):
            for tt in range(epochs.get_data().shape[2]):
                print(tt)
                reg = linear_model.LinearRegression()
@@ -357,11 +358,11 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
 
        betas = np.mean(betas,axis=0)
        scores = np.mean(scores,axis=0)
-       lin_reg['Intercept'].beta = np.asarray(betas[0,:,:])
-       lin_reg['surprise_100'].beta = np.asarray(betas[1,:,:])
-       lin_reg['Surprisenp1'].beta = np.asarray(betas[2,:,:])
-       lin_reg['RepeatAlternp1'].beta = np.asarray(betas[3,:,:])
-       lin_reg['RepeatAlter'].beta = np.asarray(betas[4,:,:])
+       lin_reg['Intercept'].beta._data = np.asarray(betas[0,:,:])
+       lin_reg['surprise_100'].beta._data = np.asarray(betas[1,:,:])
+       lin_reg['Surprisenp1'].beta._data = np.asarray(betas[2,:,:])
+       lin_reg['RepeatAlternp1'].beta._data = np.asarray(betas[3,:,:])
+       lin_reg['RepeatAlter'].beta._data = np.asarray(betas[4,:,:])
 
     # Save surprise regression results
     out_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
