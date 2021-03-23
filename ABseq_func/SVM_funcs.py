@@ -262,9 +262,10 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
 
     scores = []
     dec = []
-
+    y_tests = []
     if cross_val_func is not None:
         X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
+        y_tests.append(y_test)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
@@ -275,20 +276,26 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         kf = KFold(n_splits=4)
         y = epochs.events[:, 2]
         X = epochs._data
+        nfold = 1
         for train_index, test_index in kf.split(X):
+            print("fold number %i"%nfold)
             print("TRAIN:", train_index, "TEST:", test_index)
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             SVM_dec.fit(X_train, y_train)
             scores.append(SVM_dec.score(X_test, y_test))
+            y_tests.append(y_test)
             if distance:
                 dec.append(SVM_dec.decision_function(X_test))
-
+            nfold += 1
     score = np.mean(scores, axis=0)
-    dec = np.mean(dec, axis=0)
-    times = epochs.times
 
-    return score, dec, times
+    dec = np.vstack(dec)
+    y_tests =  np.vstack(y_tests)
+    times = epochs.times
+    results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
+
+    return results_dict
 
 
 def balance_epochs_for_feature(epochs, feature_name, list_sequences):

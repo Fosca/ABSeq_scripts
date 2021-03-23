@@ -4,7 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('simplified_linear_regression_latest', 'lin_reg', 'lin_reg', queue='Nspin_long')
+# cluster_funcs.create_qsub('simplified_linear_regression_latest', 'lin_reg', 'lin_reg', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
@@ -38,8 +38,8 @@ cluster_funcs.create_qsub('simplified_linear_regression_latest', 'lin_reg', 'lin
 # cluster_funcs.create_qsub('SVM_features_withinchunk_train_quads_test_others', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_features_chunkrev', 'rev', 'rev', queue='Nspin_bigM') # ok
 # cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'OpenPar', 'OpenPar', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_bigM') # ok
-# cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_bigM') # ok
+cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_bigM') # ok
+cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_bigM') # ok
 
 
 
