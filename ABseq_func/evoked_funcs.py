@@ -1132,3 +1132,44 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         plt.close('all')
 
     return figure
+
+
+def average_habituation_7sequences(subject_list):
+    """
+    This function computes the average of the 16 items in the habituation repetitions and plots the 10 different time points (of the average) for each of
+    the 7 sequences.
+    """
+
+    evoked_hab = {'seqID_%i'%i:[] for i in range(1,8)}
+    evoked_avg_hab = {'seqID_%i'%i:[] for i in range(1,8)}
+    gfp_hab_mag =  {'seqID_%i'%i:[] for i in range(1,8)}
+    gfp_hab_grad =  {'seqID_%i'%i:[] for i in range(1,8)}
+    gfp_hab_eeg =  {'seqID_%i'%i:[] for i in range(1,8)}
+
+    for subject in subject_list:
+        print("---- loop for participant %s -----"%subject)
+        epochs = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
+        epochs._data = epochs._data*10**14
+        for seqID in range(1,8):
+            data_hab_subj_seq = []
+            for nhab in range(1,11):
+                epo_nhab = epochs["TrialNumber == %i and SequenceID == %i"%(nhab,seqID)]
+                data_hab_subj_seq.append(np.mean(np.mean(epo_nhab.get_data(),axis=0),axis=-1))
+            data_hab_subj_seq = (np.asarray(data_hab_subj_seq))
+            evoked_hab["seqID_%i"%seqID].append(data_hab_subj_seq)
+
+    np.save(,evoked_hab)
+
+    for seq in evoked_hab.keys():
+        data = np.transpose(evoked_hab[seq],(0,2,1))
+        evoked_avg_hab[seq] = mne.EpochsArray(data,info=epochs.info,tmin=0)
+        gfp_hab_mag[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=False, meg='mag').get_data() ** 2, axis=1)
+        gfp_hab_grad[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=False, meg='grad').get_data() ** 2, axis=1)
+        gfp_hab_eeg[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=True, meg=False).get_data() ** 2, axis=1)
+
+    import matplotlib.pyplot as plt
+    cm = plt.get_cmap('viridis')
+
+    for nn, seq in enumerate(evoked_hab.keys()):
+        GFP_funcs.plot_GFP_with_sem(gfp_hab_mag[seq], times = [i for i in range(10)], color_mean=cm.colors[int((nn/7)*len(cm.colors))], label=None, filter=False)
+        plt.show()

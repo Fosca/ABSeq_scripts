@@ -347,18 +347,19 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
             preds_matrix_train = np.asarray(epochs[train_index].metadata[names].values)
             preds_matrix_test = np.asarray(epochs[test_index].metadata[names].values)
             betas_matrix = np.zeros((len(names),epochs.get_data().shape[1],epochs.get_data().shape[2]))
-            scores_cv = np.zeros((epochs.get_data().shape[1],epochs.get_data().shape[2]))
+            scores_cv = np.zeros((epochs.get_data().shape[2]))
             residuals_cv = np.zeros(epochs[test_index].get_data().shape)
+
             for tt in range(epochs.get_data().shape[2]):
                 # for each time-point, we run a regression for each channel
-                reg = linear_model.LinearRegression()
+                reg = linear_model.LinearRegression(fit_intercept = False)
                 data_train = epochs[train_index].get_data()
                 data_test = epochs[test_index].get_data()
 
                 reg.fit(y = data_train[:,:,tt], X = preds_matrix_train)
                 betas_matrix[:,:,tt] = reg.coef_.T
                 y_preds = reg.predict(preds_matrix_test)
-                scores_cv[:,tt] = r2_score(y_true = data_test[:,:,tt],y_pred = y_preds)
+                scores_cv[tt] = r2_score(y_true = data_test[:,:,tt],y_pred = y_preds)
 
                 # build the residuals by removing the betas computed on the training set to the data from the testing set
 
@@ -378,8 +379,8 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
         lin_reg['Intercept'].beta._data = np.asarray(betas[0,:,:])
         lin_reg['surprise_100'].beta._data = np.asarray(betas[1,:,:])
         lin_reg['Surprisenp1'].beta._data = np.asarray(betas[2,:,:])
-        lin_reg['RepeatAlternp1'].beta._data = np.asarray(betas[3,:,:])
-        lin_reg['RepeatAlter'].beta._data = np.asarray(betas[4,:,:])
+        lin_reg['RepeatAlter'].beta._data = np.asarray(betas[3,:,:])
+        lin_reg['RepeatAlternp1'].beta._data = np.asarray(betas[4,:,:])
 
     # Save surprise regression results
 

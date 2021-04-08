@@ -6,16 +6,26 @@ import pickle
 import numpy as np
 import mne
 
-path_log = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_reject_local_log.obj'
-log = pickle.load(open(path,'rb'))
+path_log_1 = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_eeg_1Hz_reject_local_log.obj'
+log_1 = pickle.load(open(path_log_1,'rb'))
+
+path_log_01 = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_eeg_lfreq_01Hz_reject_local_log.obj'
+log_01 = pickle.load(open(path_log_01,'rb'))
 
 path_epoch = '/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_epo.fif'
 epochs = mne.read_epochs(path_epoch)
-path_epoch_clean = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo.fif"
-epochs_clean = mne.read_epochs(path_epoch_clean)
 
-epochs_rejected_ar = epochs[log.bad_epochs]
-epochs_rejected_ar.average().plot_joint()
+path_epoch_clean_1 = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_eeg_1Hz.fif"
+epochs_clean_1 = mne.read_epochs(path_epoch_clean_1)
+
+path_epoch_clean_01 = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub04-rf_190499/sub04-rf_190499_clean_epo_eeg_lfreq_01Hz.fif"
+epochs_clean_01 = mne.read_epochs(path_epoch_clean_01)
+
+epochs_rejected_ar_1 = epochs[log_1.bad_epochs]
+epochs_rejected_ar_01 = epochs[log_01.bad_epochs]
+
+epochs_rejected_ar_1.average().plot_joint()
+epochs_rejected_ar_01.average().plot_joint()
 
 epochs_clean.average().plot_joint()
 
