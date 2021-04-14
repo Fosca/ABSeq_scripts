@@ -1158,7 +1158,7 @@ def average_habituation_7sequences(subject_list):
             data_hab_subj_seq = (np.asarray(data_hab_subj_seq))
             evoked_hab["seqID_%i"%seqID].append(data_hab_subj_seq)
 
-    np.save(,evoked_hab)
+    # np.save(,evoked_hab)
 
     for seq in evoked_hab.keys():
         data = np.transpose(evoked_hab[seq],(0,2,1))
