@@ -277,7 +277,7 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=True):
 
 def ord_code_16items(subject,load_residuals_regression=False):
     # SVM_funcs.SVM_ordinal_code_train_quads_test_others(subject, load_residuals_regression=load_residuals_regression)
-    SVM_funcs.SVM_ordinal_code_train_test_quads(subject, load_residuals_regression=load_residuals_regression)
+    SVM_funcs.SVM_ordinal_code_train_test_quads(subject)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
