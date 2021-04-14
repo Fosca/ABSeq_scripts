@@ -313,6 +313,9 @@ def convert_csv_info_to_metadata(csv_path):
 
 
 def load_epochs_items(subject, cleaned=True, AR_type='local'):
+
+
+
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     if cleaned:
