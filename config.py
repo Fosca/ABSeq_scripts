@@ -22,6 +22,11 @@ plot = False
 #   When you load the epochs on the sequence items, if tcrop is not None, the epochs will be cropped with tmax = tcrop
 tcrop = 0.5
 
+###################### COMPLEXITY ############################################
+
+complexity = {1:4,2:6,3:6,4:6,5:12,6:14,7:26}
+
+
 ###############################################################################
 # DIRECTORIES
 # -----------
