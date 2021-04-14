@@ -66,6 +66,12 @@ def forward_solution(subject, fsMRI_dir):
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
+    evoked = evoked[0]
+
+    ######### REMOVE EEG (from object used for info) ########
+    # evoked = evoked.pick_types( meg=True, eeg=False, eog=False)
+    #############################
+
     # BEM solution
     fname_bem = op.join(meg_subject_dir, '%s-5120-5120-5120-bem-sol.fif' % subject)
     # Coregistration file
@@ -73,7 +79,7 @@ def forward_solution(subject, fsMRI_dir):
     # Source space
     src = mne.read_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'))
     # Forward solution
-    fwd = mne.make_forward_solution(evoked[0].info, fname_trans, src, fname_bem, mindist=config.mindist)
+    fwd = mne.make_forward_solution(evoked.info, fname_trans, src, fname_bem, mindist=config.mindist)
     extension = '_%s-fwd' % (config.spacing)
     fname_fwd = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     mne.write_forward_solution(fname_fwd, fwd, overwrite=True)
@@ -96,14 +102,30 @@ def compute_noise_cov(subject):
 
     # NOISE COVARIANCE FROM BASELINE OF ALL THE (LONG) EPOCHS
     epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True)
+
+    ######### REMOVE EEG ########
+    # epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
+    #############################
+
+
     if not epochs.baseline:
         print('Epochs were not baseline corrected! Applying (-0.200, 0.0) baseline...')
         epochs = epochs.apply_baseline((-0.200, 0))
     cov = mne.compute_covariance(epochs, tmax=0, method=['empirical', 'shrunk'], rank='info')
-    # To check:
-    # fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
-    # evoked = mne.read_evokeds(fname_evoked)
-    # evoked[0].plot_white(cov)
+
+    # Diagnostic figures:
+    fig_path = op.join(config.fig_path, 'NoiseCov')
+    utils.create_folder(fig_path)
+    fig = epochs.average().plot_white(cov)
+    fig.savefig(op.join(fig_path, subject + '_noisecov_white_fullseq.jpg'), dpi=300)
+    fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
+    evoked = mne.read_evokeds(fname_evoked)
+    fig = evoked[0].plot_white(cov)
+    fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_nobaseline.jpg'), dpi=300)
+    fig = evoked[0].apply_baseline(baseline=(-0.050,0)).plot_white(cov)
+    fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_baseline.jpg'), dpi=300)
+    plt.close('all')
+
     return cov
 
 
@@ -116,12 +138,18 @@ def inverse_operator(subject):
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
+    evoked = evoked[0]
+
+    ######### REMOVE EEG (from object used for info) ########
+    # evoked = evoked.copy().pick_types( meg=True, eeg=False, eog=False)
+    #############################
+
     # Load forward solution
     extension = '_%s-fwd' % (config.spacing)
     fname_fwd = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     forward = mne.read_forward_solution(fname_fwd)
     # Inverse operator
-    inverse_operator = mne.minimum_norm.make_inverse_operator(evoked[0].info, forward, cov, loose=0.2, depth=0.8)
+    inverse_operator = mne.minimum_norm.make_inverse_operator(evoked.info, forward, cov, loose=0.2, depth=0.8)
     extension = '_%s-inv' % (config.spacing)
     fname_inv = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     mne.minimum_norm.write_inverse_operator(fname_inv, inverse_operator)
@@ -138,6 +166,10 @@ def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None, e
     else:
         evoked, path_evo = evoked_funcs.load_evoked(subject=subject, filter_name=evoked_filter_name, filter_not=evoked_filter_not, cleaned=True)
     evoked = evoked[list(evoked.keys())[0]][0]  # first key
+
+    ######### REMOVE EEG ########
+    # evoked = evoked.pick_types(meg=True, eeg=False, eog=False)
+    #############################
 
     # Apply baseline
     if apply_baseline:
