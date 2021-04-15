@@ -20,7 +20,6 @@ from mne.decoding import GeneralizingEstimator
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC, LinearSVR
-from sklearn.model_selection import KFold
 import numpy as np
 import random
 from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
@@ -364,7 +363,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
     else:
-        kf = KFold(n_splits=4)
+        kf = StratifiedKFold(n_splits=4)
         y = epochs.events[:, 2]
         X = epochs._data
         nfold = 1
@@ -389,7 +388,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     return results_dict
 
 
-def balance_epochs_for_feature(epochs, feature_name, list_sequences):
+def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_values = 2):
     # concatenate the epochs belonging to the different sequences from the list_sequences
     epochs_concat1 = []
     # count the number of epochs that contribute per sequence in order later to balance this
@@ -400,10 +399,19 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences):
         filter_epochs = np.where(1 - np.isnan(epo.metadata[feature_name].values))[0]
         epo = epo[filter_epochs]
         epo.events[:, 2] = epo.metadata[feature_name].values
+        n_different_vals = len(np.unique(epo.events[:,2]))
+
+        if n_different_vals != ndifferent_values:
+            raise ValueError("The sequence seqID_%i has %i diffent values of the feature instead of %i. It should not be included in this analysis."%(seqID,n_different_vals,ndifferent_values))
+
         epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
         epo.equalize_event_counts(epo.event_id)
         n_epochs.append(len(epo))
+        print(" ======= BEFORE EQUALIZING THE NUMBER OF EPOCHS COMMING FROM THE DIFFERENT SEQUENCES =====")
         print("---- there are %i epochs that contribute from sequence %i -----" % (len(epo), seqID))
+        for key in epo.event_id.keys():
+            print("There are %i events for the feature value %s"%(len(epo[key]),key))
+        print("")
         epochs_concat1.append(epo)
     # now determine the minimum number of epochs that come from a sequence and append the same number of epochs from each
     # sequence type
@@ -419,6 +427,12 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences):
     else:
         epochs_concat2 = epochs_concat1
     epochs = mne.concatenate_epochs(epochs_concat2)
+
+    print(" ======= AFTER EQUALIZING THE NUMBER OF EPOCHS COMMING FROM THE DIFFERENT SEQUENCES =====")
+    for key in epochs.event_id.keys():
+        print("There are %i events for the feature value %s" % (len(epochs[key]), key))
+    print("")
+
     return epochs
 
 
