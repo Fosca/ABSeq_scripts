@@ -319,3 +319,8 @@ def simplified_linear_regression_latest(subject):
 def simplified_with_complexity(subject):
     from ABseq_func import linear_reg_funcs
     linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject, with_complexity=True)
+
+
+def compute_correlation_stc_complexity(subject):
+    from ABseq_func import stc_funcs
+    stc_funcs.compute_correlation_comp_all_conditions(subject)

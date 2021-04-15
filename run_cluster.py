@@ -4,7 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('ord_code_16items', '16quads', 'quads', queue='Nspin_long')
+cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 'stccorcomp', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
