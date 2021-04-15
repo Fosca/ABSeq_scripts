@@ -192,7 +192,6 @@ def SVM_features_stimID(subject,load_residuals_regression=True,cross_validation 
 
 # ---- repetition or alternation ------
 def SVM_features_repeatalter(subject,load_residuals_regression=True,cross_validation = None):
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
 

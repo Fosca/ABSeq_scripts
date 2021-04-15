@@ -39,7 +39,6 @@ config.subjects_list = ['sub01-pa_190002',
 # ============== GAT decoding Standard // Deviant ===========================
 # ___________________________________________________________________________
 
-
 def results_SVM_standard_deviant(fname,subjects_list):
 
     results = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}

@@ -381,8 +381,8 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             nfold += 1
     score = np.mean(scores, axis=0)
 
-    dec = np.vstack(dec)
-    y_tests =  np.vstack(y_tests)
+    dec = np.concatenate(dec)
+    y_tests =  np.concatenate(y_tests)
     times = epochs.times
     results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
 

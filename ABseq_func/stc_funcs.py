@@ -10,8 +10,6 @@ import pickle
 from scipy.stats import sem, pearsonr
 
 
-
-
 def extract_stc_per_sequence(subject,condition_name="habituation",baseline=True,morph_sources=False):
 
     epochs_items = epoching_funcs.load_epochs_items(subject)
@@ -63,8 +61,6 @@ def extract_stc_per_sequence(subject,condition_name="habituation",baseline=True,
 
     return stcs
 
-
-
 def compute_correlation_with_complexity(subject,condition_name="habituation",baseline=True,morph_sources=False):
 
     stcs = extract_stc_per_sequence(subject,condition_name=condition_name,baseline=baseline,morph_sources=morph_sources)
@@ -83,7 +79,6 @@ def compute_correlation_with_complexity(subject,condition_name="habituation",bas
     stc_correl._data = correl
 
     return stc_correl
-
 
 def compute_correlation_comp_all_conditions(subject,baseline=True, morph_sources=False):
 
