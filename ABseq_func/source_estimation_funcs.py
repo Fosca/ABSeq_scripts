@@ -69,7 +69,7 @@ def forward_solution(subject, fsMRI_dir):
     evoked = evoked[0]
 
     ######### REMOVE EEG (from object used for info) ########
-    # evoked = evoked.pick_types( meg=True, eeg=False, eog=False)
+    evoked = evoked.pick_types( meg=True, eeg=False, eog=False)
     #############################
 
     # BEM solution
@@ -85,7 +85,7 @@ def forward_solution(subject, fsMRI_dir):
     mne.write_forward_solution(fname_fwd, fwd, overwrite=True)
 
 
-def compute_noise_cov(subject):
+def compute_noise_cov(subject, makefigures=True):
     print('Subject ' + subject + ': noise covariance ======================')
 
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -104,7 +104,7 @@ def compute_noise_cov(subject):
     epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True)
 
     ######### REMOVE EEG ########
-    # epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
+    epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
     #############################
 
 
@@ -114,17 +114,18 @@ def compute_noise_cov(subject):
     cov = mne.compute_covariance(epochs, tmax=0, method=['empirical', 'shrunk'], rank='info')
 
     # Diagnostic figures:
-    fig_path = op.join(config.fig_path, 'NoiseCov')
-    utils.create_folder(fig_path)
-    fig = epochs.average().plot_white(cov)
-    fig.savefig(op.join(fig_path, subject + '_noisecov_white_fullseq.jpg'), dpi=300)
-    fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
-    evoked = mne.read_evokeds(fname_evoked)
-    fig = evoked[0].plot_white(cov)
-    fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_nobaseline.jpg'), dpi=300)
-    fig = evoked[0].apply_baseline(baseline=(-0.050,0)).plot_white(cov)
-    fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_baseline.jpg'), dpi=300)
-    plt.close('all')
+    if makefigures:
+        fig_path = op.join(config.fig_path, 'NoiseCov')
+        utils.create_folder(fig_path)
+        fig = epochs.average().plot_white(cov)
+        fig.savefig(op.join(fig_path, subject + '_noisecov_white_fullseq.jpg'), dpi=300)
+        fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
+        evoked = mne.read_evokeds(fname_evoked)
+        fig = evoked[0].plot_white(cov)
+        fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_nobaseline.jpg'), dpi=300)
+        fig = evoked[0].apply_baseline(baseline=(-0.050,0)).plot_white(cov)
+        fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_baseline.jpg'), dpi=300)
+        plt.close('all')
 
     return cov
 
@@ -134,14 +135,14 @@ def inverse_operator(subject):
 
     meg_subject_dir = op.join(config.meg_dir, subject)
     # Noise covariance
-    cov = compute_noise_cov(subject)
+    cov = compute_noise_cov(subject, makefigures=False)
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
     evoked = evoked[0]
 
     ######### REMOVE EEG (from object used for info) ########
-    # evoked = evoked.copy().pick_types( meg=True, eeg=False, eog=False)
+    evoked = evoked.copy().pick_types( meg=True, eeg=False, eog=False)
     #############################
 
     # Load forward solution
@@ -168,7 +169,7 @@ def source_estimates(subject, evoked_filter_name=None, evoked_filter_not=None, e
     evoked = evoked[list(evoked.keys())[0]][0]  # first key
 
     ######### REMOVE EEG ########
-    # evoked = evoked.pick_types(meg=True, eeg=False, eog=False)
+    evoked = evoked.pick_types(meg=True, eeg=False, eog=False)
     #############################
 
     # Apply baseline
@@ -412,6 +413,46 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     # for ax, label in zip(axes, 'AB'):
     #     ax.text(0.03, ax.get_position().ymax, label, transform=fig.transFigure,
     #             fontsize=12, fontweight='bold', va='top', ha='left')
+    fig.savefig(output_file, bbox_inches='tight', dpi=600)
+    print('========> ' + output_file + " saved !")
+    plt.close(fig)
+
+
+def timecourse_source_figure(stc, title, times_to_plot, win_size, output_file):
+    # /!\ we plot the mean between "times_to_plot[i]" and "times_to_plot[i] + win_size" (for i in range(len(times_to_plot)))
+
+    maxval = np.max(stc._data)
+    colorlims = [maxval * .10, maxval * .30, maxval * .80]
+    # plot and screenshot for each timewindow
+    stc_screenshots = []
+    for t in times_to_plot:
+        twin_min = t
+        twin_max = t + win_size
+        stc_timewin = stc.copy()
+        stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+        stc_timewin = stc_timewin.mean()
+        brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
+                                 subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
+                                 colormap='hot', colorbar=False, time_viewer=False)
+        screenshot = brain.screenshot()
+        brain.close()
+        nonwhite_pix = (screenshot != 255).any(-1)
+        nonwhite_row = nonwhite_pix.any(1)
+        nonwhite_col = nonwhite_pix.any(0)
+        cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+        plt.close('all')
+        stc_screenshots.append(cropped_screenshot)
+    # main figure
+    fig, axes = plt.subplots(len(times_to_plot), 1, figsize=(len(times_to_plot) * 1.1, 4))
+    fig.suptitle(title, fontsize=6, fontweight='bold')
+    for idx in range(len(times_to_plot)):
+        axes[idx].imshow(stc_screenshots[idx])
+        axes[idx].axis('off')
+        twin_min = times_to_plot[idx]
+        twin_max = times_to_plot[idx] + win_size
+        axes[idx].set_title('[%d - %d ms]' % (twin_min * 1000, twin_max * 1000), fontsize=3, y=0.8)
+    # tweak margins and spacing
+    fig.subplots_adjust(left=0.1, right=0.9, bottom=0.01, top=0.93, wspace=1, hspace=0.3)
     fig.savefig(output_file, bbox_inches='tight', dpi=600)
     print('========> ' + output_file + " saved !")
     plt.close(fig)
