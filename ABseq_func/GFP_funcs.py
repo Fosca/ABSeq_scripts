@@ -16,15 +16,16 @@ mne.set_log_level(verbose='WARNING')
 
 
 # ______________________________________________________________________________________________________________________
-def gfp_evoked(evoked_list, baseline=None):
+def gfp_evoked(evoked_list, baseline=None,times=None):
     """
     Compute the global field power from the list of the evoked activities evoked_list.
     :param evoked_list: List of evoked activities that may correspond to the different participants.
     :param baseline: Set it to tmin < 0 if you want to baseline the evoked activity from tmin to 0
     :return: Dictionnary that contains the gfp for all the types of sensors, times array
     """
+    if times is None:
+        times = evoked_list[0][0].times
 
-    times = evoked_list[0][0].times
     gfp_eeg_all = []
     gfp_mag_all = []
     gfp_grad_all = []

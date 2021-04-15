@@ -29,7 +29,9 @@ import pandas as pd
 import glob
 import os
 from importlib import reload
-
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import r2_score
+from sklearn import linear_model
 # Exclude some subjects
 config.exclude_subjects.append('sub10-gp_190568')
 config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
@@ -51,7 +53,7 @@ use_baseline = True  # apply baseline to the epochs before running the regressio
 lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
 suffix = ''
 if cross_validate:
-    suffix = 'cv_'
+    suffix = '_cv'
 Do3Dplot = True
 RunStats = True
 if resid_epochs:
@@ -238,7 +240,7 @@ if DoFirstLevel:
 
                 for tt in range(epochs.get_data().shape[2]):
                     # for each time-point, we run a regression for each channel
-                    reg = linear_model.LinearRegression()
+                    reg = linear_model.LinearRegression(fit_intercept=False)
                     data_train = epochs[train_index].get_data()
                     data_test = epochs[test_index].get_data()
 
@@ -255,12 +257,15 @@ if DoFirstLevel:
             betas = np.mean(betas, axis=0)
             scores = np.mean(scores, axis=0)
 
+            np.save(op.join(sub_results_path, suffix + 'score' + '.npy'),scores)
+
             for ii, name_reg in enumerate(regressors_names):
                 res[name_reg].beta._data = np.asarray(betas[ii, :, :])
 
         # Save regression results
         for name in regressors_names:
             res[name].beta.save(op.join(sub_results_path, suffix + name + '.fif'))
+
 
         # ===== create evoked for each level of each regressor ===== #
         path_evo = op.join(config.meg_dir, subject, 'evoked')

@@ -130,6 +130,97 @@ def train_test_different_blocks(epochs,return_per_seq = False):
         return [np.concatenate(train_inds_fold1),np.concatenate(train_inds_fold2)], [np.concatenate(test_inds_fold1),np.concatenate(test_inds_fold2)]
 
 
+
+def SVM_ordinal_code_train_test_quads(subject, SVM_dec=SVM_decoder(),decim=1,sliding_window=True,crop=[0.1,0.3],dobaseline=True):
+    """
+    Train on the quads sequences (trials coming from the standards of the  test part), remove the first, second, 15th and 16th item of quads.
+    Test on all the other sequences. It makes especially sense for 2 pairs, shrink, complex
+    :param subject:
+    :param load_residuals_regression:
+    :param SVM_dec: The classifier type
+    :param decim:
+    :return:
+    """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------- LOAD THE EPOCHS ON SINGLE ITEMS IN ORDER TO TRAIN THE DECODER  ----------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
+    suffix = ''
+
+    epochs_train = epoching_funcs.load_epochs_items(subject, cleaned=False)
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                              recompute=True)
+    epochs_train.metadata = metadata
+
+    if dobaseline:
+        print("--- we baselined the data from %i ms to 0 ----"%(int(epochs_train.tmin*1000)))
+        epochs_train.apply_baseline()
+        suffix += 'baselined_training_'
+
+    # --- for training: quad sequences without the first 2 and last 2 positions. Bon
+    epochs_train = epochs_train["SequenceID == 4 and StimPosition > 2 and StimPosition < 15 and TrialNumber > 10 and ViolationInSequence == 0 "]
+    if sliding_window:
+        epochs_train = epoching_funcs.sliding_window(epochs_train)
+    if decim is not None:
+        epochs_train.decimate(decim)
+
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # ---------------- LOAD THE EPOCHS ON FULL SEQUENCES TO TEST THE DECODER  ------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
+
+    epochs_full = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
+    epochs_full = epochs_full["ViolationInSequence == 0 and TrialNumber > 10"]
+
+    if sliding_window:
+        epochs_full = epoching_funcs.sliding_window(epochs_full)
+
+    folds_CV = train_test_different_blocks(epochs_full, return_per_seq=True)
+    folds_CV = folds_CV[4]
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # ----------------  TRAIN AND TEST DOING CROSS-VALIDATION ACROSS RUNS  ---------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
+
+    proj = []
+
+    for cv in range(2):
+        print(" fitting and scoring the decoder for the fold number %i"%cv)
+
+        # test data : full sequence
+        test_inds =  folds_CV['test'][cv]
+        epochs_full_test = epochs_full[test_inds]
+
+        # find the good params to select the training data that corresponds to the complementary of the test data
+        inds_for_train = folds_CV['train'][cv]
+        epo_train = epochs_full[inds_for_train]
+        epochs_all_train = []
+        for k in range(len(epo_train)):
+            # extract the training run numbers and trial numbers
+            run_k = epo_train[k].metadata["RunNumber"].values
+            trial_k = epo_train[k].metadata["TrialNumber"].values
+            string = "RunNumber == %i and TrialNumber == %i"%(run_k[0],trial_k[0])
+            print(string)
+            epochs_all_train.append(epochs_train[string])
+
+        # concatenate all the training data into one single epoch object
+        epochs_all_train = mne.concatenate_epochs(epochs_all_train)
+        if crop is not None:
+            epochs_all_train.crop(crop[0], crop[1])
+
+        #  fit on the training data
+        SVM_dec.fit(epochs_all_train.get_data(), epochs_all_train.metadata['WithinChunkPosition'].values)
+        # test on the full sequence data
+        proj.append(SVM_dec.decision_function(epochs_full_test.get_data()))
+
+
+    save_path = config.result_path+'/SVM/ordinal_code_16items/'+subject+'/'
+    utils.create_folder(save_path)
+    np.save(save_path+'/'+suffix + 'ordinal_code_quads_tested_quads.npy',{'projection':proj,'times':epochs_full_test.times})
+
+
+
+
 def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=False, SVM_dec=SVM_decoder(),decim=1,sliding_window=True,crop=[0.1,0.3],dobaseline=True):
     """
     Train on the quads sequences (trials coming from the standards of the  test part), remove the first, second, 15th and 16th item of quads.
@@ -2010,3 +2101,29 @@ def compute_regression_complexity_epochs(epochs_name):
         Complexity_coeff.append(coeff_complexity)
 
     return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
+
+
+def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
+                                 , cross_val_func = None,decim=4,filter_from_metadata=None,
+                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True):
+
+    import os.path as op
+
+    if load_residuals_regression:
+        if cross_val_func is None:
+            resid_suffix = 'resid_cv_'
+        else:
+            resid_suffix = 'resid_'
+    else:
+        resid_suffix = 'full_data_'
+
+    save_path = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + feature_name+ '_score_dict.npy'
+    if not op.exists(save_path):
+
+        results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
+                                                   cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
+                                                   list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
+
+        np.save(save_path, results_dict)
+    else:
+        print('This already exists : %s'%save_path)
