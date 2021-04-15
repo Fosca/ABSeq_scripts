@@ -58,7 +58,6 @@ def results_SVM_standard_deviant(fname,subjects_list):
 
     return results, times
 
-<<<<<<< HEAD
 results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
 results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list,clim=None,tail=1)
 
@@ -168,11 +167,12 @@ vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
 
 for residual_analysis in [True]:
     if residual_analysis:
-        suffix = 'resid_cv4_'
+        suffix = 'resid_cv_'
     else:
         suffix = 'full_data_'
     chance = [0.5,0.5,0.25,0.5,0.25,0.25]
-    for ii,name in enumerate(['ChunkBeg_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','RepeatAlter_score_dict','WithinChunkPosition_score_dict']):
+
+    for ii,name in enumerate(['RepeatAlter_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','ChunkBeg_score_dict','WithinChunkPosition_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
         SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
 

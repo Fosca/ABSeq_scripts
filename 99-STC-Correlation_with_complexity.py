@@ -77,6 +77,8 @@ def tvalues_from_stc(stcs_morphed_fsaverage):
     stc_tvalue = stcs_morphed_fsaverage[0].copy()
     stc_tvalue._data = tval_map
 
+    return stc_tvalue
+
 
 whichs = ['correlation_complexity_habituation','correlation_complexity_standard','correlation_complexity_deviant','correlation_complexity_standard_minus_deviant']
 
@@ -108,5 +110,6 @@ for which in whichs:
     output_file_tval = op.join(config.result_path, 'Correlation_complexity',  which+'tvalues_timecourse.png')
     times_to_plot = [.0, .050, .100, .150, .200, .250, .300, .350, .400]
     win_size = .050
-    source_estimation_funcs.timecourse_source_figure(mean_stc, which, times_to_plot, win_size, output_file)
     source_estimation_funcs.timecourse_source_figure(tval_map, which, times_to_plot, win_size, output_file_tval)
+    source_estimation_funcs.timecourse_source_figure(mean_stc, which, times_to_plot, win_size, output_file)
+

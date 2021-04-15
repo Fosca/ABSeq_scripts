@@ -327,7 +327,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         epochs.metadata = metadata
 
 
-    epochs = epoching_funcs.sliding_window(epochs,sliding_window_step=2)
+    epochs = epoching_funcs.sliding_window(epochs,sliding_window_size=100,sliding_window_step=10)
 
     if decim is not None:
         epochs.decimate(decim)
@@ -1981,9 +1981,11 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
 
 
 def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
+
     GAT_all = []
     fig_path = op.join(config.fig_path, 'SVM', folder_name)
     count = 0
+
     for subject in subjects_list:
         count += 1
         SVM_path = op.join(config.SVM_path, subject)
@@ -1993,8 +1995,13 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         times = GAT_results['times']
         GAT_all.append(GAT_results[score_field])
 
+    GAT_all = np.asarray(GAT_all)
+    GAT_all_new = np.zeros((len(subjects_list),GAT_all[0].shape[0],GAT_all[0].shape[1]))
+
+    for subj in range(len(subjects_list)):
+        GAT_all_new[subj,:,:] = GAT_all[subj]
+
     if compute_significance is not None:
-        GAT_all = np.asarray(GAT_all)
         tmin_sig = compute_significance[0]
         tmax_sig = compute_significance[1]
         times_sig = np.where(np.logical_and(times<=tmax_sig,times>tmin_sig))[0]
@@ -2104,7 +2111,7 @@ def compute_regression_complexity_epochs(epochs_name):
 
 
 def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
-                                 , cross_val_func = None,decim=4,filter_from_metadata=None,
+                                 , cross_val_func = None,decim=1,filter_from_metadata=None,
                                  SVM_dec =SVM_decoder(),balance_features=True,distance=True):
 
     import os.path as op
@@ -2118,12 +2125,7 @@ def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=
         resid_suffix = 'full_data_'
 
     save_path = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + feature_name+ '_score_dict.npy'
-    if not op.exists(save_path):
-
-        results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
-                                                   cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
-                                                   list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
-
-        np.save(save_path, results_dict)
-    else:
-        print('This already exists : %s'%save_path)
+    results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
+                                               cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
+                                               list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
+    np.save(save_path, results_dict)
