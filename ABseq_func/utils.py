@@ -24,3 +24,18 @@ def age_participants(subject_list):
         epochs =  ABseq_func.epoching_funcs.load_epochs_items(sub, cleaned=True)
         print(epochs.info['subject_info']['birthday'])
         print("sex %i"%epochs.info['subject_info']['sex'])
+
+
+def is_there_this_file_for_subjects(path,subject_list,filename):
+
+    print("searching for files of the type: %s" %path+'/'+'subject'+filename)
+
+    for subject in subject_list:
+        full_path = path+'/'+subject+filename
+        if os.path.exists(full_path):
+            print("Exists for %s"%subject)
+        else:
+            print("------- Does not exist for %s" % subject)
+
+
+

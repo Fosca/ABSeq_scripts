@@ -2101,3 +2101,29 @@ def compute_regression_complexity_epochs(epochs_name):
         Complexity_coeff.append(coeff_complexity)
 
     return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
+
+
+def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
+                                 , cross_val_func = None,decim=4,filter_from_metadata=None,
+                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True):
+
+    import os.path as op
+
+    if load_residuals_regression:
+        if cross_val_func is None:
+            resid_suffix = 'resid_cv_'
+        else:
+            resid_suffix = 'resid_'
+    else:
+        resid_suffix = 'full_data_'
+
+    save_path = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + feature_name+ '_score_dict.npy'
+    if not op.exists(save_path):
+
+        results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
+                                                   cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
+                                                   list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
+
+        np.save(save_path, results_dict)
+    else:
+        print('This already exists : %s'%save_path)

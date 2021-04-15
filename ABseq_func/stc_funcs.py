@@ -97,14 +97,14 @@ def compute_correlation_comp_all_conditions(subject,baseline=True, morph_sources
     results_path = op.join(config.result_path, 'Correlation_complexity/')
     utils.create_folder(results_path)
 
-    with open(op.join(results_path, subject + '_stc_correl_complexity_habituation.pickle'), 'wb') as f:
+    with open(op.join(results_path, subject + '_stc_correl_complexity.pickle'), 'wb') as f:
         pickle.dump(stc_hab, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(op.join(results_path, subject + '_stc_correl_standard_habituation.pickle'), 'wb') as f:
+    with open(op.join(results_path, subject + '_stc_correl_standard.pickle'), 'wb') as f:
         pickle.dump(stc_standard, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(op.join(results_path, subject + '_stc_correl_deviant_habituation.pickle'), 'wb') as f:
+    with open(op.join(results_path, subject + '_stc_correl_deviant.pickle'), 'wb') as f:
         pickle.dump(stc_deviant, f, pickle.HIGHEST_PROTOCOL)
 
-    with open(op.join(results_path, subject + '_stc_correl_stc_standard_minus_deviant_habituation.pickle'), 'wb') as f:
+    with open(op.join(results_path, subject + '_stc_correl_stc_standard_minus_deviant.pickle'), 'wb') as f:
         pickle.dump(stc_standard_minus_deviant, f, pickle.HIGHEST_PROTOCOL)

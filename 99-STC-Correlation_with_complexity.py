@@ -13,22 +13,23 @@ config.exclude_subjects.append('sub08-cc_150418')
 config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
 config.subjects_list.sort()
 
+def load_correl(subject,condition_name):
 
+    results_path = op.join(config.result_path, 'Correlation_complexity/')
+    with open(op.join(results_path, subject + '_stc_correl_'+condition_name+'.pickle'), 'rb') as f:
+        stc = pickle.load(f)
 
-results_path = op.join(config.result_path, 'Correlation_complexity')
-utils.create_folder(results_path)
+    return stc
 
 correl_hab = []
 correl_standard = []
 correl_deviant = []
 correl_standard_minus_deviant = []
-
-for subject in subjects_list:
-    correl_standard_minus_deviant_subj = compute_correlation_with_complexity(subject, condition_name="standard_minus_deviant", baseline=True, morph_sources=False)
-
-    correl_hab_subj = compute_correlation_with_complexity(subject, condition_name="habituation", baseline=True, morph_sources=False)
-    correl_standard_subj = compute_correlation_with_complexity(subject, condition_name="standard", baseline=True, morph_sources=False)
-    correl_deviant_subj = compute_correlation_with_complexity(subject, condition_name="deviant", baseline=True, morph_sources=False)
+for subject in config.subjects_list:
+    correl_standard_minus_deviant_subj = load_correl(subject, condition_name="stc_standard_minus_deviant_habituation")
+    correl_hab_subj = load_correl(subject, condition_name="complexity_habituation")
+    correl_standard_subj = load_correl(subject, condition_name="standard_habituation")
+    correl_deviant_subj = load_correl(subject, condition_name="deviant_habituation")
 
     correl_hab.append(correl_hab_subj)
     correl_standard.append(correl_standard)
@@ -36,14 +37,14 @@ for subject in subjects_list:
     correl_standard_minus_deviant.append(correl_standard_minus_deviant)
 
 # Save all subjects data to a file
-with open(op.join(results_path, 'correlation_complexity_habituation.pickle'), 'wb') as f:
+with open(op.join(op.join(config.result_path, 'Correlation_complexity/'), 'correlation_complexity_habituation.pickle'), 'wb') as f:
     pickle.dump(correl_hab, f, pickle.HIGHEST_PROTOCOL)
 
-with open(op.join(results_path, 'correlation_complexity_standard.pickle'), 'wb') as f:
+with open(op.join(op.join(config.result_path, 'Correlation_complexity/'), 'correlation_complexity_standard.pickle'), 'wb') as f:
     pickle.dump(correl_standard, f, pickle.HIGHEST_PROTOCOL)
 
-with open(op.join(results_path, 'correlation_complexity_deviant.pickle'), 'wb') as f:
+with open(op.join(op.join(config.result_path, 'Correlation_complexity/'), 'correlation_complexity_deviant.pickle'), 'wb') as f:
     pickle.dump(correl_deviant, f, pickle.HIGHEST_PROTOCOL)
 
-with open(op.join(results_path, 'correlation_complexity_standard_minus_deviant.pickle'), 'wb') as f:
+with open(op.join(op.join(config.result_path, 'Correlation_complexity/'), 'correlation_complexity_standard_minus_deviant.pickle'), 'wb') as f:
     pickle.dump(correl_standard_minus_deviant, f, pickle.HIGHEST_PROTOCOL)
