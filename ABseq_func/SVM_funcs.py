@@ -367,7 +367,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         y = epochs.events[:, 2]
         X = epochs._data
         nfold = 1
-        for train_index, test_index in kf.split(X):
+        for train_index, test_index in kf.split(X,y):
             print("fold number %i"%nfold)
             print("TRAIN:", train_index, "TEST:", test_index)
             X_train, X_test = X[train_index], X[test_index]
