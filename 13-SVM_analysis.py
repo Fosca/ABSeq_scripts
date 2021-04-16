@@ -165,7 +165,7 @@ for residual_analysis in [True]:
 
     for ii,name in enumerate(['RepeatAlter_score_dict','ChunkEnd_score_dict','ChunkBeginning_score_dict','WithinChunkPosition_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = 0.,score_field='distance',vmin=None,vmax=None,compute_significance=[0.,0.6])
+        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
 
 
 # ___________________________________________________________________________
