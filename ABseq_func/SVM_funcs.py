@@ -2007,6 +2007,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         GAT_results = np.load(GAT_path, allow_pickle=True).item()
         print(op.join(SVM_path, analysis_name + '.npy'))
         times = GAT_results['times']
+        print("The number of time points is %i"%len(times))
         GAT_all.append(GAT_results[score_field])
 
     GAT_all = np.asarray(GAT_all)
