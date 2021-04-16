@@ -199,20 +199,20 @@ def SVM_features_repeatalter(subject,load_residuals_regression=True,cross_valida
 def SVM_features_withinchunk(subject, load_residuals_regression=True, cross_validation=None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
                                            load_residuals_regression=load_residuals_regression,
-                                           list_sequences=[4, 5, 6], cross_val_func=cross_validation)
+                                           list_sequences=[4, 5, 6], cross_val_func=cross_validation,nvalues_feature=4)
 
 # ----- ordinal position focus on quads ----
 def SVM_quad_ordpos(subject):
     for resid in [True,False]:
         SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=resid,
-                                     list_sequences=[4], cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15")
+                                     list_sequences=[4], cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15",nvalues_feature=4)
 
 
 # ----- ordinal position focus on quads ----
 def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regression=True):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=load_residuals_regression,
-                                           filter_from_metadata="StimPosition > 2 and StimPosition < 15",cross_val_func=SVM_funcs.train_quads_test_others)
+                                           filter_from_metadata="StimPosition > 2 and StimPosition < 15",cross_val_func=SVM_funcs.train_quads_test_others,nvalues_feature=4)
 
 # ----- quelles séquences ? ----
 def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=True):

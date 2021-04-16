@@ -293,7 +293,7 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
                        list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
-                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None):
+                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None,nvalues_feature=2):
 
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
@@ -344,7 +344,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     print(np.unique(epochs.metadata[feature_name].values))
 
     if balance_features:
-        epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences)
+        epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_values=nvalues_feature)
     else:
         filter_epochs = np.where(1 - np.isnan(epochs.metadata[feature_name].values))[0]
         epochs = epochs[filter_epochs]
@@ -416,14 +416,17 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
     # now determine the minimum number of epochs that come from a sequence and append the same number of epochs from each
     # sequence type
     epochs_concat2 = []
-    n_min = np.min(n_epochs)
-    n_max = np.max(n_epochs)
+    n_min = int(np.min(n_epochs)/ndifferent_values)
+    n_max = int(np.max(n_epochs)/ndifferent_values)
     if n_min != n_max:
         for k in range(len(list_sequences)):
-            n_epo_seq = len(epochs_concat1[k])
-            inds = np.random.permutation(n_epo_seq)
-            inds = inds[:n_min]
-            epochs_concat2.append(mne.concatenate_epochs([epochs_concat1[k][i] for i in inds]))
+            for nn in range(ndifferent_values):
+                epo_seq = epochs_concat1[k]
+                epo_seq_condition = epo_seq['%i'%nn]
+                n_epo_seq = len(epo_seq_condition)
+                inds = np.random.permutation(n_epo_seq)
+                inds = inds[:n_min]
+                epochs_concat2.append(mne.concatenate_epochs([epo_seq_condition[i] for i in inds]))
     else:
         epochs_concat2 = epochs_concat1
     epochs = mne.concatenate_epochs(epochs_concat2)
@@ -2008,7 +2011,10 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print(op.join(SVM_path, analysis_name + '.npy'))
         times = GAT_results['times']
         print("The number of time points is %i"%len(times))
-        GAT_all.append(GAT_results[score_field])
+        if score_field=='score' or score_field == 'GAT':
+            GAT_all.append(GAT_results[score_field])
+        elif score_field == 'distance':
+            GAT_all.append(np.mean(GAT_results[score_field],axis=0))
 
     GAT_all = np.asarray(GAT_all)
     GAT_all_new = np.zeros((len(subjects_list),GAT_all[0].shape[0],GAT_all[0].shape[1]))
@@ -2127,7 +2133,7 @@ def compute_regression_complexity_epochs(epochs_name):
 
 def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
                                  , cross_val_func = None,decim=1,filter_from_metadata=None,
-                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True):
+                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2):
 
     import os.path as op
 
@@ -2142,5 +2148,5 @@ def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=
     save_path = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + feature_name+ '_score_dict.npy'
     results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
                                                cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
-                                               list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
+                                               list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance,nvalues_feature=nvalues_feature)
     np.save(save_path, results_dict)

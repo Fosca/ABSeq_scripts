@@ -59,7 +59,7 @@ def results_SVM_standard_deviant(fname,subjects_list):
     return results, times
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
-results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list,clim=None,tail=1)
+results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
 
 
 def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None,tail=1):
@@ -81,15 +81,7 @@ def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_trai
 
 
 
-def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5):
-=======
-results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
-
-
-results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
-
-def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks'):
->>>>>>> 0d7e392ce569ff1de9b58e10ab7f498f2417169a
+def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None):
 
     for chans in results.keys():
         res_chan = results[chans]
@@ -108,14 +100,14 @@ def plot_results_GAT(results,times,save_folder,compute_significance=None,suffix=
                 sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
 
             # -------- plot the gat --------
-            pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5)
+            pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5,clim=clim)
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.png')
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
             plt.close('all')
 
 
-plot_results_GAT_chans_seqID(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks')
-plot_results_GAT_chans_seqID(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq')
+plot_results_GAT_chans_seqID(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks',clim=[0.37,0.63])
+plot_results_GAT_chans_seqID(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq',clim=[0.33,0.67])
 
 
 
@@ -128,7 +120,6 @@ GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blo
 #                  'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185', 'sub17-mt_170249', 'sub18-eo_190576']
 
 
-analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT'
 
 # __________Linear regression of the GATs as a function of complexity____________________________________________
 SVM_funcs.check_missing_GAT_data(config.subjects_list)
@@ -162,19 +153,19 @@ SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, "full_data_" + "ordin
                           vmin=None, vmax=None, compute_significance=[0., 0.6])
 
 
-vmin = [0.45,0.45,0.20,0.45,0.20,0.20]
-vmax = [0.55,0.55,0.3,0.55,0.3,0.3]
+vmin = [0.45,0.45,0.45,0.20]
+vmax = [0.55,0.55,0.55,0.3]
 
 for residual_analysis in [True]:
     if residual_analysis:
         suffix = 'resid_cv_'
     else:
         suffix = 'full_data_'
-    chance = [0.5,0.5,0.25,0.5,0.25,0.25]
+    chance = [0.5,0.5,0.5,0.25]
 
-    for ii,name in enumerate(['RepeatAlter_score_dict','ChunkEnd_score_dict','Number_Open_Chunks_score_dict','ChunkBeg_score_dict','WithinChunkPosition_score_dict']):
+    for ii,name in enumerate(['RepeatAlter_score_dict','ChunkEnd_score_dict','ChunkBeginning_score_dict','WithinChunkPosition_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
+        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = 0.,score_field='distance',vmin=None,vmax=None,compute_significance=[0.,0.6])
 
 
 # ___________________________________________________________________________
@@ -278,7 +269,18 @@ for sens in sensors:
 # ======= plot the Ordinal code when training on quads and testing on the 16 items of the others ============
 # ___________________________________________________________________________________________________________
 
-fname = 'ordinal_code_quads_tested_others.npy'
+fname = 'baselined_training_ordinal_code_quads_tested_quads.npy'
+# ---- load ----
+avg_subj_4 = []
+for subject in config.subjects_list:
+    data_path = config.result_path + '/SVM/ordinal_code_16items/' + subject + '/' + fname
+    print("loading data from %s"%subject)
+    ord_16 = np.load(data_path, allow_pickle=True).item()
+    for seq in [1,2,3,5,6,7]:
+        avg_subj_4.append(np.mean(np.mean(np.mean(ord_16['projection'],axis=0),axis=0),axis=0))
+    times = ord_16['times']
+
+fname = 'baselined_training_ordinal_code_quads_tested_others.npy'
 # ---- load ----
 avg_subj = {'%i'%i:[] for i in [1,2,3,5,6,7]}
 for subject in config.subjects_list:
@@ -290,10 +292,11 @@ for subject in config.subjects_list:
     times = ord_16['SeqID_%i'%seq]['times']
 
 #----- plot -----
-predictions = np.asarray(avg_subj['5'])
 
+avg_subj_all_seq = {'1':avg_subj['1'],'2':avg_subj['2'],'3':avg_subj['3'],'5':avg_subj['5'],'6':avg_subj['6'],'7':avg_subj['7'],'4':avg_subj_4}
+plot_ordinal_code_sequences(avg_subj_all_seq)
 
-def plot_ordinal_code_sequences(data_ord16):
+def plot_ordinal_code_sequences(avg_subj):
 
     labelsize = 6
     fontsize = 6
@@ -302,17 +305,18 @@ def plot_ordinal_code_sequences(data_ord16):
     linewidth_other = 0.5
     n_cat = 4
 
-    fig, axes = plt.subplots(6, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
+    fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
     fig.suptitle("Projection on the decision axis", fontsize=12)
     ax = axes.ravel()[::1]
     ax[0].set_title('Repeat', loc='left', weight='bold')
     ax[1].set_title('Alternate', loc='left', weight='bold')
     ax[2].set_title('Pairs', loc='left', weight='bold')
-    ax[3].set_title('Pairs+Alt', loc='left', weight='bold')
-    ax[4].set_title('Shrinking', loc='left', weight='bold')
-    ax[5].set_title('Complex', loc='left', weight='bold')
+    ax[3].set_title('Quads', loc='left', weight='bold')
+    ax[4].set_title('Pairs+Alt', loc='left', weight='bold')
+    ax[5].set_title('Shrinking', loc='left', weight='bold')
+    ax[6].set_title('Complex', loc='left', weight='bold')
 
-    for n, seq in enumerate([1,2,3,5,6,7]):
+    for n, seq in enumerate([1,2,3,4,5,6,7]):
 
         predictions = np.asarray(avg_subj['%i'%seq])
         mean_plot = np.mean(predictions, axis=0)
@@ -333,6 +337,6 @@ def plot_ordinal_code_sequences(data_ord16):
         ax[n].tick_params(axis='both', which='major', labelsize=labelsize)
         # ax[n].set_ylabel('Probability ordinal position', fontsize=fontsize)
 
-    ax[5].set_xlabel('Testing Time (s)', fontsize=fontsize)
+    ax[6].set_xlabel('Testing Time (s)', fontsize=fontsize)
 
     plt.show()
