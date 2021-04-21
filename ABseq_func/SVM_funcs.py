@@ -1481,7 +1481,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
                               vmin=-0.5, vmax=0.5)
         else:
-            im = ax[7].imshow(np.asarray([np.mean(t_complexity_hab,axis=0),np.mean(t_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+            im = ax[7].imshow(np.asarray([t_complexity_hab,t_complexity_test]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
                               vmin=-0.5, vmax=0.5)
 
         fmt = ticker.ScalarFormatter(useMathText=True)
@@ -2106,10 +2106,12 @@ def compute_regression_complexity(data):
     comp_coeff = np.asarray(Complexity_coeff)
 
     for tt in range(n_times):
-        t_const, _ = ttest_1samp(const_coeff[:,tt],popmean=0)
-        t_comp, _ = ttest_1samp(comp_coeff[:,tt],popmean=0)
+        t_con, _ = ttest_1samp(const_coeff[:,tt],popmean=0)
+        t_cop, _ = ttest_1samp(comp_coeff[:,tt],popmean=0)
+        t_const.append(t_con)
+        t_comp.append(t_cop)
 
-    return const_coeff, comp_coeff, t_const, t_comp
+    return const_coeff, comp_coeff, np.asarray(t_const), np.asarray(t_comp)
 
 
 
