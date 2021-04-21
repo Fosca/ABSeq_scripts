@@ -222,7 +222,6 @@ def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=False):
 
 # ----- quelles séquences pour chunk opening ? ----
 def SVM_features_chunkBeg(subject,load_residuals_regression=False):
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 

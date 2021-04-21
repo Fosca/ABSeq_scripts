@@ -31,6 +31,8 @@ epochs_clean.average().plot_joint()
 
 
 
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import csv
 import os
 import numpy as np
@@ -62,7 +64,8 @@ from autoreject import AutoReject
 import pickle
 
 
-subject = config.subjects_list[11]
+# subject = config.subjects_list[11]
+subject = 'sub08-cc_150418'
 meg_subject_dir = op.join(config.meg_dir, subject)
 epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
 

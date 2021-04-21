@@ -1323,7 +1323,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None,plot_betas=True):
     import matplotlib.colors as mcolors
 
     colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
@@ -1470,15 +1470,20 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     if compute_reg_complexity:
         epochs_data_hab_allseq = np.asarray(epochs_data_hab_allseq)
         epochs_data_test_allseq = np.asarray(epochs_data_test_allseq)
-        coeff_const_hab, coeff_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
-        coeff_const_test, coeff_complexity_test = compute_regression_complexity(epochs_data_test_allseq)
+        coeff_const_hab, coeff_complexity_hab, t_const_hab, t_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
+        coeff_const_test, coeff_complexity_test, t_const_test, t_complexity_test = compute_regression_complexity(epochs_data_test_allseq)
 
         for xx in range(16):
             ax[7].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
 
         # return data_mean
-        im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
-                          vmin=-0.5, vmax=0.5)
+        if plot_betas:
+            im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                              vmin=-0.5, vmax=0.5)
+        else:
+            im = ax[7].imshow(np.asarray([np.mean(t_complexity_hab,axis=0),np.mean(t_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                              vmin=-0.5, vmax=0.5)
+
         fmt = ticker.ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((0, 0))
         cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
@@ -2076,11 +2081,14 @@ def compute_regression_complexity(data):
     :param
     :return:
     """
+    from scipy.stats import ttest_1samp
     complexities = np.asarray([4,6,6,6,12,14,28])
     n_times = data.shape[2]
 
     Constant_coeff = []
     Complexity_coeff = []
+    t_const = []
+    t_comp = []
 
     for ii in range(data.shape[1]):
         data_reg_subject = data[:,ii,:]
@@ -2094,7 +2102,14 @@ def compute_regression_complexity(data):
         Constant_coeff.append(coeff_constant)
         Complexity_coeff.append(coeff_complexity)
 
-    return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
+    const_coeff = np.asarray(Constant_coeff)
+    comp_coeff = np.asarray(Complexity_coeff)
+
+    for tt in range(n_times):
+        t_const, _ = ttest_1samp(const_coeff[:,tt],popmean=0)
+        t_comp, _ = ttest_1samp(comp_coeff[:,tt],popmean=0)
+
+    return const_coeff, comp_coeff, t_const, t_comp
 
 
 
