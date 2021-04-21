@@ -191,12 +191,12 @@ def SVM_features_stimID(subject,load_residuals_regression=True,cross_validation 
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
 
 # ---- repetition or alternation ------
-def SVM_features_repeatalter(subject,load_residuals_regression=True,cross_validation = None):
+def SVM_features_repeatalter(subject,load_residuals_regression=False,cross_validation = None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
 
 # ---- ordinal position ------
-def SVM_features_withinchunk(subject, load_residuals_regression=True, cross_validation=None):
+def SVM_features_withinchunk(subject, load_residuals_regression=False, cross_validation=None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
                                            load_residuals_regression=load_residuals_regression,
                                            list_sequences=[4, 5, 6], cross_val_func=cross_validation,nvalues_feature=4)
@@ -215,20 +215,20 @@ def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regr
                                            filter_from_metadata="StimPosition > 2 and StimPosition < 15",cross_val_func=SVM_funcs.train_quads_test_others,nvalues_feature=4)
 
 # ----- quelles séquences ? ----
-def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=True):
+def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=False):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',SVM_dec =SVM_funcs.regression_decoder(),balance_features=False,distance=False,  load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 
 # ----- quelles séquences pour chunk opening ? ----
-def SVM_features_chunkBeg(subject,load_residuals_regression=True):
+def SVM_features_chunkBeg(subject,load_residuals_regression=False):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 
 
 # ----- quelles séquences pour chunk closing ? ----
-def SVM_features_chunkEnd(subject,load_residuals_regression=True):
+def SVM_features_chunkEnd(subject,load_residuals_regression=False):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])

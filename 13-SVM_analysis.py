@@ -152,11 +152,10 @@ anal_name = 'feature_decoding/' + "full_data_" + "ordinal_code_quads_tested_othe
 SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, "full_data_" + "ordinal_code_quads_tested_others.npy", chance=0.25, score_field='score',
                           vmin=None, vmax=None, compute_significance=[0., 0.6])
 
-
 vmin = [0.45,0.45,0.45,0.20]
 vmax = [0.55,0.55,0.55,0.3]
 
-for residual_analysis in [True]:
+for residual_analysis in [False]:
     if residual_analysis:
         suffix = 'resid_cv_'
     else:
