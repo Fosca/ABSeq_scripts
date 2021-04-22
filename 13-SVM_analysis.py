@@ -215,7 +215,7 @@ for sens in ['all_chans','mag', 'grad', 'eeg']:
     win_tmin = epochs_list['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_list['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
 
-    SVM_funcs.plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, compute_reg_complexity = True,
+    plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, compute_reg_complexity = True,
                                                                   window_CBPT_violation = 0.7,sensor_type=sens,
                                                                   save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims_tvals.png' % ( sens, win_tmin, win_tmax)),
                                                                   vmin=-vminvmax[sens],vmax=vminvmax[sens],plot_betas=False)

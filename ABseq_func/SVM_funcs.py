@@ -399,7 +399,8 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
         filter_epochs = np.where(1 - np.isnan(epo.metadata[feature_name].values))[0]
         epo = epo[filter_epochs]
         epo.events[:, 2] = epo.metadata[feature_name].values
-        n_different_vals = len(np.unique(epo.events[:,2]))
+        uniq_vals_feat = np.unique(epo.events[:,2])
+        n_different_vals = len(uniq_vals_feat)
 
         if n_different_vals != ndifferent_values:
             raise ValueError("The sequence seqID_%i has %i diffent values of the feature instead of %i. It should not be included in this analysis."%(seqID,n_different_vals,ndifferent_values))
@@ -420,7 +421,7 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
     n_max = int(np.max(n_epochs)/ndifferent_values)
     if n_min != n_max:
         for k in range(len(list_sequences)):
-            for nn in range(ndifferent_values):
+            for nn in uniq_vals_feat:
                 epo_seq = epochs_concat1[k]
                 epo_seq_condition = epo_seq['%i'%nn]
                 n_epo_seq = len(epo_seq_condition)
@@ -1356,7 +1357,10 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xYxxxYYYYxYYxxxY']
 
     if compute_reg_complexity:
-        ax[7].set_title('Beta_complexity', loc='left', weight='bold')
+        if plot_betas:
+            ax[7].set_title('Beta_complexity', loc='left', weight='bold')
+        else:
+            ax[7].set_title('t-values-betas', loc='left', weight='bold')
         seqtxtXY.append('')
 
     print("vmin = %0.02f, vmax = %0.02f" % (vmin, vmax))
@@ -1482,7 +1486,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                               vmin=-0.5, vmax=0.5)
         else:
             im = ax[7].imshow(np.asarray([t_complexity_hab,t_complexity_test]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
-                              vmin=-0.5, vmax=0.5)
+                              vmin=-6, vmax=6)
 
         fmt = ticker.ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((0, 0))
