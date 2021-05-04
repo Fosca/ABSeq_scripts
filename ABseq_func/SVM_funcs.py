@@ -20,7 +20,6 @@ from mne.decoding import GeneralizingEstimator
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC, LinearSVR
-from sklearn.model_selection import KFold
 import numpy as np
 import random
 from jr.plot import base, gat_plot, pretty_gat, pretty_decod, pretty_slices
@@ -294,7 +293,7 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
                        list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
-                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None):
+                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None,nvalues_feature=2):
 
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
@@ -327,7 +326,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         epochs.metadata = metadata
 
 
-    epochs = epoching_funcs.sliding_window(epochs,sliding_window_step=2)
+    epochs = epoching_funcs.sliding_window(epochs,sliding_window_size=25,sliding_window_step=2)
 
     if decim is not None:
         epochs.decimate(decim)
@@ -345,7 +344,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     print(np.unique(epochs.metadata[feature_name].values))
 
     if balance_features:
-        epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences)
+        epochs = balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_values=nvalues_feature)
     else:
         filter_epochs = np.where(1 - np.isnan(epochs.metadata[feature_name].values))[0]
         epochs = epochs[filter_epochs]
@@ -364,11 +363,11 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
     else:
-        kf = KFold(n_splits=4)
+        kf = StratifiedKFold(n_splits=4)
         y = epochs.events[:, 2]
         X = epochs._data
         nfold = 1
-        for train_index, test_index in kf.split(X):
+        for train_index, test_index in kf.split(X,y):
             print("fold number %i"%nfold)
             print("TRAIN:", train_index, "TEST:", test_index)
             X_train, X_test = X[train_index], X[test_index]
@@ -381,15 +380,15 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             nfold += 1
     score = np.mean(scores, axis=0)
 
-    dec = np.vstack(dec)
-    y_tests =  np.vstack(y_tests)
+    dec = np.concatenate(dec)
+    y_tests =  np.concatenate(y_tests)
     times = epochs.times
     results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
 
     return results_dict
 
 
-def balance_epochs_for_feature(epochs, feature_name, list_sequences):
+def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_values = 2):
     # concatenate the epochs belonging to the different sequences from the list_sequences
     epochs_concat1 = []
     # count the number of epochs that contribute per sequence in order later to balance this
@@ -400,25 +399,44 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences):
         filter_epochs = np.where(1 - np.isnan(epo.metadata[feature_name].values))[0]
         epo = epo[filter_epochs]
         epo.events[:, 2] = epo.metadata[feature_name].values
+        uniq_vals_feat = np.unique(epo.events[:,2])
+        n_different_vals = len(uniq_vals_feat)
+
+        if n_different_vals != ndifferent_values:
+            raise ValueError("The sequence seqID_%i has %i diffent values of the feature instead of %i. It should not be included in this analysis."%(seqID,n_different_vals,ndifferent_values))
+
         epo.event_id = {'%i' % i: i for i in np.unique(epo.events[:, 2])}
         epo.equalize_event_counts(epo.event_id)
         n_epochs.append(len(epo))
+        print(" ======= BEFORE EQUALIZING THE NUMBER OF EPOCHS COMMING FROM THE DIFFERENT SEQUENCES =====")
         print("---- there are %i epochs that contribute from sequence %i -----" % (len(epo), seqID))
+        for key in epo.event_id.keys():
+            print("There are %i events for the feature value %s"%(len(epo[key]),key))
+        print("")
         epochs_concat1.append(epo)
     # now determine the minimum number of epochs that come from a sequence and append the same number of epochs from each
     # sequence type
     epochs_concat2 = []
-    n_min = np.min(n_epochs)
-    n_max = np.max(n_epochs)
+    n_min = int(np.min(n_epochs)/ndifferent_values)
+    n_max = int(np.max(n_epochs)/ndifferent_values)
     if n_min != n_max:
         for k in range(len(list_sequences)):
-            n_epo_seq = len(epochs_concat1[k])
-            inds = np.random.permutation(n_epo_seq)
-            inds = inds[:n_min]
-            epochs_concat2.append(mne.concatenate_epochs([epochs_concat1[k][i] for i in inds]))
+            for nn in uniq_vals_feat:
+                epo_seq = epochs_concat1[k]
+                epo_seq_condition = epo_seq['%i'%nn]
+                n_epo_seq = len(epo_seq_condition)
+                inds = np.random.permutation(n_epo_seq)
+                inds = inds[:n_min]
+                epochs_concat2.append(mne.concatenate_epochs([epo_seq_condition[i] for i in inds]))
     else:
         epochs_concat2 = epochs_concat1
     epochs = mne.concatenate_epochs(epochs_concat2)
+
+    print(" ======= AFTER EQUALIZING THE NUMBER OF EPOCHS COMMING FROM THE DIFFERENT SEQUENCES =====")
+    for key in epochs.event_id.keys():
+        print("There are %i events for the feature value %s" % (len(epochs[key]), key))
+    print("")
+
     return epochs
 
 
@@ -1306,7 +1324,7 @@ def plot_SVM_projection_for_seqID_window(epochs_list, sensor_type, seqID=1, save
 
 
 # ______________________________________________________________________________________________________________________
-def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None):
+def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None,plot_betas=True):
     import matplotlib.colors as mcolors
 
     colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
@@ -1339,7 +1357,10 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 'xYxxxYYYYxYYxxxY']
 
     if compute_reg_complexity:
-        ax[7].set_title('Beta_complexity', loc='left', weight='bold')
+        if plot_betas:
+            ax[7].set_title('Beta_complexity', loc='left', weight='bold')
+        else:
+            ax[7].set_title('t-values-betas', loc='left', weight='bold')
         seqtxtXY.append('')
 
     print("vmin = %0.02f, vmax = %0.02f" % (vmin, vmax))
@@ -1453,15 +1474,20 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     if compute_reg_complexity:
         epochs_data_hab_allseq = np.asarray(epochs_data_hab_allseq)
         epochs_data_test_allseq = np.asarray(epochs_data_test_allseq)
-        coeff_const_hab, coeff_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
-        coeff_const_test, coeff_complexity_test = compute_regression_complexity(epochs_data_test_allseq)
+        coeff_const_hab, coeff_complexity_hab, t_const_hab, t_complexity_hab = compute_regression_complexity(epochs_data_hab_allseq)
+        coeff_const_test, coeff_complexity_test, t_const_test, t_complexity_test = compute_regression_complexity(epochs_data_test_allseq)
 
         for xx in range(16):
             ax[7].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
 
         # return data_mean
-        im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
-                          vmin=-0.5, vmax=0.5)
+        if plot_betas:
+            im = ax[7].imshow(np.asarray([np.mean(coeff_complexity_hab,axis=0),np.mean(coeff_complexity_test,axis=0)]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                              vmin=-0.5, vmax=0.5)
+        else:
+            im = ax[7].imshow(np.asarray([t_complexity_hab,t_complexity_test]), extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
+                              vmin=-6, vmax=6)
+
         fmt = ticker.ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((0, 0))
         cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
@@ -1981,9 +2007,11 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
 
 
 def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
+
     GAT_all = []
     fig_path = op.join(config.fig_path, 'SVM', folder_name)
     count = 0
+
     for subject in subjects_list:
         count += 1
         SVM_path = op.join(config.SVM_path, subject)
@@ -1991,10 +2019,19 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         GAT_results = np.load(GAT_path, allow_pickle=True).item()
         print(op.join(SVM_path, analysis_name + '.npy'))
         times = GAT_results['times']
-        GAT_all.append(GAT_results[score_field])
+        print("The number of time points is %i"%len(times))
+        if score_field=='score' or score_field == 'GAT':
+            GAT_all.append(GAT_results[score_field])
+        elif score_field == 'distance':
+            GAT_all.append(np.mean(GAT_results[score_field],axis=0))
+
+    GAT_all = np.asarray(GAT_all)
+    GAT_all_new = np.zeros((len(subjects_list),GAT_all[0].shape[0],GAT_all[0].shape[1]))
+
+    for subj in range(len(subjects_list)):
+        GAT_all_new[subj,:,:] = GAT_all[subj]
 
     if compute_significance is not None:
-        GAT_all = np.asarray(GAT_all)
         tmin_sig = compute_significance[0]
         tmax_sig = compute_significance[1]
         times_sig = np.where(np.logical_and(times<=tmax_sig,times>tmin_sig))[0]
@@ -2048,11 +2085,14 @@ def compute_regression_complexity(data):
     :param
     :return:
     """
+    from scipy.stats import ttest_1samp
     complexities = np.asarray([4,6,6,6,12,14,28])
     n_times = data.shape[2]
 
     Constant_coeff = []
     Complexity_coeff = []
+    t_const = []
+    t_comp = []
 
     for ii in range(data.shape[1]):
         data_reg_subject = data[:,ii,:]
@@ -2066,7 +2106,16 @@ def compute_regression_complexity(data):
         Constant_coeff.append(coeff_constant)
         Complexity_coeff.append(coeff_complexity)
 
-    return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
+    const_coeff = np.asarray(Constant_coeff)
+    comp_coeff = np.asarray(Complexity_coeff)
+
+    for tt in range(n_times):
+        t_con, _ = ttest_1samp(const_coeff[:,tt],popmean=0)
+        t_cop, _ = ttest_1samp(comp_coeff[:,tt],popmean=0)
+        t_const.append(t_con)
+        t_comp.append(t_cop)
+
+    return const_coeff, comp_coeff, np.asarray(t_const), np.asarray(t_comp)
 
 
 
@@ -2104,8 +2153,8 @@ def compute_regression_complexity_epochs(epochs_name):
 
 
 def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
-                                 , cross_val_func = None,decim=4,filter_from_metadata=None,
-                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True):
+                                 , cross_val_func = None,decim=1,filter_from_metadata=None,
+                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2):
 
     import os.path as op
 
@@ -2118,12 +2167,7 @@ def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=
         resid_suffix = 'full_data_'
 
     save_path = config.SVM_path + subject + '/feature_decoding/' + resid_suffix + feature_name+ '_score_dict.npy'
-    if not op.exists(save_path):
-
-        results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
-                                                   cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
-                                                   list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance)
-
-        np.save(save_path, results_dict)
-    else:
-        print('This already exists : %s'%save_path)
+    results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
+                                               cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
+                                               list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance,nvalues_feature=nvalues_feature)
+    np.save(save_path, results_dict)

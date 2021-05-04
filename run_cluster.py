@@ -4,7 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 'stccorcomp', queue='Nspin_long')
+# cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 'stccorcomp', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
@@ -38,8 +38,11 @@ cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 's
 # cluster_funcs.create_qsub('SVM_features_withinchunk_train_quads_test_others', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_features_chunkrev', 'rev', 'rev', queue='Nspin_bigM') # ok
 # cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'OpenPar', 'OpenPar', queue='Nspin_long')
-# cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_long') # ok
-# cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_long') # ok
+# cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_bigM') # ok
+# cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_bigM') # ok
+cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
+#cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'op', 'op', queue='Nspin_long', sublist_subjects=['sub10-gp_190568'])
 
 
 
@@ -47,8 +50,6 @@ cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 's
 #cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_long')
 
 
-#cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
-#cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 
 #cluster_funcs.create_qsub('SVM_1', 'svm1111', 'svm1111', queue='Nspin_long')
 #cluster_funcs.create_qsub('SVM_features', 'feat', 'feat', queue='Nspin_long')
