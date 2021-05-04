@@ -24,7 +24,10 @@ tcrop = 0.5
 
 ###################### COMPLEXITY ############################################
 
-complexity = {1:4,2:6,3:6,4:6,5:12,6:14,7:27}
+complexity = {1:4,2:6,3:6,4:6,5:12,6:15,7:28}
+
+###################### exclude EEG? ############################################
+noEEG = True
 
 ###############################################################################
 # DIRECTORIES
@@ -101,7 +104,8 @@ subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04
 # a participant (e.g. too many movements, missing blocks, aborted experiment,
 # did not understand the instructions, etc, ...)
 
-exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
+exclude_subjects = ['sub04-rf_190499']
+# exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
 # sub04 & sub08: very bad EEG data
 
 
