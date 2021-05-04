@@ -11,6 +11,7 @@ import glob
 import warnings
 from autoreject import AutoReject
 import pickle
+from ABseq_func import utils
 
 
 def read_info_csv(filename):
@@ -452,6 +453,12 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     raw_list = list()
     events_list = list()
 
+    if config.noEEG:
+        output_dir = op.join(meg_subject_dir, 'noEEG')
+        utils.create_folder(output_dir)
+    else:
+        output_dir = meg_subject_dir
+
     print("  Loading raw data")
     runs = config.runs_dict[subject]
     for run in runs:
@@ -502,7 +509,11 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     elif 'mag' in config.ch_types:
         meg = 'mag'
     eeg = 'eeg' in config.ch_types
-    picks = mne.pick_types(raw.info, meg=meg, eeg=eeg, stim=True, eog=True, exclude=())
+
+    if config.noEEG:
+        picks = mne.pick_types(raw.info, meg=meg, eeg=False, stim=True, eog=True, exclude=())
+    else:
+        picks = mne.pick_types(raw.info, meg=meg, eeg=eeg, stim=True, eog=True, exclude=())
 
     # Construct metadata from csv events file
     metadata = convert_csv_info_to_metadata(run_info_subject_dir)
@@ -550,7 +561,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         extension = subject + '_1st_element_epo'
     else:
         extension = subject + '_epo'
-    epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+    epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
 
     print("Output: ", epochs_fname)
     epochs.save(epochs_fname, overwrite=True)
@@ -561,6 +572,10 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
 
         # Running AutoReject "global" (https://autoreject.github.io) -> just get the thresholds
         from autoreject import get_rejection_threshold
+        if config.noEEG:
+            ch_types = ['mag', 'grad']
+        else:
+            ch_types = ['mag', 'grad', 'eeg']
         reject = get_rejection_threshold(epochs, ch_types=['mag', 'grad', 'eeg'])
         epochsARglob = epochs.copy().drop_bad(reject=reject)
         print('  Writing "AR global" cleaned epochs to disk')
@@ -568,7 +583,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             extension = subject + '_1st_element_ARglob_epo'
         else:
             extension = subject + '_ARglob_epo'
-        epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+        epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
         epochsARglob.save(epochs_fname, overwrite=True)
         # Save autoreject thresholds
@@ -582,7 +597,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             extension = subject + '_1st_element_clean_epo'
         else:
             extension = subject + '_clean_epo'
-        epochs_fname = op.join(meg_subject_dir, config.base_fname.format(**locals()))
+        epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
         epochsAR.save(epochs_fname, overwrite=True)
         # Save autoreject reject_log
