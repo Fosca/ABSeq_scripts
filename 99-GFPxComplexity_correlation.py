@@ -21,11 +21,11 @@ config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subje
 config.subjects_list.sort()
 
 # Parameters
-epochs_type = 'fullseq'  # 'items' or 'fullseq'
+epochs_type = 'items'  # 'items' or 'fullseq'
 detrend_epochs = False
-lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
+lowpass_epochs = False  # option to filter epochs with  30Hz lowpass filter
 baseline_epochs = True  # apply baseline to the epochs (if wasn't already done)
-complexity_values = [4, 6, 6, 6, 12, 14, 27]
+complexity_values = [4, 6, 6, 6, 12, 14, 28]
 
 # Output folder
 results_path = op.join(config.result_path, 'Corr_GFPxComplexity', epochs_type)
