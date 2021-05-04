@@ -6,6 +6,7 @@ from ABseq_func import *
 import numpy as np
 import pickle
 from scipy.stats import sem
+from scipy.stats.stats import pearsonr
 
 # Exclude some subjects
 config.exclude_subjects.append('sub08-cc_150418')
@@ -35,18 +36,18 @@ for label_name in label_names:
     group_all_labels_data[label_name]['Habituation']['allseq'] = []
     group_all_labels_data[label_name]['Standard']['allseq'] = []
     group_all_labels_data[label_name]['Deviant']['allseq'] = []
-    for seqID in range(1,8):
-        group_all_labels_data[label_name]['Habituation']['seq'+str(seqID)] = []
-        group_all_labels_data[label_name]['Standard']['seq'+str(seqID)] = []
-        group_all_labels_data[label_name]['Deviant']['seq'+str(seqID)] = []
+    for seqID in range(1, 8):
+        group_all_labels_data[label_name]['Habituation']['seq' + str(seqID)] = []
+        group_all_labels_data[label_name]['Standard']['seq' + str(seqID)] = []
+        group_all_labels_data[label_name]['Deviant']['seq' + str(seqID)] = []
     group_all_labels_data[label_name]['StandVSDev'] = dict()
     group_all_labels_data[label_name]['StandVSDev']['allseq'] = dict()
     group_all_labels_data[label_name]['StandVSDev']['allseq']['cond1'] = []
     group_all_labels_data[label_name]['StandVSDev']['allseq']['cond2'] = []
-    for seqID in range(1,8):
-        group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID)] = dict()
-        group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID)]['cond1'] = []
-        group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID)]['cond2'] = []
+    for seqID in range(1, 8):
+        group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID)] = dict()
+        group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID)]['cond1'] = []
+        group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID)]['cond2'] = []
 
 # subject loop
 for subject in subjects_list:
@@ -72,15 +73,15 @@ for subject in subjects_list:
     stcs['allseq'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     for seqID in range(1, 8):
         ev = epochs_items['TrialNumber < 11 & SequenceID == ' + str(seqID)].average()
-        stcs['seq'+str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
+        stcs['seq' + str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     # -- Store ROI timecourses
     for label_name in label_names:
         anat_label = mne.read_labels_from_annot(subject, parc='aparc', subjects_dir=fsMRI_dir, regexp=label_name)[0]
         label_data = stcs['allseq'].extract_label_time_course(anat_label, src, mode='mean')[0]
         group_all_labels_data[label_name]['Habituation']['allseq'].append(label_data)
         for seqID in range(1, 8):
-            label_data = stcs['seq'+str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
-            group_all_labels_data[label_name]['Habituation']['seq'+str(seqID)].append(label_data)
+            label_data = stcs['seq' + str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
+            group_all_labels_data[label_name]['Habituation']['seq' + str(seqID)].append(label_data)
 
     # ==== STANDARDS DATA
     # -- Compute sources of evoked
@@ -89,15 +90,15 @@ for subject in subjects_list:
     stcs['allseq'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     for seqID in range(1, 8):
         ev = epochs_items['TrialNumber > 10 & ViolationInSequence == 0 & SequenceID == ' + str(seqID)].average()
-        stcs['seq'+str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
+        stcs['seq' + str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     # -- Store ROI timecourses
     for label_name in label_names:
         anat_label = mne.read_labels_from_annot(subject, parc='aparc', subjects_dir=fsMRI_dir, regexp=label_name)[0]
         label_data = stcs['allseq'].extract_label_time_course(anat_label, src, mode='mean')[0]
         group_all_labels_data[label_name]['Standard']['allseq'].append(label_data)
         for seqID in range(1, 8):
-            label_data = stcs['seq'+str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
-            group_all_labels_data[label_name]['Standard']['seq'+str(seqID)].append(label_data)
+            label_data = stcs['seq' + str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
+            group_all_labels_data[label_name]['Standard']['seq' + str(seqID)].append(label_data)
 
     # ==== DEVIANTS DATA
     # -- Compute sources of evoked
@@ -106,19 +107,19 @@ for subject in subjects_list:
     stcs['allseq'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     for seqID in range(1, 8):
         ev = epochs_items['ViolationOrNot == 1 & SequenceID == ' + str(seqID)].average()
-        stcs['seq'+str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
+        stcs['seq' + str(seqID)] = source_estimation_funcs.compute_sources_from_evoked(subject, ev, morph_sources=False)
     # -- Store ROI timecourses
     for label_name in label_names:
         anat_label = mne.read_labels_from_annot(subject, parc='aparc', subjects_dir=fsMRI_dir, regexp=label_name)[0]
         label_data = stcs['allseq'].extract_label_time_course(anat_label, src, mode='mean')[0]
         group_all_labels_data[label_name]['Deviant']['allseq'].append(label_data)
         for seqID in range(1, 8):
-            label_data = stcs['seq'+str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
-            group_all_labels_data[label_name]['Deviant']['seq'+str(seqID)].append(label_data)
+            label_data = stcs['seq' + str(seqID)].extract_label_time_course(anat_label, src, mode='mean')[0]
+            group_all_labels_data[label_name]['Deviant']['seq' + str(seqID)].append(label_data)
 
-    # ==== STAND VS DEV (balanced - but across seqIDs not for each seqID)
+    # ==== STAND VS DEV (balanced)
     # -- Compute sources of evoked
-    ep_bal = epoching_funcs.balance_epochs_violation_positions(epochs_items, 'sequence')
+    ep_bal = epoching_funcs.balance_epochs_violation_positions(epochs_items, 'local')
     ev1 = ep_bal['ViolationOrNot == 0'].average()
     ev2 = ep_bal['ViolationOrNot == 1'].average()
     stcs = dict()
@@ -129,9 +130,9 @@ for subject in subjects_list:
     for seqID in range(1, 8):
         ev1 = ep_bal['ViolationOrNot == 0 & SequenceID == ' + str(seqID)].average()
         ev2 = ep_bal['ViolationOrNot == 1 & SequenceID == ' + str(seqID)].average()
-        stcs['seq'+str(seqID)] = dict()
-        stcs['seq'+str(seqID)]['cond1'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev1, morph_sources=False)
-        stcs['seq'+str(seqID)]['cond2'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev2, morph_sources=False)
+        stcs['seq' + str(seqID)] = dict()
+        stcs['seq' + str(seqID)]['cond1'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev1, morph_sources=False)
+        stcs['seq' + str(seqID)]['cond2'] = source_estimation_funcs.compute_sources_from_evoked(subject, ev2, morph_sources=False)
     # -- Store ROI timecourses
     for label_name in label_names:
         anat_label = mne.read_labels_from_annot(subject, parc='aparc', subjects_dir=fsMRI_dir, regexp=label_name)[0]
@@ -140,10 +141,10 @@ for subject in subjects_list:
         label_data = stcs['allseq']['cond2'].extract_label_time_course(anat_label, src, mode='mean')[0]
         group_all_labels_data[label_name]['StandVSDev']['allseq']['cond2'].append(label_data)
         for seqID in range(1, 8):
-            label_data = stcs['seq'+str(seqID)]['cond1'].extract_label_time_course(anat_label, src, mode='mean')[0]
-            group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID)]['cond1'].append(label_data)
-            label_data = stcs['seq'+str(seqID)]['cond2'].extract_label_time_course(anat_label, src, mode='mean')[0]
-            group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID)]['cond2'].append(label_data)
+            label_data = stcs['seq' + str(seqID)]['cond1'].extract_label_time_course(anat_label, src, mode='mean')[0]
+            group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID)]['cond1'].append(label_data)
+            label_data = stcs['seq' + str(seqID)]['cond2'].extract_label_time_course(anat_label, src, mode='mean')[0]
+            group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID)]['cond2'].append(label_data)
 
 # Save all subjects data to a file
 with open(op.join(results_path, 'ROI_data.pickle'), 'wb') as f:
@@ -151,7 +152,18 @@ with open(op.join(results_path, 'ROI_data.pickle'), 'wb') as f:
 
 # =======================================================================
 # ============== Plot group means StandVSDev allseq
-times = (1e3 * ev.times)
+# (Re)Load extracted ROI timecourses
+with open(op.join(results_path, 'ROI_data.pickle'), 'rb') as f:
+    group_all_labels_data = pickle.load(f)
+
+# Load one evoked to get times
+ev, _ = evoked_funcs.load_evoked(subject=subjects_list[0], filter_name='items_standard_all')
+times = (1e3 * ev['items_standard_all-'][0].times)
+
+complexity_values = [4, 6, 6, 6, 12, 14, 28]
+
+# =======================================================================
+# ============== Plot group means StandVSDev allseq
 analysis_name = 'StandVSDev'
 plt.close('all')
 for label_name in label_names:
@@ -182,8 +194,7 @@ for label_name in label_names:
     plt.close('all')
 
 # =======================================================================
-# ============== Plot group means StandVSDev reach seqID
-times = (1e3 * ev.times)
+# ============== Plot group means StandVSDev each seqID
 analysis_name = 'StandVSDev'
 plt.close('all')
 for label_name in label_names:
@@ -192,11 +203,11 @@ for label_name in label_names:
 
     for seqID in range(7):
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID + 1)
-        data = group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID+1)]['cond1']
+        data = group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID + 1)]['cond1']
         mean1 = np.mean(data, axis=0)
         ub1 = mean1 + sem(data, axis=0)
         lb1 = mean1 - sem(data, axis=0)
-        data = group_all_labels_data[label_name]['StandVSDev']['seq'+str(seqID+1)]['cond2']
+        data = group_all_labels_data[label_name]['StandVSDev']['seq' + str(seqID + 1)]['cond2']
         mean2 = np.mean(data, axis=0)
         ub2 = mean2 + sem(data, axis=0)
         lb2 = mean2 - sem(data, axis=0)
@@ -241,30 +252,62 @@ for label_name in label_names:
 
 # =======================================================================
 # ============== Plot group means Habituation/Standard/Deviants each seq
-times = (1e3 * ev.times)
 for analysis_name in ['Habituation', 'Standard', 'Deviant']:
     plt.close('all')
     for label_name in label_names:
-        fig, ax = plt.subplots(1, 1, figsize=(10, 4), constrained_layout=False)
-        plt.axvline(0, linestyle='-', color='k', linewidth=2)
+        fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 4), constrained_layout=True, gridspec_kw={'height_ratios': [10, 1], 'width_ratios': [2, 1]}, sharex=False)  # sharex was not working as expected...
+        plt.suptitle(analysis_name + ': ' + label_name, fontsize=14, weight='bold', color='k')
         NUM_COLORS = 7
-        cm = plt.get_cmap('viridis')
+        cmap = 'viridis'
+        cmap2 = 'RdBu'
+        cm = plt.get_cmap(cmap)
         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
 
-        for seqID in range(1,8):
-            data = group_all_labels_data[label_name][analysis_name]['seq'+str(seqID)]
+        # Main plot
+        allseq_means = []
+        ax[0][0].axvline(0, linestyle='-', color='k', linewidth=2)
+        for seqID in range(1, 8):
+            data = group_all_labels_data[label_name][analysis_name]['seq' + str(seqID)]
             mean = np.mean(data, axis=0)
             ub = mean + sem(data, axis=0)
             lb = mean - sem(data, axis=0)
-            ax.fill_between(times, ub, lb, color=colorslist[seqID-1], alpha=.2)
-            ax.plot(times, mean, color=colorslist[seqID-1], linewidth=1.5, label='SeqID'+str(seqID))
+            ax[0][0].fill_between(times, ub, lb, color=colorslist[seqID - 1], alpha=.2)
+            ax[0][0].plot(times, mean, color=colorslist[seqID - 1], linewidth=1.5, label='SeqID' + str(seqID))
+            allseq_means.append(mean)
+        ax[0][0].set_xlabel('Time (ms)')
+        ax[0][0].set_xlim([-50, 600])
 
-        ax.set_xlabel('Time (ms)')
-        ax.set_xlim([-50, 600])
         for key in ('top', 'right'):  # Remove spines
-            ax.spines[key].set(visible=False)
-        plt.legend(loc='best', fontsize=8)
-        plt.title(analysis_name + ': ' + label_name, fontsize=14, weight='bold', color='k')
+            ax[0][0].spines[key].set(visible=False)
+        ax[0][0].legend(loc='best', fontsize=8)
+
+        # Compute & plot correlation over time
+        allseq_means_array = np.array(allseq_means)
+        timeR = []
+        for timepoint in range(len(times)):
+            r, pval = pearsonr(allseq_means_array[:, timepoint], complexity_values)
+            timeR.append(r)
+        a = np.array(timeR)
+        a = np.expand_dims(a, axis=0)
+        ax[1][0].imshow(a, extent=[min(times), max(times), 0, 10], cmap=cmap2, vmin=-1, vmax=1, interpolation='none')
+        ax[1][0].axis('off')
+
+        # ROI on Brain ?
+        anat_label = mne.read_labels_from_annot('fsaverage', parc='aparc', subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), regexp=label_name)[0]
+        Brain = mne.viz.get_brain_class()
+        brain = Brain('fsaverage', label_name[-2:], 'inflated', subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='white', size=(800, 600))
+        brain.add_label(anat_label, borders=False, color='r', alpha=.8)
+        screenshot = brain.screenshot()
+        brain.close()
+        nonwhite_pix = (screenshot != 255).any(-1)
+        nonwhite_row = nonwhite_pix.any(1)
+        nonwhite_col = nonwhite_pix.any(0)
+        cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+        ax[0][1].imshow(cropped_screenshot)
+        ax[0][1].axis('off')
+        ax[1][1].axis('off')
+
+        # Save figure
         fig_name = op.join(results_path, analysis_name + '_' + label_name + '.png')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
