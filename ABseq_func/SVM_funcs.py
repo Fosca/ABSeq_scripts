@@ -2020,6 +2020,8 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print(op.join(SVM_path, analysis_name + '.npy'))
         times = GAT_results['times']
         print("The number of time points is %i"%len(times))
+        print("The times are \n")
+        print(times)
         if score_field=='score' or score_field == 'GAT':
             GAT_all.append(GAT_results[score_field])
         elif score_field == 'distance':

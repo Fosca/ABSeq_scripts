@@ -164,7 +164,7 @@ for residual_analysis in [False]:
 
     for ii,name in enumerate(['RepeatAlter_score_dict','ChunkEnd_score_dict','ChunkBeginning_score_dict','WithinChunkPosition_score_dict']):
         anal_name = 'feature_decoding/'+suffix+name
-        SVM_funcs.plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
+        plot_gat_simple(anal_name,config.subjects_list,suffix+name,chance = chance[ii],score_field='score',vmin=None,vmax=None,compute_significance=[0.,0.6])
 
 
 # ___________________________________________________________________________
@@ -296,7 +296,6 @@ for subject in config.subjects_list:
 #----- plot -----
 
 avg_subj_all_seq = {'1':avg_subj['1'],'2':avg_subj['2'],'3':avg_subj['3'],'5':avg_subj['5'],'6':avg_subj['6'],'7':avg_subj['7'],'4':avg_subj_4}
-plot_ordinal_code_sequences(avg_subj_all_seq)
 
 def plot_ordinal_code_sequences(avg_subj):
 
@@ -342,3 +341,6 @@ def plot_ordinal_code_sequences(avg_subj):
     ax[6].set_xlabel('Testing Time (s)', fontsize=fontsize)
 
     plt.show()
+
+
+plot_ordinal_code_sequences(avg_subj_all_seq)
