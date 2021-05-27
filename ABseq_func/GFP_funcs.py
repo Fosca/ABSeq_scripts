@@ -32,21 +32,25 @@ def gfp_evoked(evoked_list, baseline=None,times=None):
 
     for evoked in evoked_list:
 
-        gfp_eeg = np.sum(evoked[0].copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
+
         gfp_grad = np.sum(evoked[0].copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
         gfp_mag = np.sum(evoked[0].copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
-
         if baseline is not None:
-            for gfp in [gfp_eeg, gfp_grad, gfp_mag]:
+            for gfp in [gfp_grad, gfp_mag]:
                 gfp = mne.baseline.rescale(gfp, times, baseline=(baseline, 0))
-
-        gfp_eeg_all.append(gfp_eeg)
         gfp_grad_all.append(gfp_grad)
         gfp_mag_all.append(gfp_mag)
+        gfp_evoked = {'grad': gfp_grad_all,
+                      'mag': gfp_mag_all}
 
-    gfp_evoked = {'eeg': gfp_eeg_all,
-                  'grad': gfp_grad_all,
-                  'mag': gfp_mag_all}
+        if config.noEEG == False:
+            gfp_eeg = np.sum(evoked[0].copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
+            if baseline is not None:
+                gfp_eeg = mne.baseline.rescale(gfp_eeg, times, baseline=(baseline, 0))
+            gfp_eeg_all.append(gfp_eeg)
+            gfp_evoked = {'eeg': gfp_eeg_all,
+                          'grad': gfp_grad_all,
+                          'mag': gfp_mag_all}
 
     return gfp_evoked, times
 
