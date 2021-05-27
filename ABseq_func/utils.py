@@ -37,5 +37,15 @@ def is_there_this_file_for_subjects(path,subject_list,filename):
         else:
             print("------- Does not exist for %s" % subject)
 
-
-
+def count_bads():
+    data = config.bads
+    for subject in config.subjects_list:  # subjects
+        for keyR in data[subject].keys():  # runs
+            megcount = 0
+            eegcount = 0
+            for C in range(len(data[subject][keyR])):  # channels
+                if 'MEG' in data[subject][keyR][C]:
+                    megcount = megcount + 1
+                if 'EEG' in data[subject][keyR][C]:
+                    eegcount = eegcount + 1
+            print('%s;%s;MEG;%d;EEG;%d' % (subject, keyR, megcount, eegcount))
