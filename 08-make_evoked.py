@@ -9,15 +9,17 @@ from mne.parallel import parallel_func
 
 # # make less parallel runs to limit memory usage
 # N_JOBS = max(config.N_JOBS // 4, 1)
-N_JOBS = 2  # config.N_JOBS
+N_JOBS = 1  # config.N_JOBS
 
 # ----------------------------------------------------------- #
 # ---------- COMPUTE AND SAVE EVOKED OF INTEREST ------------ #
 # ----------------------------------------------------------- #
 
+# config.subjects_list = config.subjects_list[:11]
+
 parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked, n_jobs=N_JOBS)
-parallel(run_func(subject, cleaned=True) for subject in config.subjects_list)
-parallel(run_func(subject, cleaned=False) for subject in config.subjects_list)
+parallel(run_func(subject, cleaned=True, AR_type='local') for subject in config.subjects_list)
+# parallel(run_func(subject, cleaned=False) for subject in config.subjects_list)
 
 
 # parallel, run_func, _ = parallel_func(evoked_funcs.create_evoked_resid, n_jobs=N_JOBS)
@@ -177,15 +179,20 @@ def script_generate_heatmap_gfp_figures():
     # ---------------- GROUP GFP HEATMAP FIGURES ---------------- #
     # ----------------------------------------------------------- #
 
-    filterdata = True
+    filterdata = False
     # Load required evoked data
-    evoked_full_seq_teststandard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None)
-    evoked_full_seq_habituation_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None)
+    evoked_full_seq_teststandard_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None, cleaned=True)
+    evoked_full_seq_habituation_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None, cleaned=True)
     evoked_viol_seq_pos = dict()
     for seqID in range(1, 8):
-        evoked_viol_seq_pos['seq' + str(seqID)] = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None)
+        evoked_viol_seq_pos['seq' + str(seqID)], _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None, cleaned=True)
 
-    for ch_type in ['mag', 'grad', 'eeg']:
+    if config.noEEG:
+        ch_types = ['mag', 'grad']
+    else:
+        ch_types = ['mag', 'grad', 'eeg']
+
+    for ch_type in ch_types:
         # Compute & store average gfp vectors in a data_to_plot dict (gfp per subject, then group average)
         data_to_plot = {}
         data_to_plot['hab'] = {}
@@ -249,7 +256,7 @@ def script_allsensors_heatmap_figures():
     # evoked = evoked_all_standard[list(evoked_all_standard.keys())[0]][0]  # first key (only one key when all sequences combined)
     # evoked = evoked[0]
     evokeds_name = 'items_standard_seq'
-    evoked = evoked_funcs.load_evoked(subject='all', filter_name=evokeds_name, filter_not='pos')  #
+    evoked, _ = evoked_funcs.load_evoked(subject='all', filter_name=evokeds_name, filter_not='pos')  #
 
     # Loop over the 3 ch_types
     plt.close('all')
@@ -293,11 +300,11 @@ def script_allsensors_heatmap_figures():
 
     filterdata = True
 
-    evoked_full_seq_teststandard_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None)
-    evoked_full_seq_habituation_seq = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None)
+    evoked_full_seq_teststandard_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_teststandard_seq', filter_not=None)
+    evoked_full_seq_habituation_seq, _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_habituation_seq', filter_not=None)
     evoked_viol_seq_pos = dict()
     for seqID in range(1, 8):
-        evoked_viol_seq_pos['seq' + str(seqID)] = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None)
+        evoked_viol_seq_pos['seq' + str(seqID)], _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None)
 
     for ch_type in ['mag', 'grad', 'eeg']:
         # Compute & store average gfp vectors in a data_to_plot dict (gfp per subject, then group average)
@@ -337,8 +344,8 @@ def script_allsensors_heatmap_figures():
                                                  file_name=op.join(config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP', 'GFP_full_seq_allconds_heatmap_' + ch_type + '.png'))
 
 
-script_group_avg_and_plot_gfp()
+# script_group_avg_and_plot_gfp()
 script_generate_heatmap_gfp_figures()
-script_allsensors_heatmap_figures()
+# script_allsensors_heatmap_figures()
 
 
