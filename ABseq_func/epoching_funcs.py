@@ -345,6 +345,8 @@ def load_resid_epochs_items(subject, resid_epochs_type='reg_repeataltern_surpris
 def load_epochs_full_sequence(subject, cleaned=True, AR_type='local'):
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
+    if config.noEEG:
+        meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
     if cleaned:
         if AR_type == 'local':
             extension = subject + '_1st_element_clean_epo'
@@ -369,7 +371,7 @@ def balance_epochs_violation_positions(epochs,balance_param='local_position_sequ
     3 standards/deviants for position 9 and 4 for the others.
     - 'position' - Make sure that the total number of standard/deviants, given the sequence, is the same whatever the position of
     the violation.
-    - 'sequence' - Make sure that there are the same numbers of standard/deviant epochs per sequences.
+    - 'sequence' - Make sure that there are the same numbers of standard/deviant epochs per sequence
     Note here that we don't care about the stimulus ID (if the stim was sound A or B).
 
     :param epochs:
