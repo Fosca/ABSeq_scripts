@@ -57,6 +57,9 @@ def ar_log_summary(subject, epoch_on_first_element, make_figures=False):
     #     The list of channels corresponding to the rows of the labels.
 
     meg_subject_dir = op.join(config.meg_dir, subject)
+    if config.noEEG:
+        meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
+
     if epoch_on_first_element:
         arlog_name = op.join(meg_subject_dir, subject + '_1st_element_clean_epo_reject_local_log.obj')
         save_path = op.join(config.fig_path, 'AutoReject_fullsequences_epochs', subject)
@@ -88,6 +91,9 @@ def arGlob_thesholds_summary(subject, epoch_on_first_element, count_epochs=False
     Otherwise, just print the thresholds
     """
     meg_subject_dir = op.join(config.meg_dir, subject)
+    if config.noEEG:
+        meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
+
     if epoch_on_first_element:
         arlog_name = op.join(meg_subject_dir, subject + '_1st_element_ARglob_epo_ARglob_thresholds.obj')
         fname_before = op.join(meg_subject_dir, subject+'_1st_element_epo.fif')
@@ -106,14 +112,27 @@ def arGlob_thesholds_summary(subject, epoch_on_first_element, count_epochs=False
 
     if epoch_on_first_element:
         if count_epochs:
-            print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+            if config.noEEG:
+                print('%s;fullsequence epochs;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+            else:
+                print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
         else:
-            print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
+            if config.noEEG:
+                print('%s;fullsequence epochs;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['mag'], reject_thresholds['grad']))
+            else:
+                print('%s;fullsequence epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
     else:
         if count_epochs:
-            print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+            if config.noEEG:
+                print('%s;items epochs;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
+            else:
+                print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e;Nepochs_before=;%d;Nepochs_after=;%d' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad'],Nepochs_before,Nepochs_after))
         else:
-            print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
+            if config.noEEG:
+                print('%s;items epochs;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['mag'], reject_thresholds['grad']))
+            else:
+                print('%s;items epochs;eeg;%.3e;mag;%.3e;grad;%.3e' % (subject, reject_thresholds['eeg'], reject_thresholds['mag'], reject_thresholds['grad']))
+
 
 
 def reject_log_plot(reject_log, subject, save_path='', fig_name=''):
