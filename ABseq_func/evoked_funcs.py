@@ -339,31 +339,23 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
 
     for x in list_sequences:
         # EEG
-        if ch_types==['eeg']:
+        if 'eeg' in ch_types:
             fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
                                                 topomap_args=topomap_args, picks='eeg', times=times, show=False)
             fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name)
             plt.close(fig)
-        else:
-
-            fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
-                                                topomap_args=topomap_args, picks='eeg', times=times, show=False)
-            fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
-            print('Saving ' + fig_name)
-            plt.savefig(fig_name)
-            plt.close(fig)
-
-            # MAG
+        # MAG
+        if 'mag' in ch_types:
             fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
                                                 topomap_args=topomap_args, picks='mag', times=times, show=False)
             fig_name = fig_path + op.sep + ('MAG_SequenceID_' + str(x) + '.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name)
             plt.close(fig)
-
-            # #GRAD
+        # GRAD
+        if 'grad' in ch_types:
             fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
                                                 topomap_args=topomap_args, picks='grad', times=times, show=False)
             fig_name = fig_path + op.sep + ('GRAD_SequenceID_' + str(x) + '.png')
@@ -372,7 +364,7 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
             plt.close(fig)
 
 
-def create_evoked(subject, cleaned=True):
+def create_evoked(subject, cleaned=True, AR_type='local'):
     """
     This function creates several types of evoked (epochs averages, "-ave.fif") for a given subject:
     - Full 16-items sequences [full_seq]:
@@ -389,30 +381,33 @@ def create_evoked(subject, cleaned=True):
         - ?? Standard items violpositions [_standard] (non violated items from violated sequences with matched postions): for each sequenceID & position (7 x 4) [_seqN_posN] ??
     """
     # create folder for evoked
-    path_evo = op.join(config.meg_dir, subject, 'evoked')
+    if config.noEEG:
+        path_evo = op.join(config.meg_dir, subject, 'noEEG', 'evoked')
+    else:
+        path_evo = op.join(config.meg_dir, subject, 'evoked')
     if cleaned:
         path_evo = path_evo + '_cleaned'
     utils.create_folder(path_evo)
-
-    epochs_full_sequence = epoching_funcs.load_epochs_full_sequence(subject, cleaned=cleaned)
 
     # =======================================================
     # ========== evoked on full 16-items seq ================
     # =======================================================
 
-    epochs_full_sequence['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'full_seq_standard_all-ave.fif'))
-    epochs_full_sequence['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'full_seq_teststandard_all-ave.fif'))
-    epochs_full_sequence['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'full_seq_habituation_all-ave.fif'))
+    epochs_full_sequence = epoching_funcs.load_epochs_full_sequence(subject, cleaned=cleaned, AR_type=AR_type)
+
+    epochs_full_sequence['ViolationInSequence == 0'].average().save(op.join(path_evo, 'full_seq_standard_all-ave.fif'))
+    epochs_full_sequence['ViolationInSequence == 0 and TrialNumber > 11'].average().save(op.join(path_evo, 'full_seq_teststandard_all-ave.fif'))
+    epochs_full_sequence['ViolationInSequence == 0 and TrialNumber < 11'].average().save(op.join(path_evo, 'full_seq_habituation_all-ave.fif'))
 
     for k in range(1, 8):
-        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'full_seq_standard_seq%i-ave.fif' % k))
-        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'full_seq_teststandard_seq%i-ave.fif' % k))
-        epochs_full_sequence['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'full_seq_habituation_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == %i and ViolationInSequence == 0' % k].average().save(op.join(path_evo, 'full_seq_standard_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == %i and ViolationInSequence == 0 and TrialNumber > 11' % k].average().save(op.join(path_evo, 'full_seq_teststandard_seq%i-ave.fif' % k))
+        epochs_full_sequence['SequenceID == %i and ViolationInSequence == 0 and TrialNumber < 11' % k].average().save(op.join(path_evo, 'full_seq_habituation_seq%i-ave.fif' % k))
         # determine the position of the deviants
-        tmp = epochs_full_sequence['SequenceID == "%i" and ViolationInSequence > 0' % k]
+        tmp = epochs_full_sequence['SequenceID == %i and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_full_sequence['SequenceID == "%i" and  ViolationInSequence == "%i"' % (k, int(pos_viol))].average().save(op.join(path_evo, 'full_seq_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_full_sequence['SequenceID == %i and  ViolationInSequence == %i' % (k, int(pos_viol))].average().save(op.join(path_evo, 'full_seq_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
     del epochs_full_sequence
     # evoked on individual items
 
@@ -420,26 +415,28 @@ def create_evoked(subject, cleaned=True):
     # ========== evoked on each item separately =============
     # =======================================================
 
-    epochs_items = epoching_funcs.load_epochs_items(subject)
-    epochs_items['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
-    epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
-    epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
-    epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
-    epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
+    epochs_items = epoching_funcs.load_epochs_items(subject, cleaned=cleaned, AR_type=AR_type)
+
+    epochs_items['ViolationInSequence == 0'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
+    epochs_items['ViolationInSequence == 0 and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
+    epochs_items['ViolationInSequence == 0 and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
+    epochs_items['ViolationOrNot == 0'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
+    # === epochs_balanced is skipped for now, since it cannot be done when there is a high numbers of rejected epochs!
+    # epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
+    # epochs_balanced['ViolationInSequence == 0'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
     for k in range(1, 8):
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationOrNot == "1"' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
-        epochs_balanced['SequenceID == "%i" and ViolationOrNot == "0"' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
+        # epochs_balanced['SequenceID == %i and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
         # determine the position of the deviants
-        tmp = epochs_items['SequenceID == "%i" and ViolationInSequence > 0' % k]
+        tmp = epochs_items['SequenceID == %i and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "1"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "0"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
 
     del epochs_items
 
@@ -497,7 +494,7 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
     epochs_items['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
     epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
     epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
-    epochs_items['ViolationOrNot == "1"'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
+    epochs_items['ViolationOrNot == 0'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
     epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
@@ -505,13 +502,13 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
         epochs_items['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
         epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
         epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationOrNot == "1"' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == "%i" and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
         epochs_balanced['SequenceID == "%i" and ViolationOrNot == "0"' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
         # determine the position of the deviants
         tmp = epochs_items['SequenceID == "%i" and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "1"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
             epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "0"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
 
     del epochs_items
@@ -572,12 +569,18 @@ def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, 
     evoked_dict = {}
     if subject == 'all':
         for subj in config.subjects_list:
-            if cleaned:
-                path_evo = op.join(config.meg_dir, subj, 'evoked_cleaned')
+
+            if config.noEEG:
+                sub_path = op.join(config.meg_dir, subj, 'noEEG')
             else:
-                path_evo = op.join(config.meg_dir, subj, 'evoked')
+                sub_path = op.join(config.meg_dir, subj)
+
+            if cleaned:
+                path_evo = op.join(sub_path, 'evoked_cleaned')
+            else:
+                path_evo = op.join(sub_path, 'evoked')
             if evoked_resid:
-                path_evo = op.join(config.meg_dir, subj, 'evoked_resid')
+                path_evo = op.join(sub_path, 'evoked_resid')
             if root_path is not None:
                 path_evo = op.join(root_path, subj)
             evoked_names = sorted(glob.glob(path_evo + op.sep + filter_name + '*.fif'))
@@ -602,12 +605,17 @@ def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, 
                 else:
                     evoked_dict[file_names[k][:-7]] = [mne.read_evokeds(full_names[k])]
     else:
-        if cleaned:
-            path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
+        if config.noEEG:
+            sub_path = op.join(config.meg_dir, subject, 'noEEG')
         else:
-            path_evo = op.join(config.meg_dir, subject, 'evoked')
+            sub_path = op.join(config.meg_dir, subject)
+
+        if cleaned:
+            path_evo = op.join(sub_path, 'evoked_cleaned')
+        else:
+            path_evo = op.join(sub_path, 'evoked')
         if evoked_resid:
-            path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
+            path_evo = op.join(sub_path, 'evoked_resid')
         if root_path is not None:
             path_evo = op.join(root_path, subject)
         evoked_names = glob.glob(path_evo + op.sep + filter_name + '*.fif')
@@ -1081,7 +1089,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(seqID)
 
         # Subfig title
-        ax[ii].set_title(seqname, loc='left', weight='bold')
+        ax[ii].set_title(seqname, loc='left', weight='semibold', y=1.15)
 
         # Data
         y_list = []
@@ -1097,7 +1105,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         for xx in range(16):
             ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
             ax[n].text(250 * (xx + 1) - 125, width * 6 + (width / 3), seqtxtXY[xx], horizontalalignment='center', fontsize=16)
-        im = ax[n].imshow(y_list, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmap, vmin=vmin, vmax=vmax)
+        im = ax[n].imshow(y_list, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmap, vmin=vmin, vmax=vmax, interpolation='none')
         # ax[n].set_xlim(-500, 4250)
         # ax[n].legend(loc='upper left', fontsize=10)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
