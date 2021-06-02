@@ -124,6 +124,7 @@ def update_metadata_rejected(subject, epochs_items):
     tokeep = [i for i, x in enumerate(epochs_items.drop_log) if not x]
 
     metadata = convert_csv_info_to_metadata(run_info_subject_dir)
+
     metadata_pandas = pd.DataFrame.from_dict(metadata, orient='index')
     metadata_pandas = pd.DataFrame.transpose(metadata_pandas)
     metadata_pandas = metadata_pandas.loc[tokeep, :]
@@ -133,7 +134,7 @@ def update_metadata_rejected(subject, epochs_items):
 
 # ====================== change 31/3/2020 ========================
 
-def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=False):
+def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=True):
     """
     This function appends data to the metadata
     :param subject:
@@ -287,6 +288,16 @@ def convert_csv_info_to_metadata(csv_path):
     ChunkBeginning = (np.asarray(WithinChunkPosition) == 1) * 1
     ChunkEnd = (np.asarray(WithinChunkPositionReverse) == 1) * 1
 
+    # --------- add the ClosedChunks field to the metadata ---------
+    ClosedChunks = []
+    for k in range(int(len(OpenedChunks)/16)):
+        openedChunk_seq = OpenedChunks[k*16:(k+1)*16]
+        difference = np.diff(openedChunk_seq)
+        diffe = [i if i <= 0 else 0 for i in difference]
+        closedChunk_seq = np.concatenate([[0],diffe])
+        ClosedChunks.append(closedChunk_seq)
+    ClosedChunks = np.concatenate(ClosedChunks)
+
     metadata = {'SequenceID': np.asarray(seqID),
                 'Complexity': np.asarray(complexity),
                 'GlobalEntropy': np.asarray(seq_entropy),
@@ -305,6 +316,7 @@ def convert_csv_info_to_metadata(csv_path):
                 'WithinChunkPositionReverse': np.asarray(WithinChunkPositionReverse),
                 'ChunkDepth': np.asarray(ChunkDepth),
                 'OpenedChunks': np.asarray(OpenedChunks),
+                'ClosedChunks' : np.asarray(ClosedChunks),
                 'ChunkSize': np.asarray(ChunkSize),
                 'ChunkBeginning': ChunkBeginning,
                 'ChunkEnd': ChunkEnd
@@ -313,7 +325,7 @@ def convert_csv_info_to_metadata(csv_path):
     return metadata
 
 
-def load_epochs_items(subject, cleaned=True, AR_type='local'):
+def load_epochs_items(subject, cleaned=True, AR_type='global'):
 
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -325,9 +337,11 @@ def load_epochs_items(subject, cleaned=True, AR_type='local'):
             extension = subject + '_clean_epo'
         elif AR_type == 'global':
             extension = subject + '_ARglob_epo'
+        print("'\nLoading  the epochs %s "%extension)
     else:
         extension = subject + '_epo'
-        warnings.warn('\nLoading pre-autoreject epochs for subject ' + subject)
+        warnings.warn('\nLoading all the epochs (not autorejected) for subject ' + subject)
+
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
     epochs = mne.read_epochs(fname_in, preload=True)
@@ -620,7 +634,6 @@ def sliding_window(epoch,sliding_window_size=25, sliding_window_step=1,
     :param delta_t: sliding window in number of data points
     :return:
     """
-    epoch2 = epoch.copy()
 
     from ABseq_func import SVM_funcs
 
@@ -641,3 +654,63 @@ def sliding_window(epoch,sliding_window_size=25, sliding_window_step=1,
     epoch2.metadata = epoch.metadata
 
     return epoch2
+
+
+def brackets_for_sequences(seqID):
+    """
+    This function outputs the brackets expression for each sequence
+    """
+    if seqID == 1:
+        #repeat
+        expr = "[AAAAAAAAAAAAAAAA]"
+        hierarchy_level = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+
+    elif seqID == 2:
+        #alternate
+        expr = "[ABABABABABABABAB]"
+        hierarchy_level = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    elif seqID == 3:
+        #2pairs
+        expr = "[[AA][BB][AA][BB][AA][BB][AA][BB]]"
+        hierarchy_level = 2*[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    elif seqID == 4:
+        #quads
+        expr = "[[AAAA][BBBB][AAAA][BBBB]]"
+        hierarchy_level = 2 * [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    elif seqID == 5:
+        #pairs plus alt
+        expr = "[[[AA][BB]],[ABAB]][[[AA][BB]],[ABAB]]"
+        hierarchy_level = [3,3,3,3,2,2,2,2,3,3,3,3,2,2,2,2]
+    elif seqID == 6:
+        # shrink
+        expr = "[[AAAA][BBBB]],[[AA][BB]],[ABAB]"
+        hierarchy_level = [2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1]
+    elif seqID == 7:
+        # complex
+        expr = "A,B,[AAA],[BBBB],A,[BB],[AAA],B"
+        hierarchy_level = [0,0,1,1,1,1,1,1,1,0,1,1,1,1,1,0]
+    return expr
+
+def compute_structure_from_brackets(seqID):
+    """
+    This function outputs the number of nodes open and if there was an opening or a closing of how many nodes
+    """
+    expr = brackets_for_sequences(seqID)
+
+    pos = 0
+    open = 0
+    level_hierarch_list = []
+
+    for ii in range(len(expr)):
+        car = expr[ii]
+        if '[' in car:
+            open +=1
+        if ']' in car:
+            open -=1
+        if 'A' in car or 'B' in car:
+            print("step done")
+            pos +=1
+            level_hierarch_list.append(open)
+
+
+            print(car)

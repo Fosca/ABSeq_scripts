@@ -106,7 +106,8 @@ def script_group_avg_and_plot_gfp():
 
         return plt.gcf()
 
-    for ch_type in ['eeg', 'mag', 'grad']:
+
+    for ch_type in config.ch_types:
         plot_gfp_super_cool(evoked_viol_seq, full_sequence=False, ch_type=ch_type,
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP', fig_name='viol',
                             labels=['Seq_%i' % r for r in range(1, 8)])
@@ -127,7 +128,7 @@ def script_group_avg_and_plot_gfp():
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP',
                             fig_name='full_seq_all_standard', labels=['all_sequences'])
 
-    for ch_type in ['eeg', 'mag', 'grad']:
+    for ch_type in config.ch_types:
         plot_gfp_super_cool(evoked_viol_seq1_pos, full_sequence=True, ch_type=ch_type,
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP',
                             fig_name='viol_seq1_pos', labels=list(evoked_viol_seq1_pos.keys()))
@@ -150,7 +151,7 @@ def script_group_avg_and_plot_gfp():
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP',
                             fig_name='viol_seq7_pos', labels=list(evoked_viol_seq7_pos.keys()))
 
-    for ch_type in ['eeg', 'mag', 'grad']:
+    for ch_type in config.ch_types:
         plot_gfp_super_cool(evoked_standard_seq1, full_sequence=True, ch_type=ch_type,
                             save_path=config.fig_path + op.sep + 'Evoked_and_GFP_plots' + op.sep + 'GROUP',
                             fig_name='full_seq_standard_seq1', labels=[''])
@@ -260,8 +261,7 @@ def script_allsensors_heatmap_figures():
 
     # Loop over the 3 ch_types
     plt.close('all')
-    ch_types = ['eeg', 'grad', 'mag']
-    for ch_type in ch_types:
+    for ch_type in config.ch_types:
         fig, axes = plt.subplots(1, len(evoked.keys()), figsize=(len(evoked.keys()) * 4, 10), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
         ax = axes.ravel()[::1]
@@ -306,7 +306,7 @@ def script_allsensors_heatmap_figures():
     for seqID in range(1, 8):
         evoked_viol_seq_pos['seq' + str(seqID)], _ = evoked_funcs.load_evoked(subject='all', filter_name='full_seq_viol_seq' + str(seqID) + '_pos', filter_not=None)
 
-    for ch_type in ['mag', 'grad', 'eeg']:
+    for ch_type in config.ch_types:
         # Compute & store average gfp vectors in a data_to_plot dict (gfp per subject, then group average)
         data_to_plot = {}
         data_to_plot['hab'] = {}

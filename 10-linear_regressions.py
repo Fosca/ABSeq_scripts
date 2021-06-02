@@ -489,7 +489,7 @@ if DoSecondLevel:
     p_threshold = 0.05
     tmin = 0.000  # timewindow to test (crop data)
     tmax = 0.500  # timewindow to test (crop data)
-    for ch_type in ['eeg', 'grad', 'mag']:
+    for ch_type in config.ch_types:
         for x, regressor_name in enumerate(betas.keys()):
             data_stat = copy.deepcopy(betas[regressor_name])
             data_stat.crop(tmin=tmin, tmax=tmax)  # crop
@@ -668,7 +668,7 @@ def tmp_script_repeataltern_surprise_regression_figures():
 
     # Loop over the 3 ch_types
     plt.close('all')
-    ch_types = ['eeg', 'grad', 'mag']
+    ch_types = config.ch_types
     for ch_type in ch_types:
         fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
