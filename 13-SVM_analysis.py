@@ -41,9 +41,9 @@ config.subjects_list = ['sub01-pa_190002',
 
 def results_SVM_standard_deviant(fname,subjects_list):
 
-    results = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
+    results = {sens: [] for sens in np.concatenate([[config.ch_types, 'all_chans']])}
 
-    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+    for sens in np.concatenate([[config.ch_types, 'all_chans']]):
         results[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
         for subject in subjects_list:
 

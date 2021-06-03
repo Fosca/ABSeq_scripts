@@ -176,7 +176,7 @@ fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'GFP', 'GROUP')
 utils.create_folder(fig_path)
 
 # EACH 7 SEQUENCES, ITEMS, STAND
-for ch_type in ['eeg', 'grad', 'mag']:
+for ch_type in config.ch_types:
     fig = GFP_funcs.plot_GFP_timecourse_7seq(evoked_standard_seq, ch_type=ch_type)
     fig_name = op.join(fig_path, ch_type + '_eachSeqGFP_ITEMS_stand_timecourses.png')
     print('Saving ' + fig_name)
@@ -192,7 +192,7 @@ for ch_type in ['eeg', 'grad', 'mag']:
     plt.close(fig)
 
 # EACH 7 SEQUENCES, FULL SEQUENCES, STAND
-for ch_type in ['eeg', 'grad', 'mag']:
+for ch_type in config.ch_types:
     fig = GFP_funcs.plot_GFP_timecourse_7seq(evoked_full_seq_standard_seq, ch_type=ch_type)
     fig_name = op.join(fig_path, ch_type + '_eachSeqGFP_FULLSEQ_stand_timecourses.png')
     print('Saving ' + fig_name)
