@@ -634,7 +634,7 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
     # ----- initialize the results dictionnary ------
     GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
 
-    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+    for sens in config.ch_types:
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
 
