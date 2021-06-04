@@ -293,7 +293,7 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
                        list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
-                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None,nvalues_feature=2):
+                       balance_features=True, meg=True, eeg=False, distance=True,filter_from_metadata = None,nvalues_feature=2):
 
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
@@ -2188,7 +2188,7 @@ def compute_regression_complexity_epochs(epochs_name):
     return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
 
 
-def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
+def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=False,list_sequences=[1, 2, 3, 4, 5, 6, 7]
                                  , cross_val_func = None,decim=1,filter_from_metadata=None,
                                  SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2):
 
@@ -2206,4 +2206,5 @@ def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=
     results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
                                                cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
                                                list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance,nvalues_feature=nvalues_feature)
+
     np.save(save_path, results_dict)

@@ -236,14 +236,15 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=False):
 
 
 # ----- quelles séquences pour chunk closing ? ----
-def SVM_features_sequence_structure(subject,load_residuals_regression=False):
+def SVM_features_sequence_structure(subject,load_residuals_regression=False,cleaned=True):
 
+    epoching_funcs.update_metadata(subject,clean=cleaned)
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7])
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7])
-    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7])
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
 
 
 def ord_code_16items(subject,load_residuals_regression=False):
