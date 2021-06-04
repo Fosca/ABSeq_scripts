@@ -442,7 +442,7 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-                               sliding_window=False,cleaned = True):
+                               sliding_window=False,cleaned = True, noeeg = True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -467,7 +467,9 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
         epochs.pick_types(stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
+    # 'local' - Just make sure we have the same amount of standards and deviants for a given position. This may end up with
+    #     3 standards/deviants for position 9 and 4 for the others.
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_param="local")
 
     # ----------- do a sliding window to smooth the data if neeeded -------
     if sliding_window:
@@ -477,14 +479,21 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
     # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
-    epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
-    epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+    if noeeg:
+        epochs_balanced_all_chans = epochs_balanced.copy().pick_types(meg=True)
+        sensor_types = ['mag', 'grad', 'all_chans']
+        SVM_results = {'mag': [], 'grad': [], 'all_chans': []}
+        epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_all_chans]
+
+    else:
+        epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+        epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
+        sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
+        SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
+        epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
 
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
-    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
-    sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
-    SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
 
     for l, senso in enumerate(sensor_types):
         epochs_senso = epochs_all[l]
