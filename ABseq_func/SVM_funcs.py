@@ -604,7 +604,7 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
 
 # ______________________________________________________________________________________________________________________
 def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-            sliding_window=False,cleaned=True):
+            sliding_window=True,cleaned=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
