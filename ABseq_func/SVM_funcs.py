@@ -442,7 +442,7 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-                               sliding_window=False):
+                               sliding_window=False,cleaned = True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -463,8 +463,8 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
         epochs.pick_types(meg=True, eeg=True, stim=False)
         suf = 'resid_'
     else:
-        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-        epochs.pick_types(meg=True, eeg=True, stim=False)
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
+        epochs.pick_types(stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
@@ -517,12 +517,14 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
 
     if train_different_blocks:
         suf += 'train_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_separate_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-                               sliding_window=False):
+                               sliding_window=False,cleaned = True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -543,7 +545,7 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
         epochs.pick_types(meg=True, eeg=True, stim=False)
         suf = 'resid_'
     else:
-        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
         epochs.pick_types(meg=True, eeg=True, stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
@@ -585,13 +587,15 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
 
     if train_different_blocks:
         suf += 'train_different_blocks_and_sequences'
+    if cleaned:
+        suf += '_cleaned'
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
 
 # ______________________________________________________________________________________________________________________
 def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-            sliding_window=False):
+            sliding_window=False,cleaned=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -612,6 +616,8 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
         n_folds = 2
     else:
         n_folds = 4
+    if cleaned:
+        suf += '_cleaned'
 
     # ---------- load the data ------------
     SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
