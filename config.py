@@ -140,13 +140,13 @@ runs_dict['sub07-jm_100109'] = ['run01', 'run02', 'run03', 'run04', 'run06', 'ru
 #
 # Example
 # ~~~~~~~
-# >>> ch_types = ['meg', 'eeg']  # to use MEG and EEG channels
+# >>> ch_types_maxfilter = ['meg', 'eeg']  # to use MEG and EEG channels
 # or
-# >>> ch_types = ['meg']  # to use only MEG
+# >>> ch_types_maxfilter = ['meg']  # to use only MEG
 # or
-# >>> ch_types = ['grad']  # to use only gradiometer MEG channels
+# >>> ch_types_maxfilter = ['grad']  # to use only gradiometer MEG channels
 
-ch_types = ['meg', 'eeg']
+ch_types_maxfilter = ['meg', 'eeg']
 
 # ``base_fname`` : str
 #    This automatically generates the name for all files
@@ -1074,7 +1074,7 @@ allow_maxshield = True
 # --- --- You should not touch the next lines --- ---
 
 if (use_maxwell_filter and
-        len(set(ch_types).intersection(('meg', 'grad', 'mag'))) == 0):
+        len(set(ch_types_maxfilter).intersection(('meg', 'grad', 'mag'))) == 0):
     raise ValueError('Cannot use maxwell filter without MEG channels.')
 
 if use_ssp and use_ica:
