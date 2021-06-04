@@ -25,7 +25,7 @@ cluster_funcs.create_qsub('SVM_generate_all_sequences', 'all', 'all', queue='Nsp
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM') -- ok sauf pour subject 16
+cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
 
 #cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok

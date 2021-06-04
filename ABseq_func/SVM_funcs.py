@@ -632,7 +632,7 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
     SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ----- initialize the results dictionnary ------
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
+    GAT_sens_seq = {sens: [] for sens in config.ch_types}
 
     for sens in config.ch_types:
         GAT_all = []
