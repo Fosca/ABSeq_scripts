@@ -942,7 +942,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
 
 # ______________________________________________________________________________________________________________________
 def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
-                                     train_test_different_blocks=True, sliding_window=False):
+                                     train_test_different_blocks=True, sliding_window=False, cleaned = True):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
     :param subject:
@@ -963,6 +963,8 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     if train_test_different_blocks:
         n_folds = 2
         suf += 'train_test_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
 
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
@@ -970,6 +972,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     meg_subject_dir = op.join(config.meg_dir, subject)
     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
     extension = subject + '_1st_element_epo'
+    if cleaned:
+        extension = subject + '_1st_element_ARglob_epo'
+
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
 
@@ -980,13 +985,18 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
 
     epochs_1st_element = epochs_1st_element["TrialNumber > 10"]
-    epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
-                  'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
+    if config.noEEG:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'all_chans': epochs_1st_element.copy().pick_types(meg=True)}
+    else:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                      'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['mag', 'grad', 'eeg', 'all_chans']:
+    for sens in config.ch_types:
 
         print(sens)
         SVM_sens = SVM_results[sens]['SVM']
@@ -1092,7 +1102,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
 
 def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
-                                                 train_test_different_blocks=True, sliding_window=False):
+                                                 train_test_different_blocks=True, sliding_window=False,cleaned=True):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -1112,6 +1122,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     if train_test_different_blocks:
         n_folds = 2
         suf += 'train_test_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
 
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
@@ -1119,6 +1131,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     meg_subject_dir = op.join(config.meg_dir, subject)
     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
     extension = subject + '_1st_element_epo'
+    if cleaned:
+        extension = subject + '_1st_element_ARglob_epo'
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
 
@@ -1127,11 +1141,16 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     if sliding_window:
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
     epochs_1st_element = epochs_1st_element["TrialNumber < 11"]
-    epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
-                  'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
+    if config.noEEG:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'all_chans': epochs_1st_element.copy().pick_types(meg=True)}
+    else:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                      'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in ['all_chans', 'mag', 'grad', 'eeg']:
         # for sens in ['all_chans','mag', 'grad', 'eeg']:

@@ -41,7 +41,7 @@ cluster_funcs.create_qsub('SVM_generate_all_sequences', 'all', 'all', queue='Nsp
 # cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_bigM') # ok
 # cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_bigM') # ok
-cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'op', 'op', queue='Nspin_long', sublist_subjects=['sub10-gp_190568'])
 
 
