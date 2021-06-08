@@ -962,7 +962,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     if train_test_different_blocks:
         n_folds = 2
-        suf += 'train_test_different_blocks'
+        suf += 'train_different_blocks'
     if cleaned:
         suf += '_cleaned'
 
@@ -1121,7 +1121,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
     if train_test_different_blocks:
         n_folds = 2
-        suf += 'train_test_different_blocks'
+        suf += 'train_different_blocks'
     if cleaned:
         suf += '_cleaned'
 
