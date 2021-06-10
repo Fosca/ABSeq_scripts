@@ -950,6 +950,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     min(times) and max(times) define the time window on which we average the spatial filter.
     :param window: set to True if you want to average the spatial filter over a window.
     :return:
+
+    subject = config.subjects_list[0]
+    times=[0.140, 0.180]
+    window=True
+    sliding_window=True
+    cleaned = True
     """
 
     # ==== load the ems results ==============
@@ -1031,9 +1037,6 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
                 epochs_1st_sens_m = epochs_1st_sens[
                     'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
-
-                # if sens =="all_chans":
-                #    epochs_1st_sens_m.pick_types(meg=True,eeg=True)
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
