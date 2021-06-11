@@ -4,11 +4,9 @@ import numpy as np
 
 print('jaime les tomates')
 
-# cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 'stccorcomp', queue='Nspin_long')
+cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
-
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_generate_all_sequences', 'all_dirty', 'all_dirty', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('GAT_SVM_separate_seq', 'GAT_sepseq', 'GAT_sepseq', queue='Nspin_bigM's)
 
