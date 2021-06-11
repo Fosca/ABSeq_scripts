@@ -300,19 +300,19 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     It is meant to generalize across time by construction.
     :return:
 
-    SVM_dec=SVM_decoder()
-    subject = 'sub06-kc_160388'
-    feature_name = 'ChunkBeginning'
-    load_residuals_regression = True
-    list_sequences=[3,4,5,6,7]
-    crop = [-0.1,0.4]
+    subject = config.subjects_list[15]
+    feature_name = 'OpenedChunks'
+    load_residuals_regression = False
+    list_sequences = list_sequences=[3,4,5,6,7]
+    cross_val_func = None
+    decim = 1
+    filter_from_metadata = None
+    SVM_dec = SVM_funcs.regression_decoder()
+    balance_features = False
+    distance = False
 
-    decim = 10
-    cross_val_func=SVM_funcs.leave_one_sequence_out
-    balance_features=True
     meg=True
     eeg=False
-    distance = True
 
     """
 
@@ -321,9 +321,10 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         # metadata = epoching_funcs.update_metadata(subject, clean=True,recompute=True)
     else:
         epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-        metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
-                                                  recompute=True)
-        epochs.metadata = metadata
+        if subject!="sub16-ma_190185":
+            metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                                      recompute=True)
+            epochs.metadata = metadata
 
 
     epochs = epoching_funcs.sliding_window(epochs,sliding_window_size=25,sliding_window_step=2)
