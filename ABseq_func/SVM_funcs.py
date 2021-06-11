@@ -311,7 +311,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     cross_val_func=SVM_funcs.leave_one_sequence_out
     balance_features=True
     meg=True
-    eeg=True
+    eeg=False
     distance = True
 
     """
@@ -380,7 +380,8 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             nfold += 1
     score = np.mean(scores, axis=0)
 
-    dec = np.concatenate(dec)
+    if distance:
+        dec = np.concatenate(dec)
     y_tests =  np.concatenate(y_tests)
     times = epochs.times
     results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
@@ -2194,6 +2195,20 @@ def compute_regression_complexity_epochs(epochs_name):
 def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=False,list_sequences=[1, 2, 3, 4, 5, 6, 7]
                                  , cross_val_func = None,decim=1,filter_from_metadata=None,
                                  SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2):
+
+    """
+    subject = config.subjects_list[0]
+    feature_name = 'OpenedChunks'
+    load_residuals_regression = False
+    list_sequences = list_sequences=[3,4,5,6,7]
+    cross_val_func = None
+    decim = 1
+    filter_from_metadata = None
+    SVM_dec = SVM_funcs.regression_decoder()
+    balance_features = False
+    distance = False
+    """
+
 
     import os.path as op
 
