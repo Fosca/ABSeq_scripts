@@ -2081,7 +2081,10 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print("The times are \n")
         print(times)
         if plot_per_subjects:
-            pretty_gat(GAT_results[score_field], times, chance=chance, clim=[vmin, vmax])
+            # if vmin is None:
+            #     vmin = np.mean(GAT_results[score_field])-np.std(GAT_results[score_field])
+            #     vmax = np.mean(GAT_results[score_field]) + np.std(GAT_results[score_field])
+            pretty_gat(GAT_results[score_field], times)
             plt.gcf().savefig(fig_path+fig_name+subject+'.png')
             plt.close('all')
         if score_field=='score' or score_field == 'GAT':
