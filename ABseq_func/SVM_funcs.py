@@ -2081,7 +2081,6 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print("The times are \n")
         print(times)
         if plot_per_subjects:
-            utils.create_folder(fig_path_subj)
             pretty_gat(GAT_results[score_field], times, chance=chance, clim=[vmin, vmax])
             plt.gcf().savefig(fig_path+fig_name+subject+'.png')
             plt.close('all')
