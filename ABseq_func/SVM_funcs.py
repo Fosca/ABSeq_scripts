@@ -2049,7 +2049,7 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
     return coeff_complexity, coeff_constant, times
 
 
-def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
+def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True):
 
 
     """
@@ -2080,6 +2080,12 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print("The number of time points is %i"%len(times))
         print("The times are \n")
         print(times)
+        if plot_per_subjects:
+            fig_path_subj = fig_path + '/subjects/'
+            utils.create_folder(fig_path_subj)
+            pretty_gat(GAT_results[score_field], times, chance=chance, clim=[vmin, vmax])
+            plt.gcf().savefig(fig_path_subj+subject+fig_name+'.png')
+            plg.close('all')
         if score_field=='score' or score_field == 'GAT':
             GAT_all.append(GAT_results[score_field])
         elif score_field == 'distance':
