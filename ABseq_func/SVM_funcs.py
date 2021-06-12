@@ -354,12 +354,14 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     scores = []
     dec = []
     y_tests = []
+    y_preds = []
     if cross_val_func is not None:
         X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
         y_tests.append(y_test)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
+            y_preds.append(SVM_dec.predict(X_test[k]))
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
@@ -374,6 +376,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             SVM_dec.fit(X_train, y_train)
+            y_preds.append(SVM_dec.predict(X_test))
             scores.append(SVM_dec.score(X_test, y_test))
             y_tests.append(y_test)
             if distance:
@@ -384,8 +387,9 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     if distance:
         dec = np.concatenate(dec)
     y_tests =  np.concatenate(y_tests)
+    y_preds =  np.concatenate(y_preds)
     times = epochs.times
-    results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
+    results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec,'y_preds':y_preds}
 
     return results_dict
 
@@ -2047,6 +2051,21 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
 
 def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
 
+
+    """
+    analysis_name = 'feature_decoding/' + 'full_data_OpenedChunks_score_dict'
+    analysis_name = 'feature_decoding/' + 'full_data_ClosedChunks_score_dict'
+
+    subjects_list = config.subjects_list
+    fig_name = 'test'
+    chance = 0
+    score_field='score'
+    folder_name='GAT'
+    vmin = None
+    vmax = None
+    compute_significance=None
+
+    """
     GAT_all = []
     fig_path = op.join(config.fig_path, 'SVM', folder_name)
     count = 0
