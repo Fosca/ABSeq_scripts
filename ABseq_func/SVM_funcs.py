@@ -357,11 +357,11 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     y_preds = []
     if cross_val_func is not None:
         X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
-        y_tests.append(y_test)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
             y_preds.append(SVM_dec.predict(X_test[k]))
+            y_tests.append(y_test[k])
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
