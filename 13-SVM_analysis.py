@@ -154,8 +154,8 @@ for subject in config.subjects_list:
 
 anal_name = 'feature_decoding/' + 'full_data_OpenedChunks_score_dict'
 
-coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/GAT/feature_decoding/OpenedChunks', chance=0, score_field='score', vmin=None,
-                vmax=None, compute_significance=None)
+coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/OpenedChunks', chance=0, score_field='score',
+                compute_significance=None,plot_per_subjects=True)
 
 # __________Linear regression of the GATs as a function of complexity____________________________________________
 SVM_funcs.check_missing_GAT_data(config.subjects_list)
