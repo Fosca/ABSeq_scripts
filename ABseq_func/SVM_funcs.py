@@ -4,6 +4,7 @@ import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 from initialization_paths import initialization_paths
 import os.path as op
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -2068,6 +2069,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
     """
     GAT_all = []
     fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    utils.create_folder(op.dirname(fig_path))
     count = 0
 
     for subject in subjects_list:
