@@ -2050,7 +2050,7 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
     return coeff_complexity, coeff_constant, times
 
 
-def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True):
+def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True):
 
 
     """
@@ -2068,8 +2068,9 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
 
     """
     GAT_all = []
-    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    fig_path = op.join(config.fig_path, 'SVM/GAT/'+fig_name)
     utils.create_folder(op.dirname(fig_path))
+
     count = 0
 
     for subject in subjects_list:
@@ -2087,7 +2088,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
             #     vmin = np.mean(GAT_results[score_field])-np.std(GAT_results[score_field])
             #     vmax = np.mean(GAT_results[score_field]) + np.std(GAT_results[score_field])
             pretty_gat(GAT_results[score_field], times)
-            plt.gcf().savefig(fig_path+fig_name+subject+'.png')
+            plt.gcf().savefig(fig_path+subject+'.png')
             plt.close('all')
         if score_field=='score' or score_field == 'GAT':
             GAT_all.append(GAT_results[score_field])
@@ -2121,7 +2122,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         else:
             pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance)
 
-    plt.gcf().savefig(fig_path+'/'+fig_name)
+    plt.gcf().savefig(fig_path)
     plt.close('all')
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
