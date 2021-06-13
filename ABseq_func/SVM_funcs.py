@@ -2083,7 +2083,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print("The number of time points is %i"%len(times))
         print("The times are \n")
         print(times)
-        if plot_per_subjects:
+        if plot_per_subjects and score_field != 'regression':
             # if vmin is None:
             #     vmin = np.mean(GAT_results[score_field])-np.std(GAT_results[score_field])
             #     vmax = np.mean(GAT_results[score_field]) + np.std(GAT_results[score_field])
@@ -2095,7 +2095,6 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         elif score_field == 'distance':
             GAT_all.append(np.mean(GAT_results[score_field],axis=0))
         elif score_field == 'regression':
-
             score = np.zeros(GAT_results['y_preds'].shape[1:3])
             from sklearn.metrics import explained_variance_score
             y_test = GAT_results['y_test']
