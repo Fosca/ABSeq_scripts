@@ -2094,6 +2094,18 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
             GAT_all.append(GAT_results[score_field])
         elif score_field == 'distance':
             GAT_all.append(np.mean(GAT_results[score_field],axis=0))
+        elif score_field == 'regression':
+
+            score = np.zeros(GAT_results['y_preds'].shape[1:3])
+            from sklearn.metrics import explained_variance_score
+            y_test = GAT_results['y_test']
+            y_preds = GAT_results['y_preds']
+
+            for ti in range(GAT_results['y_preds'].shape[1]):
+                for tj in range(GAT_results['y_preds'].shape[2]):
+                    score[ti,tj] = explained_variance_score(y_test,y_preds[:,ti,tj])
+            GAT_all.append(score)
+
 
     GAT_all = np.asarray(GAT_all)
     GAT_all_new = np.zeros((len(subjects_list),GAT_all[0].shape[0],GAT_all[0].shape[1]))
