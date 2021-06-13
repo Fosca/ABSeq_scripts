@@ -2102,7 +2102,8 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
 
             for ti in range(GAT_results['y_preds'].shape[1]):
                 for tj in range(GAT_results['y_preds'].shape[2]):
-                    score[ti,tj] = explained_variance_score(y_test,y_preds[:,ti,tj])
+                    # score[ti,tj] = explained_variance_score(y_test,y_preds[:,ti,tj])
+                    score[ti, tj] = np.corrcoef(y_test, y_preds[:, ti, tj])[0,1]
             GAT_all.append(score)
 
 
