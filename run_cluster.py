@@ -4,7 +4,8 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('sanity_check_ARglobal', 'sanity', 'sanity', queue='Nspin_bigM', sublist_subjects=['sub12-lg_170436'])
+for i in range(10):
+    cluster_funcs.create_qsub('sanity_check_ARglobal', 'sanity', 'sanity', queue='Nspin_bigM', sublist_subjects=['sub12-lg_170436'])
 
 
 # cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
