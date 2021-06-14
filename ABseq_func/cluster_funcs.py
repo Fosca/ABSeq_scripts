@@ -182,6 +182,12 @@ def SVM_full_sequences_16items(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
 
+def sanity_check_ARglobal(subject):
+    for i in range(10):
+        epoching_funcs.run_epochs(subject,epoch_on_first_element=False,baseline=False)
+
+
+
 # ======================================================================================================================
 # =====================================  FEATURES DECODING =============================================================
 # ======================================================================================================================

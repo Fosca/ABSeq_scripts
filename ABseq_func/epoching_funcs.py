@@ -464,6 +464,16 @@ def metadata_balance_epochs_violation_positions(metadata):
 
 
 def run_epochs(subject, epoch_on_first_element, baseline=True):
+
+    # SEt this param to True if you want to run autoreject locally too when config.autorject = True
+    from datetime import datetime
+    now = datetime.now().time()
+
+
+    ARlocal = False
+    suffix = str(now.microsecond)
+
+
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
     run_info_subject_dir = op.join(config.run_info_dir, subject)
@@ -581,7 +591,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
 
     print("Output: ", epochs_fname)
-    epochs.save(epochs_fname, overwrite=True)
+    # epochs.save(epochs_fname, overwrite=True)
     # epochs.save(epochs_fname)
 
     if config.autoreject:
@@ -602,24 +612,26 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             extension = subject + '_ARglob_epo'
         epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
         print("Output: ", epochs_fname)
-        epochsARglob.save(epochs_fname, overwrite=True)
+        # epochsARglob.save(epochs_fname, overwrite=True)
         # Save autoreject thresholds
-        pickle.dump(reject, open(epochs_fname[:-4] + '_ARglob_thresholds.obj', 'wb'))
+        pickle.dump(reject, open(epochs_fname[:-4] +suffix+ '_ARglob_thresholds.obj', 'wb'))
 
         # Running AutoReject "local" (https://autoreject.github.io)
-        ar = AutoReject()
-        epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
-        print('  Writing "AR local" cleaned epochs to disk')
-        if epoch_on_first_element:
-            extension = subject + '_1st_element_clean_epo'
-        else:
-            extension = subject + '_clean_epo'
-        epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
-        print("Output: ", epochs_fname)
-        epochsAR.save(epochs_fname, overwrite=True)
-        # Save autoreject reject_log
-        pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_local_log.obj', 'wb'))
-        # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
+        if ARlocal:
+
+            ar = AutoReject()
+            epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
+            print('  Writing "AR local" cleaned epochs to disk')
+            if epoch_on_first_element:
+                extension = subject + '_1st_element_clean_epo'
+            else:
+                extension = subject + '_clean_epo'
+            epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
+            print("Output: ", epochs_fname)
+            epochsAR.save(epochs_fname, overwrite=True)
+            # Save autoreject reject_log
+            pickle.dump(reject_log, open(epochs_fname[:-4] + '_reject_local_log.obj', 'wb'))
+            # To read, would be: reject_log = pickle.load(open(epochs_fname[:-4]+'_reject_log.obj', 'rb'))
 
 
 
