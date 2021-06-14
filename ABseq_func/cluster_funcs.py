@@ -245,8 +245,8 @@ def SVM_features_sequence_structure(subject,load_residuals_regression=False,clea
 
     metadata = epoching_funcs.update_metadata(subject,clean=cleaned)
     epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
-    epo.metadata = metadata
-    epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
+    # epo.metadata = metadata
+    # epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
@@ -254,7 +254,6 @@ def SVM_features_sequence_structure(subject,load_residuals_regression=False,clea
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
 
-metamerge = metadata.merge(meta1,indicator=True)
 
 def ord_code_16items(subject,load_residuals_regression=False):
     # SVM_funcs.SVM_ordinal_code_train_quads_test_others(subject, load_residuals_regression=load_residuals_regression)
