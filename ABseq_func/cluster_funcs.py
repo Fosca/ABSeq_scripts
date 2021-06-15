@@ -179,7 +179,7 @@ def SVM_GAT_all_sequences(subject):
 
 
 def SVM_full_sequences_16items1(subject):
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.120, 0.190], window=True, sliding_window=True,,cleaned=True)
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.120, 0.190], window=True, sliding_window=True,cleaned=True)
 def SVM_full_sequences_16items2(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.120, 0.190], window=True, sliding_window=True,cleaned=True)
 
