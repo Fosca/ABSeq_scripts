@@ -295,7 +295,7 @@ def convert_csv_info_to_metadata(csv_path):
         difference = np.diff(openedChunk_seq)
         diffe = [i if i <= 0 else 0 for i in difference]
         closedChunk_seq = np.concatenate([[0],diffe])
-        ClosedChunks.append(closedChunk_seq)
+        ClosedChunks.append(-closedChunk_seq)
     ClosedChunks = np.concatenate(ClosedChunks)
 
     metadata = {'SequenceID': np.asarray(seqID),

@@ -49,8 +49,8 @@ def regression_decoder():
     It is meant to generalize across time by construction.
     :return:
     """
-    clf = make_pipeline(StandardScaler(), LinearSVR())
-    time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=8, verbose=True)
+    reg = make_pipeline(StandardScaler(), LinearSVR())
+    time_gen = GeneralizingEstimator(reg, scoring=None, n_jobs=8, verbose=True)
 
     return time_gen
 
@@ -475,7 +475,7 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
 
     # ----------- balance the position of the standard and the deviants -------
     # 'local' - Just make sure we have the same amount of standards and deviants for a given position. This may end up with
-    #     3 standards/deviants for position 9 and 4 for the others.
+    #     1 standards/deviants for position 9 and 4 for the others.
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_param="local")
 
     # ----------- do a sliding window to smooth the data if neeeded -------
@@ -1043,7 +1043,10 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                 trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[
                     0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
                 epochs_1st_sens_m = epochs_1st_sens[
-                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
+                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (seqID_m, run_m, trial_number_m)]
+
+
+
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
@@ -2104,6 +2107,10 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
                 for tj in range(GAT_results['y_preds'].shape[2]):
                     # score[ti,tj] = explained_variance_score(y_test,y_preds[:,ti,tj])
                     score[ti, tj] = np.corrcoef(y_test, y_preds[:, ti, tj])[0,1]
+
+            pretty_gat(score, times)
+            plt.gcf().savefig(fig_path+subject+'.png')
+            plt.close('all')
             GAT_all.append(score)
 
 

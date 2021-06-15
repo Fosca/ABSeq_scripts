@@ -162,8 +162,8 @@ def SVM_generate_different_sequences(subject):
 
 def SVM_generate_all_sequences(subject):
     # ---- I modified the following functions so they run on the cleaned epochs ------
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=False)
-    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=False)
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
 
 
 def GAT_SVM_separate_seq(subject):
@@ -243,7 +243,7 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=False):
 def SVM_features_sequence_structure(subject,load_residuals_regression=False,cleaned=False):
 
     metadata = epoching_funcs.update_metadata(subject,clean=cleaned)
-    epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned,baseline=False)
+    # epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned,baseline=False)
     # epo.metadata = metadata
     # epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,

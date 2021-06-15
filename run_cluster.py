@@ -4,7 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
-cluster_funcs.create_qsub('epoching_ARglobal', 'sanity', 'sanity', queue='Nspin_bigM')
+cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
 
 # cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')

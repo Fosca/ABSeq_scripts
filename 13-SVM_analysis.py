@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ABseq_func.SVM_funcs
 from ABseq_func import *
-from ABseq_func import SVM_funcs
+from ABseq_func import SVM_funcs, autoreject_funcs
 import mne
 import os.path as op
 from importlib import reload
@@ -16,6 +16,13 @@ import pandas as pd
 from scipy.signal import savgol_filter
 from jr.plot import pretty_gat
 import logging
+
+# epo = epoching_funcs.load_epochs_items(config.subjects_list[0],cleaned=False)
+#
+# np.unique(epo.metadata["ChunkDepth"].values)
+# np.unique(epo.metadata["ClosedChunks"].values)
+
+
 
 # ________________The list of participants (4,8 previously excluded and 16 has a problem)_______________________________
 #
@@ -156,7 +163,7 @@ for subject in config.subjects_list:
 for name in ['full_data_OpenedChunks_score_dict','full_data_ClosedChunks_score_dict','full_data_ChunkDepth_score_dict']:
     anal_name = 'feature_decoding/' + name
     coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_','').replace('_score_dict','')+'/r_', chance=0, score_field='regression',
-                    compute_significance=None,plot_per_subjects=True,vmin=None,vmax=None)
+                    compute_significance=None,plot_per_subjects=True,vmin=-0.1,vmax=0.1)
 
 # __________Linear regression of the GATs as a function of complexity____________________________________________
 SVM_funcs.check_missing_GAT_data(config.subjects_list)
