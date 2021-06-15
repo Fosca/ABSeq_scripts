@@ -147,12 +147,12 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
 
 
 
-results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
-plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_SW_new',clim=[0.37,0.63])
+results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',config.subjects_list)
+plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
 
 for subject in config.subjects_list:
-    results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',[subject])
-    plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/subjects/',compute_significance=[0,0.6],suffix=subject+'_SW_new',clim=[0.37,0.63])
+    results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',[subject])
+    plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/subjects/',compute_significance=[0,0.6],suffix=subject+'_cleaned_SW',clim=[0.37,0.63])
 
 
 # full_data_OpenedChunks_score_dic
