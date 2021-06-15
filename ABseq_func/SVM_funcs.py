@@ -1114,17 +1114,22 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
 
 def unique_test_16(epochs_1st_sens, epochs_sens, test_indices):
+
+    # epochs_sens = epoching_funcs.load_epochs_items(config.subjects_list[0])
+    # test_indices = range(1,120)
+
     all_fields = []
     for m in test_indices:
         seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
         run_m = epochs_sens[m].metadata['RunNumber'].values[0]
         trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]
-
-        truple = (seqID_m, run_m, trial_number_m)
+        truple = (int(seqID_m), int(run_m), int(trial_number_m))
+        print(truple)
         all_fields.append(truple)
-    unique_fields = list(set(truple))
+    unique_fields = list(set(all_fields))
     epochs_1st_item = []
     for seqID, run_number, trial_number in unique_fields:
+        print(seqID)
         epochs_1st_item.append(epochs_1st_sens[
                                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (
                                    seqID, run_number, trial_number)])
