@@ -947,6 +947,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
     return fig
 
 
+
 # ______________________________________________________________________________________________________________________
 def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
                                      train_test_different_blocks=True, sliding_window=False, cleaned = True):
@@ -1036,17 +1037,17 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
             epochs_sens_test = epochs_sens[test_indices]
             points = epochs_sens_test.time_as_index(times)
 
-            for m in test_indices:
+            # ---- extract one unique 16 item sequence that may correspond to various test_indices ---
+            epochs_1st_item_unique = unique_test_16(epochs_1st_sens, epochs_sens, test_indices)
 
-                seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
-                run_m = epochs_sens[m].metadata['RunNumber'].values[0]
-                trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[
-                    0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
-                epochs_1st_sens_m = epochs_1st_sens[
-                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (seqID_m, run_m, trial_number_m)]
+            for m, epochs_1st_sens_m in enumerate(epochs_1st_item_unique):
 
-
-
+                # seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
+                # run_m = epochs_sens[m].metadata['RunNumber'].values[0]
+                # trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[
+                #     0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
+                # epochs_1st_sens_m = epochs_1st_sens[
+                #     'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (seqID_m, run_m, trial_number_m)]
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
@@ -1086,13 +1087,11 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                         metadata_m['SVM_filter_tmax_window'] = times[-1]
                         data_frame_meta = data_frame_meta.append(metadata_m)
                         counter += 1
-
                 else:
                     print(
                         '========================================================================================================================================')
                     print(
-                        ' Epoch on first element for sequence %s Run number %i and Trial number %i was excluded by autoreject' % (
-                        seqID_m, run_m, trial_number_m))
+                        'len(epochs_1st_sens_m.events) was equal to 0')
                     print(
                         '========================================================================================================================================')
             end = time.time()
@@ -1112,6 +1111,25 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                                   overwrite=True)
 
     return True
+
+
+def unique_test_16(epochs_1st_sens, epochs_sens, test_indices):
+    all_fields = []
+    for m in test_indices:
+        seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
+        run_m = epochs_sens[m].metadata['RunNumber'].values[0]
+        trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]
+
+        truple = (seqID_m, run_m, trial_number_m)
+        all_fields.append(truple)
+    unique_fields = list(set(truple))
+    epochs_1st_item = []
+    for seqID, run_number, trial_number in unique_fields:
+        epochs_1st_item.append(epochs_1st_sens[
+                                   'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (
+                                   seqID, run_number, trial_number)])
+
+    return mne.concatenate_epochs(epochs_1st_item)
 
 
 def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
