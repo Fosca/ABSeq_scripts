@@ -15,15 +15,18 @@ from mne.parallel import parallel_func
 import pandas as pd
 from scipy.signal import savgol_filter
 from jr.plot import pretty_gat
+import logging
 
 # ________________The list of participants (4,8 previously excluded and 16 has a problem)_______________________________
-
+#
 config.subjects_list = ['sub01-pa_190002',
  'sub02-ch_180036',
  'sub03-mr_190273',
+ 'sub04-rf_190499',
  'sub05-cr_170417',
  'sub06-kc_160388',
  'sub07-jm_100109',
+ 'sub08-cc_150418',
  'sub09-ag_170045',
  'sub10-gp_190568',
  'sub11-fr_190151',
@@ -31,20 +34,46 @@ config.subjects_list = ['sub01-pa_190002',
  'sub13-lq_180242',
  'sub14-js_180232',
  'sub15-ev_070110',
+ # 'sub16-ma_190185',
  'sub17-mt_170249',
  'sub18-eo_190576',
  'sub19-mg_190180']
+
+#importing the module
+
+
+
 
 # ___________________________________________________________________________
 # ============== GAT decoding Standard // Deviant ===========================
 # ___________________________________________________________________________
 
+
+# now we will Create and configure logger
+logging.basicConfig(filename=config.result_path + '/SVM/' + "number_epochs_forSVM.log",
+                    format='%(asctime)s %(message)s',
+                    filemode='w')
+# Let us Create an object
+logger = logging.getLogger()
+# Now we are going to Set the threshold of logger to DEBUG
+# logger.setLevel()
+for subject in config.subjects_list:
+    fname = "SW_train_different_blocksSVM_results.npy"
+    load_path = config.result_path+'/SVM/'+subject+'/'+fname
+    data = np.load(load_path, allow_pickle=True).item()
+    # some messages to test
+    logger.info("There are %i epochs that are in the training + testing sets for subject %s"%(len(data['mag']['epochs']),subject) )
+
+
+
+
 def results_SVM_standard_deviant(fname,subjects_list):
 
-    results = {sens: [] for sens in np.concatenate([[config.ch_types, 'all_chans']])}
+    results = {sens: [] for sens in config.ch_types}
 
-    for sens in np.concatenate([[config.ch_types, 'all_chans']]):
+    for sens in config.ch_types:
         results[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        results[sens]["average_all_sequences"] = []
         for subject in subjects_list:
 
             load_path = config.result_path+'/SVM/'+subject+'/'+fname
@@ -56,11 +85,9 @@ def results_SVM_standard_deviant(fname,subjects_list):
             for seqID in range(1,8):
                 results[sens]["SeqID_"+str(seqID)].append(data_GAT_sens["SeqID_"+str(seqID)])
 
+            results[sens]["average_all_sequences"].append(data_GAT_sens["average_all_sequences"])
+
     return results, times
-
-results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
-results_sepseq, times_sepseq = results_SVM_standard_deviant('SW_train_different_blocks_and_sequencesGAT_results.npy',config.subjects_list)
-
 
 def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None,tail=1):
     if compute_significance is not None:
@@ -78,7 +105,6 @@ def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_trai
     plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.png')
     plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.svg')
     plt.close('all')
-
 
 
 def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None):
@@ -105,21 +131,32 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
             plt.close('all')
 
-
-plot_results_GAT_chans_seqID(results,times,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks',clim=[0.37,0.63])
-plot_results_GAT_chans_seqID(results_sepseq,times_sepseq,'/SVM/GAT',compute_significance=[0,0.6],suffix='SW_train_different_blocks_different_seq',clim=[0.33,0.67])
-
-
-
-GAT_sens_all, times = plot_all_subjects_results_SVM('SW_train_test_different_blocksGAT_results_score',config.subjects_list,
-                                                    'SW_train_test_different_blocksGAT_results_score',plot_per_sequence=True,
-                                                    vmin=-0.1,vmax=0.1,analysis_type='perSeq',compute_significance = [0,0.6])
-
-# subjects_list = ['sub02-ch_180036', 'sub05-cr_170417', 'sub06-kc_160388',
-#                   'sub09-ag_170045', 'sub10-gp_190568', 'sub11-fr_190151', 'sub12-lg_170436',
-#                  'sub13-lq_180242', 'sub14-js_180232', 'sub15-ev_070110', 'sub16-ma_190185', 'sub17-mt_170249', 'sub18-eo_190576']
+# load reject log for subj01 on epochs items
+# epo = epoching_funcs.load_epochs_items(config.subjects_list[11],cleaned=True)
+# epo_balance = epoching_funcs.balance_epochs_violation_positions(epo)
+#
+# epo_not_clean = epoching_funcs.load_epochs_items(config.subjects_list[0],cleaned=False)
+# epo_balance_not_clean = epoching_funcs.balance_epochs_violation_positions(epo_not_clean)
 
 
+
+results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',config.subjects_list)
+plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_SW_new',clim=[0.37,0.63])
+
+for subject in config.subjects_list:
+    results, times = results_SVM_standard_deviant('SW_train_different_blocksGAT_results.npy',[subject])
+    plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/subjects/',compute_significance=[0,0.6],suffix=subject+'_SW_new',clim=[0.37,0.63])
+
+
+# full_data_OpenedChunks_score_dic
+# full_data_ClosedChunks_score_dict
+# full_data_ChunkDepth_score_dict
+
+
+for name in ['full_data_OpenedChunks_score_dict','full_data_ClosedChunks_score_dict','full_data_ChunkDepth_score_dict']:
+    anal_name = 'feature_decoding/' + name
+    coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_','').replace('_score_dict','')+'/r_', chance=0, score_field='regression',
+                    compute_significance=None,plot_per_subjects=True,vmin=None,vmax=None)
 
 # __________Linear regression of the GATs as a function of complexity____________________________________________
 SVM_funcs.check_missing_GAT_data(config.subjects_list)

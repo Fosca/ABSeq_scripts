@@ -156,14 +156,15 @@ def autoreject_marmouset(subject):
 # ---------------------------------------- DECODING FUNCTIONS FOR THE CLUSTER ------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 def SVM_generate_different_sequences(subject):
-    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
-    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
 
 
 def SVM_generate_all_sequences(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
-def GAT_SVM_all_seq(subject):
-    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    # ---- I modified the following functions so they run on the cleaned epochs ------
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=False)
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=False)
+
 
 def GAT_SVM_separate_seq(subject):
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
@@ -176,9 +177,15 @@ def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
 
 def SVM_full_sequences_16items(subject):
+    # --- to do when the GAT SVM functions will have run --
     # ----- We test on the 16 items sequences. We average the predictions of the decoders between 140 and 180 ms -----
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
+
+def sanity_check_ARglobal(subject):
+    epoching_funcs.run_epochs(subject,epoch_on_first_element=False,baseline=False)
+
+
 
 # ======================================================================================================================
 # =====================================  FEATURES DECODING =============================================================
@@ -231,6 +238,21 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=False):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
+
+
+# ----- quelles séquences pour chunk closing ? ----
+def SVM_features_sequence_structure(subject,load_residuals_regression=False,cleaned=False):
+
+    metadata = epoching_funcs.update_metadata(subject,clean=cleaned)
+    epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
+    # epo.metadata = metadata
+    # epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False)
 
 
 def ord_code_16items(subject,load_residuals_regression=False):

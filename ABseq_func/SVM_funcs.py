@@ -4,6 +4,7 @@ import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 from initialization_paths import initialization_paths
 import os.path as op
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -293,26 +294,26 @@ def SVM_ordinal_code_train_quads_test_others(subject,load_residuals_regression=F
 # ______________________________________________________________________________________________________________________
 def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SVM_dec=SVM_decoder(),
                        list_sequences=[1, 2, 3, 4, 5, 6, 7], decim=1, crop=None, cross_val_func=None,
-                       balance_features=True, meg=True, eeg=True, distance=True,filter_from_metadata = None,nvalues_feature=2):
+                       balance_features=True, meg=True, eeg=False, distance=True,filter_from_metadata = None,nvalues_feature=2):
 
     """
     Builds an SVM decoder that will be able to output the distance to the hyperplane once trained on data.
     It is meant to generalize across time by construction.
     :return:
 
-    SVM_dec=SVM_decoder()
-    subject = 'sub06-kc_160388'
-    feature_name = 'ChunkBeginning'
-    load_residuals_regression = True
-    list_sequences=[3,4,5,6,7]
-    crop = [-0.1,0.4]
+    subject = config.subjects_list[15]
+    feature_name = 'OpenedChunks'
+    load_residuals_regression = False
+    list_sequences = list_sequences=[3,4,5,6,7]
+    cross_val_func = None
+    decim = 1
+    filter_from_metadata = None
+    SVM_dec = SVM_funcs.regression_decoder()
+    balance_features = False
+    distance = False
 
-    decim = 10
-    cross_val_func=SVM_funcs.leave_one_sequence_out
-    balance_features=True
     meg=True
-    eeg=True
-    distance = True
+    eeg=False
 
     """
 
@@ -321,9 +322,10 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
         # metadata = epoching_funcs.update_metadata(subject, clean=True,recompute=True)
     else:
         epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-        metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
-                                                  recompute=True)
-        epochs.metadata = metadata
+        if subject!="sub16-ma_190185":
+            metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,
+                                                      recompute=True)
+            epochs.metadata = metadata
 
 
     epochs = epoching_funcs.sliding_window(epochs,sliding_window_size=25,sliding_window_step=2)
@@ -353,12 +355,14 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     scores = []
     dec = []
     y_tests = []
+    y_preds = []
     if cross_val_func is not None:
         X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
-        y_tests.append(y_test)
         n_folds = len(list_sequences)
         for k in range(n_folds):
             SVM_dec.fit(X_train[k], y_train[k])
+            y_preds.append(SVM_dec.predict(X_test[k]))
+            y_tests.append(y_test[k])
             scores.append(SVM_dec.score(X_test[k], y_test[k]))
             if distance:
                 dec.append(SVM_dec.decision_function(X_test[k]))
@@ -373,6 +377,7 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
             SVM_dec.fit(X_train, y_train)
+            y_preds.append(SVM_dec.predict(X_test))
             scores.append(SVM_dec.score(X_test, y_test))
             y_tests.append(y_test)
             if distance:
@@ -380,10 +385,12 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
             nfold += 1
     score = np.mean(scores, axis=0)
 
-    dec = np.concatenate(dec)
+    if distance:
+        dec = np.concatenate(dec)
     y_tests =  np.concatenate(y_tests)
+    y_preds =  np.concatenate(y_preds)
     times = epochs.times
-    results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec}
+    results_dict = {'score':score,'times':times,'y_test':y_tests,'distance':dec,'y_preds':y_preds}
 
     return results_dict
 
@@ -442,7 +449,7 @@ def balance_epochs_for_feature(epochs, feature_name, list_sequences,ndifferent_v
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-                               sliding_window=False):
+                               sliding_window=False,cleaned = True, noeeg = True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -463,11 +470,13 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
         epochs.pick_types(meg=True, eeg=True, stim=False)
         suf = 'resid_'
     else:
-        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
-        epochs.pick_types(meg=True, eeg=True, stim=False)
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
+        epochs.pick_types(stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
-    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs, balance_violation_standards=True)
+    # 'local' - Just make sure we have the same amount of standards and deviants for a given position. This may end up with
+    #     3 standards/deviants for position 9 and 4 for the others.
+    epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs,balance_param="local")
 
     # ----------- do a sliding window to smooth the data if neeeded -------
     if sliding_window:
@@ -477,14 +486,21 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
     # =============================================================================================
     epochs_balanced_mag = epochs_balanced.copy().pick_types(meg='mag')
     epochs_balanced_grad = epochs_balanced.copy().pick_types(meg='grad')
-    epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
-    epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+    if noeeg:
+        epochs_balanced_all_chans = epochs_balanced.copy().pick_types(meg=True)
+        sensor_types = ['mag', 'grad', 'all_chans']
+        SVM_results = {'mag': [], 'grad': [], 'all_chans': []}
+        epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_all_chans]
+
+    else:
+        epochs_balanced_all_chans = epochs_balanced.copy().pick_types(eeg=True, meg=True)
+        epochs_balanced_eeg = epochs_balanced.copy().pick_types(eeg=True, meg=False)
+        sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
+        SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
+        epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
 
     # ==============================================================================================
     y_violornot = np.asarray(epochs_balanced.metadata['ViolationOrNot'].values)
-    epochs_all = [epochs_balanced_mag, epochs_balanced_grad, epochs_balanced_eeg, epochs_balanced_all_chans]
-    sensor_types = ['mag', 'grad', 'eeg', 'all_chans']
-    SVM_results = {'mag': [], 'grad': [], 'eeg': [], 'all_chans': []}
 
     for l, senso in enumerate(sensor_types):
         epochs_senso = epochs_all[l]
@@ -517,12 +533,14 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
 
     if train_different_blocks:
         suf += 'train_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
 # ______________________________________________________________________________________________________________________
 def generate_SVM_separate_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-                               sliding_window=False):
+                               sliding_window=False,cleaned = True):
     """
     Generates the SVM decoders for all the channel types using 4 folds. We save the training and testing indices as well as the epochs
     in order to be flexible for the later analyses.
@@ -543,7 +561,7 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
         epochs.pick_types(meg=True, eeg=True, stim=False)
         suf = 'resid_'
     else:
-        epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
+        epochs = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
         epochs.pick_types(meg=True, eeg=True, stim=False)
 
     # ----------- balance the position of the standard and the deviants -------
@@ -585,13 +603,15 @@ def generate_SVM_separate_sequences(subject, load_residuals_regression=False, tr
 
     if train_different_blocks:
         suf += 'train_different_blocks_and_sequences'
+    if cleaned:
+        suf += '_cleaned'
     np.save(op.join(saving_directory, suf + 'SVM_results.npy'), SVM_results)
 
 
 
 # ______________________________________________________________________________________________________________________
 def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, train_different_blocks=True,
-            sliding_window=False):
+            sliding_window=True,cleaned=True):
     """
     The SVM at a training times are tested at testing times. Allows to obtain something similar to the GAT from decoding.
     Dictionnary contains the GAT for each sequence separately. GAT_all contains the average over all the sequences
@@ -612,14 +632,16 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
         n_folds = 2
     else:
         n_folds = 4
+    if cleaned:
+        suf += '_cleaned'
 
     # ---------- load the data ------------
     SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ----- initialize the results dictionnary ------
-    GAT_sens_seq = {sens: [] for sens in ['eeg', 'mag', 'grad', 'all_chans']}
+    GAT_sens_seq = {sens: [] for sens in config.ch_types}
 
-    for sens in ['eeg', 'mag', 'grad', 'all_chans']:
+    for sens in config.ch_types:
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
 
@@ -927,7 +949,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
 
 # ______________________________________________________________________________________________________________________
 def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
-                                     train_test_different_blocks=True, sliding_window=False):
+                                     train_test_different_blocks=True, sliding_window=False, cleaned = True):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
     :param subject:
@@ -935,6 +957,12 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     min(times) and max(times) define the time window on which we average the spatial filter.
     :param window: set to True if you want to average the spatial filter over a window.
     :return:
+
+    subject = config.subjects_list[0]
+    times=[0.140, 0.180]
+    window=True
+    sliding_window=True
+    cleaned = True
     """
 
     # ==== load the ems results ==============
@@ -947,7 +975,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     if train_test_different_blocks:
         n_folds = 2
-        suf += 'train_test_different_blocks'
+        suf += 'train_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
 
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
@@ -955,6 +985,9 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     meg_subject_dir = op.join(config.meg_dir, subject)
     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
     extension = subject + '_1st_element_epo'
+    if cleaned:
+        extension = subject + '_1st_element_ARglob_epo'
+
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
 
@@ -965,13 +998,18 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
 
     epochs_1st_element = epochs_1st_element["TrialNumber > 10"]
-    epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
-                  'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
+    if config.noEEG:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'all_chans': epochs_1st_element.copy().pick_types(meg=True)}
+    else:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                      'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['mag', 'grad', 'eeg', 'all_chans']:
+    for sens in config.ch_types:
 
         print(sens)
         SVM_sens = SVM_results[sens]['SVM']
@@ -1006,9 +1044,6 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
                     0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
                 epochs_1st_sens_m = epochs_1st_sens[
                     'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i' % (seqID_m, run_m, trial_number_m)]
-
-                # if sens =="all_chans":
-                #    epochs_1st_sens_m.pick_types(meg=True,eeg=True)
 
                 if len(epochs_1st_sens_m.events) != 0:
                     data_1st_el_m = epochs_1st_sens_m.get_data()
@@ -1077,7 +1112,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
 
 def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
-                                                 train_test_different_blocks=True, sliding_window=False):
+                                                 train_test_different_blocks=True, sliding_window=False,cleaned=True):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -1096,7 +1131,9 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
 
     if train_test_different_blocks:
         n_folds = 2
-        suf += 'train_test_different_blocks'
+        suf += 'train_different_blocks'
+    if cleaned:
+        suf += '_cleaned'
 
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
@@ -1104,6 +1141,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     meg_subject_dir = op.join(config.meg_dir, subject)
     fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
     extension = subject + '_1st_element_epo'
+    if cleaned:
+        extension = subject + '_1st_element_ARglob_epo'
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
 
@@ -1112,11 +1151,16 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     if sliding_window:
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
     epochs_1st_element = epochs_1st_element["TrialNumber < 11"]
-    epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
-                  'grad': epochs_1st_element.copy().pick_types(meg='grad'),
-                  'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
-                  'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
 
+    if config.noEEG:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'all_chans': epochs_1st_element.copy().pick_types(meg=True)}
+    else:
+        epochs_1st = {'mag': epochs_1st_element.copy().pick_types(meg='mag'),
+                      'grad': epochs_1st_element.copy().pick_types(meg='grad'),
+                      'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
+                      'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in ['all_chans', 'mag', 'grad', 'eeg']:
         # for sens in ['all_chans','mag', 'grad', 'eeg']:
@@ -1849,24 +1893,24 @@ class AveragePerEvent(TransformerMixin):
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-def plot_gat_simple(analysis_name,subjects_list,fig_name,score_field='GAT',folder_name = 'GAT',sensors = ['all_chans'],vmin=-0.1,vmax=.1):
-    GAT_all = []
-    fig_path = op.join(config.fig_path, 'SVM', folder_name)
-    count = 0
-    for subject in subjects_list:
-        count += 1
-        SVM_path = op.join(config.SVM_path, subject)
-        GAT_path = op.join(SVM_path, analysis_name + '.npy')
-        GAT_results = np.load(GAT_path, allow_pickle=True).item()
-        print(op.join(SVM_path, analysis_name + '.npy'))
-        times = GAT_results['times']
-        GAT_all.append(GAT_results[score_field])
-
-    plot_GAT_SVM(np.mean(GAT_all,axis=0), times, sens=sensors, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
-
-    print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
-
-    return plt.gcf()
+# def plot_gat_simple(analysis_name,subjects_list,fig_name,score_field='GAT',folder_name = 'GAT',sensors = ['all_chans'],vmin=-0.1,vmax=.1):
+#     GAT_all = []
+#     fig_path = op.join(config.fig_path, 'SVM', folder_name)
+#     count = 0
+#     for subject in subjects_list:
+#         count += 1
+#         SVM_path = op.join(config.SVM_path, subject)
+#         GAT_path = op.join(SVM_path, analysis_name + '.npy')
+#         GAT_results = np.load(GAT_path, allow_pickle=True).item()
+#         print(op.join(SVM_path, analysis_name + '.npy'))
+#         times = GAT_results['times']
+#         GAT_all.append(GAT_results[score_field])
+#
+#     plot_GAT_SVM(np.mean(GAT_all,axis=0), times, sens=sensors, save_path=fig_path, figname=fig_name,vmin=vmin,vmax=vmax)
+#
+#     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========"%count)
+#
+#     return plt.gcf()
 
 def plot_all_subjects_results_SVM(analysis_name,subjects_list,fig_name,plot_per_sequence=False,plot_individual_subjects=False,score_field='GAT',folder_name = 'GAT',sensors = ['eeg', 'mag', 'grad','all_chans'],vmin=-0.1,vmax=.1,analysis_type='',compute_significance=None):
 
@@ -2006,10 +2050,27 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
     return coeff_complexity, coeff_constant, times
 
 
-def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', folder_name='GAT',vmin=-0.1, vmax=.1,compute_significance=None):
+def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True):
 
+
+    """
+    analysis_name = 'feature_decoding/' + 'full_data_OpenedChunks_score_dict'
+    analysis_name = 'feature_decoding/' + 'full_data_ClosedChunks_score_dict'
+
+    subjects_list = config.subjects_list
+    fig_name = 'test'
+    chance = 0
+    score_field='score'
+    folder_name='GAT'
+    vmin = None
+    vmax = None
+    compute_significance=None
+
+    """
     GAT_all = []
-    fig_path = op.join(config.fig_path, 'SVM', folder_name)
+    fig_path = op.join(config.fig_path, 'SVM/GAT/'+fig_name)
+    utils.create_folder(op.dirname(fig_path))
+
     count = 0
 
     for subject in subjects_list:
@@ -2022,10 +2083,29 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         print("The number of time points is %i"%len(times))
         print("The times are \n")
         print(times)
+        if plot_per_subjects and score_field != 'regression':
+            # if vmin is None:
+            #     vmin = np.mean(GAT_results[score_field])-np.std(GAT_results[score_field])
+            #     vmax = np.mean(GAT_results[score_field]) + np.std(GAT_results[score_field])
+            pretty_gat(GAT_results[score_field], times)
+            plt.gcf().savefig(fig_path+subject+'.png')
+            plt.close('all')
         if score_field=='score' or score_field == 'GAT':
             GAT_all.append(GAT_results[score_field])
         elif score_field == 'distance':
             GAT_all.append(np.mean(GAT_results[score_field],axis=0))
+        elif score_field == 'regression':
+            score = np.zeros(GAT_results['y_preds'].shape[1:3])
+            from sklearn.metrics import explained_variance_score
+            y_test = GAT_results['y_test']
+            y_preds = GAT_results['y_preds']
+
+            for ti in range(GAT_results['y_preds'].shape[1]):
+                for tj in range(GAT_results['y_preds'].shape[2]):
+                    # score[ti,tj] = explained_variance_score(y_test,y_preds[:,ti,tj])
+                    score[ti, tj] = np.corrcoef(y_test, y_preds[:, ti, tj])[0,1]
+            GAT_all.append(score)
+
 
     GAT_all = np.asarray(GAT_all)
     GAT_all_new = np.zeros((len(subjects_list),GAT_all[0].shape[0],GAT_all[0].shape[1]))
@@ -2054,7 +2134,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         else:
             pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance)
 
-    plt.gcf().savefig(fig_path+'/'+fig_name)
+    plt.gcf().savefig(fig_path)
     plt.close('all')
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
@@ -2154,9 +2234,23 @@ def compute_regression_complexity_epochs(epochs_name):
     return np.asarray(Constant_coeff), np.asarray(Complexity_coeff)
 
 
-def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=True,list_sequences=[1, 2, 3, 4, 5, 6, 7]
+def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=False,list_sequences=[1, 2, 3, 4, 5, 6, 7]
                                  , cross_val_func = None,decim=1,filter_from_metadata=None,
                                  SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2):
+
+    """
+    subject = config.subjects_list[0]
+    feature_name = 'OpenedChunks'
+    load_residuals_regression = False
+    list_sequences = list_sequences=[3,4,5,6,7]
+    cross_val_func = None
+    decim = 1
+    filter_from_metadata = None
+    SVM_dec = SVM_funcs.regression_decoder()
+    balance_features = False
+    distance = False
+    """
+
 
     import os.path as op
 
@@ -2172,4 +2266,5 @@ def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=
     results_dict= SVM_decode_feature(subject, feature_name,load_residuals_regression=load_residuals_regression,crop = [-0.1,0.4],
                                                cross_val_func=cross_val_func,decim=decim,filter_from_metadata=filter_from_metadata,
                                                list_sequences=list_sequences,SVM_dec =SVM_dec,balance_features=balance_features,distance=distance,nvalues_feature=nvalues_feature)
+
     np.save(save_path, results_dict)

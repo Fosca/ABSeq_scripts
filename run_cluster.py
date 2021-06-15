@@ -4,16 +4,18 @@ import numpy as np
 
 print('jaime les tomates')
 
-# cluster_funcs.create_qsub('compute_correlation_stc_complexity', 'stccorcomp', 'stccorcomp', queue='Nspin_long')
+for i in range(10):
+    cluster_funcs.create_qsub('sanity_check_ARglobal', 'sanity', 'sanity', queue='Nspin_bigM', sublist_subjects=['sub12-lg_170436'])
+
+
+# cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
-
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('SVM_generate_all_sequences', 'all', 'all', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
-# cluster_funcs.create_qsub('GAT_SVM_separate_seq', 'GAT_sepseq', 'GAT_sepseq', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('GAT_SVM_separate_seq', 'GAT_sepseq', 'GAT_sepseq', queue='Nspin_bigM's)
 
-cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
-cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM', sublist_subjects=['sub10-gp_190568'])
 # cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nspin_bigM', sublist_subjects=['sub14-js_180232'])
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
@@ -25,7 +27,7 @@ cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nsp
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-# cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM') -- ok sauf pour subject 16
+# cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
 
 #cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
@@ -41,7 +43,7 @@ cluster_funcs.create_qsub('epoch_full_trial', 'epo_full', 'epo_full', queue='Nsp
 # cluster_funcs.create_qsub('SVM_features_repeatalter', 'ra', 'ra', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_chunkBeg', 'Beg', 'Beg', queue='Nspin_bigM') # ok
 # cluster_funcs.create_qsub('SVM_features_chunkEnd', 'End', 'End', queue='Nspin_bigM') # ok
-cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'op', 'op', queue='Nspin_long', sublist_subjects=['sub10-gp_190568'])
 
 
