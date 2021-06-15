@@ -1134,7 +1134,7 @@ def unique_test_16(epochs_1st_sens, epochs_sens, test_indices):
                                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (
                                    seqID, run_number, trial_number)])
 
-    return mne.concatenate_epochs(epochs_1st_item)
+    return epochs_1st_item
 
 
 def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
