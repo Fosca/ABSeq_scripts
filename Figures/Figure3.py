@@ -44,7 +44,7 @@ n_subjects = len(config.subjects_list)
 
 results = {sens: {'SeqID_%i' % i: [] for i in range(1, 8)} for sens in sensors}
 significance = {sens: {'SeqID_%i' % i: [] for i in range(1, 8)} for sens in sensors}
-
+avg_res = {sens: [] for sens in sensors}
 for sens in sensors:
     n_subj = 0
     for subject in subjects_list:
@@ -57,9 +57,28 @@ for sens in sensors:
             print(np.mean(GAT_results[sens]["average_all_sequences"]))
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 results[sens][key].append(GAT_results[sens][key])
+            avg_res[sens].append(GAT_results[sens]["average_all_sequences"])
             n_subj +=1
         else:
             print("Missing data for %s "%GAT_path)
+
+for sens in ['mag','grad']:
+    plt.close('all')
+    diago_score = np.asarray(avg_res[sens])
+    diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
+    n_subj = 19
+    import numpy as np
+    mean = np.mean(diago_score, axis=0)
+    ub = (mean + np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
+    lb = (mean - np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
+    if filter == True:
+        mean = savgol_filter(mean, 11, 3)
+        ub = savgol_filter(ub, 11, 3)
+        lb = savgol_filter(lb, 11, 3)
+    plt.fill_between(times, ub, lb, alpha=.2)
+    plt.plot(times, mean, linewidth=1.5, label='Average')
+    plt.gcf().savefig("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/figures/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
+    plt.gcf().savefig("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/figures/SVM/GAT/average_diagonal_cleaned"+sens+".png")
 
 # ------ PART 1 OF THE FIGURE -------
 # ----- plot the GAT diagonal for each of the 7 sequences -----------

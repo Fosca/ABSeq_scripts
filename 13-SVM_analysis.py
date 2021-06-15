@@ -148,6 +148,11 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
 
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',config.subjects_list)
+
+res_mag = results['mag']
+res_all = res_mag['average_all_sequences']
+plot_GAT(np.asarray(res_all),times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='SW_train_different_blocks_cleaned',chance = 0.5,clim=None,tail=1)
+
 plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
 
 for subject in config.subjects_list:

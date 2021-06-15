@@ -980,6 +980,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     if cleaned:
         suf += '_cleaned'
 
+    suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
@@ -1161,6 +1162,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     if cleaned:
         suf += '_cleaned'
 
+    suf += "_%i_%ims"%(int(np.min(times)*1000),int(np.max(times)*1000))
+
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
@@ -1188,7 +1191,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
                       'eeg': epochs_1st_element.copy().pick_types(eeg=True, meg=False),
                       'all_chans': epochs_1st_element.copy().pick_types(eeg=True, meg=True)}
     # ====== compute the projections for each of the 3 types of sensors ===================
-    for sens in ['all_chans', 'mag', 'grad', 'eeg']:
+    for sens in config.ch_types:
         # for sens in ['all_chans','mag', 'grad', 'eeg']:
 
         SVM_sens = SVM_results[sens]['SVM']
