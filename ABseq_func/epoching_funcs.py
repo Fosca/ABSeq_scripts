@@ -593,7 +593,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
             ch_types = ['mag', 'grad']
         else:
             ch_types = ['mag', 'grad', 'eeg']
-        reject = get_rejection_threshold(epochs, ch_types=['mag', 'grad', 'eeg'])
+        reject = get_rejection_threshold(epochs, ch_types=ch_types)
         epochsARglob = epochs.copy().drop_bad(reject=reject)
         print('  Writing "AR global" cleaned epochs to disk')
         if epoch_on_first_element:
