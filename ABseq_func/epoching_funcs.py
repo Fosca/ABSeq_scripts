@@ -490,6 +490,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     runs = config.runs_dict[subject]
     for run in runs:
         extension = run + '_ica_raw'
+        print(extension)
         raw_fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
         raw = mne.io.read_raw_fif(raw_fname_in, preload=True)
 
@@ -519,6 +520,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
 
     print('Concatenating runs')
     raw = mne.concatenate_raws(raw_list)
+    # raw.set_annotations(None)
     if "eeg" in config.ch_types:
         raw.set_eeg_reference(projection=True)
     del raw_list
@@ -591,7 +593,10 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
     epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
 
     print("Output: ", epochs_fname)
-    # epochs.save(epochs_fname, overwrite=True)
+
+
+
+    # epochs.save(epochs_fname, overwrite=True,)
     # epochs.save(epochs_fname)
 
     if config.autoreject:
