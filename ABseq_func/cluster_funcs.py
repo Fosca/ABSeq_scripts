@@ -176,8 +176,6 @@ def SVM_generate_different_sequences(subject):
 def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
 
-
-
 def SVM_full_sequences_16items1(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.120, 0.190], window=True, sliding_window=True,cleaned=True)
 def SVM_full_sequences_16items2(subject):

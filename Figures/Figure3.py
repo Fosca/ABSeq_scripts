@@ -62,10 +62,19 @@ for sens in sensors:
         else:
             print("Missing data for %s "%GAT_path)
 
+#  -----  plot the average diagonal over all sequences (and participants). Shaded bars = sem ------
+
 for sens in ['mag','grad']:
     plt.close('all')
     diago_score = np.asarray(avg_res[sens])
     diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
+
+    # ---- determine the significant time-windows ----
+    sig = stats_funcs.stats(diago_score[:, times > 0] - 0.5)
+    # ---- determine the significant times ----
+    times_sig = times[times > 0]
+    times_sig = times_sig[sig<0.05]
+
     n_subj = 19
     import numpy as np
     mean = np.mean(diago_score, axis=0)
@@ -77,8 +86,8 @@ for sens in ['mag','grad']:
         lb = savgol_filter(lb, 11, 3)
     plt.fill_between(times, ub, lb, alpha=.2)
     plt.plot(times, mean, linewidth=1.5, label='Average')
-    plt.gcf().savefig("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/figures/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
-    plt.gcf().savefig("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/figures/SVM/GAT/average_diagonal_cleaned"+sens+".png")
+    plt.gcf().savefig(config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
+    plt.gcf().savefig(config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".png")
 
 # ------ PART 1 OF THE FIGURE -------
 # ----- plot the GAT diagonal for each of the 7 sequences -----------
@@ -169,43 +178,19 @@ for sens in sensors:
         t_r[sens].append(t_pearson)
         t_rho[sens].append(t_spear)
 
+
+t_values = {'Pearson':t_r,'Spearman':t_rho}
+for name in t_values.keys():
+    for sens in t_values[name].keys():
+        pretty_decod(t_values[name][sens],times)
+        plt.gca().set_xlabel('Time [ms]')
+        plt.gca().set_ylabel('T values')
+        plt.gca().set_title('%s correlations - %s'%(name,sens))
+        plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.png'%(name,sens)))
+        plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.svg'%(name,sens)))
+        plt.close('all')
+
 sig = stats_funcs.stats(correlation_complexity_pearson['grad'])
-
-# ======= plot the t-values =====
-plt.figure()
-plt.plot(times, t_r['grad'])
-plt.gca().set_xlabel('Time [ms]')
-plt.gca().set_ylabel('T values')
-plt.gca().set_title('Pearson correlations - grad')
-plt.show()
-plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_pearson_correlation_grad.png'))
-
-plt.figure()
-plt.plot(times, t_r['mag'])
-plt.gca().set_xlabel('Time [ms]')
-plt.gca().set_ylabel('T values')
-plt.gca().set_title('Pearson correlations - mag')
-plt.show()
-plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_pearson_correlation_mag.png'))
-
-
-plt.figure()
-plt.plot(times, t_rho['mag'])
-plt.gca().set_xlabel('Time [ms]')
-plt.gca().set_ylabel('T values')
-plt.gca().set_title('Spearman correlations - mag')
-plt.show()
-plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_spearman_correlation_mag.png'))
-
-
-plt.figure()
-plt.plot(times, t_rho['grad'])
-plt.gca().set_xlabel('Time [ms]')
-plt.gca().set_ylabel('T values')
-plt.gca().set_title('Spearman correlations - grad')
-plt.show()
-plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_spearman_correlation_grad.png'))
-
 
 # ----------- Temporal cluster based permutation test pour les différentes courbes
 #  ---------------------------------------------------  (afficher en plus épais les parties significatives)

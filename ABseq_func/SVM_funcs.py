@@ -980,7 +980,6 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     if cleaned:
         suf += '_cleaned'
 
-    suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
@@ -1104,6 +1103,8 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
         epochs_proj_sens.metadata = data_frame_meta
 
+        suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
+
         if window:
             epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',
                                   overwrite=True)
@@ -1162,7 +1163,6 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
     if cleaned:
         suf += '_cleaned'
 
-    suf += "_%i_%ims"%(int(np.min(times)*1000),int(np.max(times)*1000))
 
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
@@ -1253,6 +1253,8 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
         print("==== the total number of epochs is %i ====" % len(epochs_proj_sens))
         print("==== the total number of metadata fields is %i ====" % len(data_frame_meta))
+
+        suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
 
         epochs_proj_sens.metadata = data_frame_meta
         if window:
