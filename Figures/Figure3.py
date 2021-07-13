@@ -20,6 +20,8 @@ from scipy.signal import savgol_filter
 import os.path as op
 from scipy import stats
 from jr.plot import pretty_decod
+import numpy as np
+
 # ---- remind how the data was computed ---
 # SVM decoder on standard VS deviants where standards are the ones that happen at the same location
 # Training on one block testing on the other (nice because there is invertion of A and B). When there is only one block
@@ -63,35 +65,47 @@ for sens in sensors:
             print("Missing data for %s "%GAT_path)
 
 #  -----  plot the average diagonal over all sequences (and participants). Shaded bars = sem ------
+def petit_plot(diago_score,times,filter=True,fig_name='',color='b',label='Average',chance = 0.5):
 
-for sens in ['mag','grad']:
-    plt.close('all')
-    diago_score = np.asarray(avg_res[sens])
-    diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
-
+    plt.gcf()
     # ---- determine the significant time-windows ----
-    sig = stats_funcs.stats(diago_score[:, times > 0] - 0.5)
-    # ---- determine the significant times ----
-    times_sig = times[times > 0]
-    times_sig = times_sig[sig<0.05]
+    if chance is not None:
+        sig = stats_funcs.stats(diago_score[:, times > 0] - chance)
+        # ---- determine the significant times ----
+        times_sig = times[times > 0]
+        times_sig = times_sig[sig<0.05]
 
-    n_subj = 19
-    import numpy as np
+    n_subj = diago_score.shape[0]
     mean = np.mean(diago_score, axis=0)
+
     ub = (mean + np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
     lb = (mean - np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
     if filter == True:
         mean = savgol_filter(mean, 11, 3)
         ub = savgol_filter(ub, 11, 3)
         lb = savgol_filter(lb, 11, 3)
-    plt.fill_between(times, ub, lb, alpha=.2)
-    plt.plot(times, mean, linewidth=1.5, label='Average')
-    plt.gcf().savefig(config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
-    plt.gcf().savefig(config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".png")
+
+    if chance is not None:
+        sig_mean = mean[times>0]
+        sig_mean = sig_mean[sig<0.05]
+
+    plt.fill_between(times, ub, lb, alpha=.2,color=color)
+    plt.plot(times, mean, linewidth=1.5, label=label,color=color)
+    if chance is not None:
+        plt.plot(times_sig,sig_mean,linewidth=3,color=color)
+    if fig_name is not None:
+        plt.gcf().savefig(fig_name)
+
+for sens in ['mag','grad']:
+    plt.close('all')
+    diago_score = np.asarray(avg_res[sens])
+    diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
+    petit_plot(diago_score, times, filter=True, fig_name=config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
 
 # ------ PART 1 OF THE FIGURE -------
 # ----- plot the GAT diagonal for each of the 7 sequences -----------
-reshaped_data = {sens : np.zeros((7,len(times),n_subj)) for sens in sensors}
+reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
+plt.close('all')
 for sens in sensors:
     # ---- set figure's parameters, plot layout ----
     fig, ax = plt.subplots(1, 1, figsize=(10, 7))
@@ -107,39 +121,21 @@ for sens in sensors:
     perform_seq = results[sens]
     for ii,SeqID in enumerate(range(1, 8)):
         perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
-        # Why is there a '-' sign ?
-        data_seq_sens = np.diagonal(perform_seqID)
-        reshaped_data[sens][ii,:,:] = data_seq_sens
-
-        sig = stats_funcs.stats(data_seq_sens.T[:,times>0]-0.5)
-
-        significance[sens]['SeqID_' + str(SeqID)] = sig
-        # sig_times= times[sig<0.05]
-        # sig_data= data_seq_sens[sig<0.05]
-
-        color_mean = colorslist[SeqID - 1]
-        # --- check out why I have to take the oposite ---
-        mean = np.diagonal(np.mean(perform_seq['SeqID_' + str(SeqID)], axis=0))
-        ub = np.diagonal(mean + np.std(perform_seq['SeqID_' + str(SeqID)], axis=0)/(np.sqrt(n_subj)))
-        lb = np.diagonal(mean - np.std(perform_seq['SeqID_' + str(SeqID)], axis=0)/(np.sqrt(n_subj)))
-        if filter == True:
-            mean = savgol_filter(mean, 11, 3)
-            ub = savgol_filter(ub, 11, 3)
-            lb = savgol_filter(lb, 11, 3)
-        plt.fill_between(times, ub, lb, color=color_mean, alpha=.2)
-        plt.plot(times, mean, color=color_mean, linewidth=1.5, label='SeqID_' + str(SeqID))
-        # plt.plot(sig_times, sig_data, color=color_mean, linewidth=3)
-
+        diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
+        reshaped_data[sens][ii,:,:] = diago_seq
+        petit_plot(diago_seq, times, filter=True, fig_name=None, color= colorslist[SeqID - 1],label='SeqID_' + str(SeqID))
+    plt.show()
     plt.legend(loc='best', fontsize=9)
-    plt.savefig(op.join(config.fig_path, 'SVM', 'All_sequences_standard_VS_deviant_cleaned_%s.png' % sens), dpi=300)
+    plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'All_sequences_standard_VS_deviant_cleaned_%s.png' % sens), dpi=300)
 
 # Commentaire : on dirait qu'il y a quelque chose d'étrange dans le calcul de ce qui est significatif. Pas grand chose ne sort alors qu'on aurait pu penser que oui ---
 
 # ------ PART 2 OF THE FIGURE: CORRELATION WITH COMPLEXITY -------
 # compute per subject the correlation with complexity
 
-correlation_complexity_pearson = {sens : [] for sens in sensors}
-correlation_complexity_spearman = {sens : [] for sens in sensors}
+C = [4,6,6,6,12,15,28]
+N = [1,2,4,8,8,16,16]
+
 complexity_dict = {1:4,2:6,3:6,4:6,5:12,6:15,7:28}
 complexity = list(complexity_dict.values())
 pearson_r = {sens : [] for sens in sensors}
@@ -149,7 +145,7 @@ for sens in sensors:
     data_sens = reshaped_data[sens]
     for nn in range(n_subjects):
         # ---- for 1 subject, diagonal of the GAT for all the 7 sequences through time ---
-        dd = data_sens[:,:,nn]
+        dd = data_sens[:,nn,:]
         r = []
         rho = []
         # Pearson correlation
@@ -162,8 +158,15 @@ for sens in sensors:
         spearman_rho[sens].append(rho)
     pearson_r[sens] = np.asarray(pearson_r[sens])
     spearman_rho[sens] = np.asarray(spearman_rho[sens])
-    correlation_complexity_pearson[sens] = pearson_r[sens]
-    correlation_complexity_spearman[sens] = spearman_rho[sens]
+
+
+for sens in sensors:
+    plt.close('all')
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_pearson_%s.png'%sens)
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_pearson_%s.svg'%sens)
+    plt.close('all')
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_spearman_%s.png'%sens)
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_spearman_%s.svg'%sens)
 
 # ----- Then we compute the t-test to determine the statistical significance across subjects ----
 # ----- on obtient la carte de à quel point c'est statistiquement significatif en fonction du temps ---
@@ -171,8 +174,8 @@ t_r = {sens : [] for sens in sensors}
 t_rho = {sens : [] for sens in sensors}
 for sens in sensors:
     for t in range(len(times)):
-        corr_comp_pearson = correlation_complexity_pearson[sens]
-        corr_comp_spearman = correlation_complexity_spearman[sens]
+        corr_comp_pearson = pearson_r[sens]
+        corr_comp_spearman = spearman_rho[sens]
         t_pearson, p_pearson = stats.ttest_1samp(corr_comp_pearson[:,t],popmean=0)
         t_spear, p_spear = stats.ttest_1samp(corr_comp_spearman[:,t],popmean=0)
         t_r[sens].append(t_pearson)
@@ -182,13 +185,23 @@ for sens in sensors:
 t_values = {'Pearson':t_r,'Spearman':t_rho}
 for name in t_values.keys():
     for sens in t_values[name].keys():
-        pretty_decod(t_values[name][sens],times)
+        pretty_decod(t_values[name][sens],times,chance=0)
+
         plt.gca().set_xlabel('Time [ms]')
         plt.gca().set_ylabel('T values')
         plt.gca().set_title('%s correlations - %s'%(name,sens))
         plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.png'%(name,sens)))
         plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.svg'%(name,sens)))
         plt.close('all')
+
+extent=[0,100,0,1]
+toplot = np.mean(pearson_r['mag'],axis=0)
+plt.imshow(toplot[np.newaxis,:], aspect = "auto", cmap="viridis", extent=extent)
+plt.gca().set_yticks([])
+plt.colorbar()
+plt.show()
+
+
 
 sig = stats_funcs.stats(correlation_complexity_pearson['grad'])
 
