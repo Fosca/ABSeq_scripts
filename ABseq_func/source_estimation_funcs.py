@@ -101,7 +101,7 @@ def compute_noise_cov(subject, makefigures=True):
     # cov = mne.compute_raw_covariance(emptyroom_maxfilt, method=['empirical', 'shrunk'])
 
     # NOISE COVARIANCE FROM BASELINE OF ALL THE (LONG) EPOCHS
-    epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True)
+    epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True, AR_type='global')
 
     ######### REMOVE EEG ########
     epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
@@ -119,7 +119,7 @@ def compute_noise_cov(subject, makefigures=True):
         utils.create_folder(fig_path)
         fig = epochs.average().plot_white(cov)
         fig.savefig(op.join(fig_path, subject + '_noisecov_white_fullseq.jpg'), dpi=300)
-        fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
+        fname_evoked = op.join(meg_subject_dir, 'noEEG', 'evoked_cleaned', 'items_standard_all-ave.fif')
         evoked = mne.read_evokeds(fname_evoked)
         fig = evoked[0].plot_white(cov)
         fig.savefig(op.join(fig_path, subject + '_noisecov_white_items_stand_nobaseline.jpg'), dpi=300)
@@ -341,7 +341,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     brain = stc.plot(views='lat', hemi='split', size=(800, 400), subject='fsaverage',
                      subjects_dir=fsMRI_dir, initial_time=timeval, background='w',
                      colorbar=False, clim=clim, colormap=colormap,
-                     time_viewer=False) #, show_traces=False) does not work with mne 0.19
+                     time_viewer=False, backend='mayavi') #, show_traces=False) does not work with mne 0.19
     screenshot = brain.screenshot()
     brain.close()
     nonwhite_pix = (screenshot != 255).any(-1)
