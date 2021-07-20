@@ -429,13 +429,13 @@ def create_evoked(subject, cleaned=True, AR_type='local'):
         epochs_items['SequenceID == %i and ViolationInSequence == 0' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
         epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
         epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == %i and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationOrNot == 1' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
         # epochs_balanced['SequenceID == %i and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
         # determine the position of the deviants
         tmp = epochs_items['SequenceID == %i and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 1' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
             epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
 
     del epochs_items
