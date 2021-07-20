@@ -11,7 +11,6 @@ Can use the residuals of a previous regression (with surprise) instead of origin
 Uses filters (using epochs.metadata) to include/exclude some epochs in the regression (e.g. filters[analysis_name] = ['ViolationOrNot == 1'] for deviant items only)
 Regressors are always normalized with "scale" (sklearn.preprocessing)
 
-TO DO: DETREND EVOKED
 """
 
 from __future__ import division
@@ -33,24 +32,24 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import r2_score
 from sklearn import linear_model
 # Exclude some subjects
-config.exclude_subjects.append('sub10-gp_190568')
-config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-config.subjects_list.sort()
+# config.exclude_subjects.append('sub10-gp_190568')
+# config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+# config.subjects_list.sort()
 
 print('############------- Running analysis with ' + str(len(config.subjects_list)) + ' subjects ! -------############')
 
 # =========================================================== #
 # Options
 # =========================================================== #
-analysis_name = 'StandComplexity'
+analysis_name = 'HabComplexity'
 # names = ['StimID', 'ChunkBeginning', 'ChunkEnd', 'WithinChunkPosition']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
 names = ['Complexity']  # error if 'WithinChunkPositionReverse' also included // Factors included in the regression
 exclude_Repeat_and_Alternate = False
 cross_validate = True
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
-resid_epochs = True  # use epochs created by regressing out surprise effects, instead of original epochs
-use_baseline = True  # apply baseline to the epochs before running the regression
-lowpass_epochs = True  # option to filter epochs with  30Hz lowpass filter
+resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
+use_baseline = False  # apply baseline to the epochs before running the regression
+lowpass_epochs = False  # option to filter epochs with  30Hz lowpass filter
 suffix = ''
 if cross_validate:
     suffix = '_cv'
@@ -59,14 +58,15 @@ RunStats = True
 if resid_epochs:
     resid_epochs_type = 'reg_repeataltern_surpriseOmegainfinity'  # 'residual_surprise'  'residual_model_constant' 'reg_repeataltern_surpriseOmegainfinity'
     # /!\ if 'reg_repeataltern_surpriseOmegainfinity', epochs wil be loaded from '/results/linear_models' instead of '/data/MEG/'
-DoFirstLevel = True  # To compute the regression and evoked for each subject
-DoSecondLevel = False  # Run the group level statistics
+DoFirstLevel = False  # To compute the regression and evoked for each subject
+DoSecondLevel = True  # Run the group level statistics
 
 # Filter (for each analysis_name) to keep or exclude some epochs
 filters = dict()
 filters['StandComplexity'] = ['ViolationInSequence == 0 and StimPosition > 1']
 filters['ViolComplexity'] = ['ViolationOrNot == 1']
 filters['StandMultiStructure'] = ['ViolationInSequence == 0 and StimPosition > 1']
+filters['HabComplexity'] = ['TrialNumber <= 10'] # and StimPosition > 1'] ## WE DO NOT EXCLUDE 1st ITEM ?!
 
 if exclude_Repeat_and_Alternate:
     for key in filters.keys():
@@ -105,7 +105,7 @@ if DoFirstLevel:
             epochs = epoching_funcs.load_resid_epochs_items(subject, type=resid_epochs_type)
         else:
             if cleaned:
-                epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
+                epochs = epoching_funcs.load_epochs_items(subject, cleaned=True, AR_type='global')
                 # epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
             else:
                 epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
@@ -114,97 +114,103 @@ if DoFirstLevel:
             print('Low pass filtering...')
             epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
 
-        # ====== display regressors on original sequences - note: StimID will always be 1 ===== #
-        if not resid_epochs and subject == config.subjects_list[0]:  # do it only once (first subject):
-            metadata_seq1 = []
-            metadata_seq2 = []
-            metadata_seq3 = []
-            metadata_seq4 = []
-            metadata_seq5 = []
-            metadata_seq6 = []
-            metadata_seq7 = []
-            for stimpos in range(1, 17):  # get metadata info for the 16 items from standard sequences
-                metadata_seq1.append(epochs['SequenceID == 1 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq2.append(epochs['SequenceID == 2 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq3.append(epochs['SequenceID == 3 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq4.append(epochs['SequenceID == 4 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq5.append(epochs['SequenceID == 5 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq6.append(epochs['SequenceID == 6 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-                metadata_seq7.append(epochs['SequenceID == 7 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-            metadata_seq1 = pd.concat(metadata_seq1)
-            metadata_seq2 = pd.concat(metadata_seq2)
-            metadata_seq3 = pd.concat(metadata_seq3)
-            metadata_seq4 = pd.concat(metadata_seq4)
-            metadata_seq5 = pd.concat(metadata_seq5)
-            metadata_seq6 = pd.concat(metadata_seq6)
-            metadata_seq7 = pd.concat(metadata_seq7)
-            if exclude_Repeat_and_Alternate:
-                metadata_all = [metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
-            else:
-                metadata_all = [metadata_seq1, metadata_seq2, metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
-
-            # Plot
-            for name in names:
-                # Prepare colors range
-                cm = plt.get_cmap('viridis')
-                metadata_allseq = pd.concat(metadata_all)
-                metadata_allseq_reg = metadata_allseq[name]
-                minvalue = np.nanmin(metadata_allseq_reg)
-                maxvalue = np.nanmax(metadata_allseq_reg)
-                # Open figure
-                if exclude_Repeat_and_Alternate:
-                    fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 4.4), sharex=False, sharey=True, constrained_layout=True)
-                else:
-                    fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 6), sharex=False, sharey=True, constrained_layout=True)
-                fig.suptitle(name, fontsize=12)
-                # Plot each sequences with circle color corresponding to regressor value
-                for nseq in range(number_of_sequences):
-                    if exclude_Repeat_and_Alternate:
-                        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
-                    else:
-                        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
-                    ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
-                    metadata = metadata_all[nseq][name]
-                    # Normalize between 0 and 1 based on possible values across sequences, in order to set the color
-                    metadata = (metadata - minvalue)/(maxvalue-minvalue)
-                    # stimID is always 1, so we use seqtxtXY instead...
-                    if name == 'StimID':
-                        for ii in range(len(seqtxtXY)):
-                            if seqtxtXY[ii] == 'x':
-                                metadata[metadata.index[ii]] = 0
-                            elif seqtxtXY[ii] == 'Y':
-                                metadata[metadata.index[ii]] = 1
-                    for stimpos in range(0, 16):
-                        value = metadata[metadata.index[stimpos]]
-                        if ~np.isnan(value):
-                            circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor=cm(value), edgecolor='k', linewidth=1)
-                        else:
-                            circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor='white',  edgecolor='k', linewidth=1)
-                        ax[nseq].add_artist(circle)
-                    ax[nseq].set_xlim([0, 17])
-                    for key in ('top', 'right', 'bottom', 'left'):
-                        ax[nseq].spines[key].set(visible=False)
-                    ax[nseq].set_xticks([], [])
-                    ax[nseq].set_yticks([], [])
-                # Add "xY" using the same yval for all
-                ylim = ax[nseq].get_ylim()
-                yval = ylim[1] - ylim[1] * 0.1
-                for nseq in range(number_of_sequences):
-                    if exclude_Repeat_and_Alternate:
-                        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
-                    else:
-                        seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
-                    for xx in range(16):
-                        ax[nseq].text(xx + 1, 0.5, seqtxtXY[xx], horizontalalignment='center', verticalalignment='center', fontsize=12)
-                fig_name = op.join(results_path, name + '_regressor.png')
-                print('Saving ' + fig_name)
-                plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-                plt.close(fig)
+        # # ====== display regressors on original sequences - note: StimID will always be 1 ===== #
+        # if not resid_epochs and subject == config.subjects_list[0]:  # do it only once (first subject):
+        #     metadata_seq1 = []
+        #     metadata_seq2 = []
+        #     metadata_seq3 = []
+        #     metadata_seq4 = []
+        #     metadata_seq5 = []
+        #     metadata_seq6 = []
+        #     metadata_seq7 = []
+        #     for stimpos in range(1, 17):  # get metadata info for the 16 items from standard sequences
+        #         metadata_seq1.append(epochs['SequenceID == 1 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq2.append(epochs['SequenceID == 2 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq3.append(epochs['SequenceID == 3 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq4.append(epochs['SequenceID == 4 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq5.append(epochs['SequenceID == 5 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq6.append(epochs['SequenceID == 6 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #         metadata_seq7.append(epochs['SequenceID == 7 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
+        #     metadata_seq1 = pd.concat(metadata_seq1)
+        #     metadata_seq2 = pd.concat(metadata_seq2)
+        #     metadata_seq3 = pd.concat(metadata_seq3)
+        #     metadata_seq4 = pd.concat(metadata_seq4)
+        #     metadata_seq5 = pd.concat(metadata_seq5)
+        #     metadata_seq6 = pd.concat(metadata_seq6)
+        #     metadata_seq7 = pd.concat(metadata_seq7)
+        #     if exclude_Repeat_and_Alternate:
+        #         metadata_all = [metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
+        #     else:
+        #         metadata_all = [metadata_seq1, metadata_seq2, metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
+        #
+        #     # Plot
+        #     for name in names:
+        #         # Prepare colors range
+        #         cm = plt.get_cmap('viridis')
+        #         metadata_allseq = pd.concat(metadata_all)
+        #         metadata_allseq_reg = metadata_allseq[name]
+        #         minvalue = np.nanmin(metadata_allseq_reg)
+        #         maxvalue = np.nanmax(metadata_allseq_reg)
+        #         # Open figure
+        #         if exclude_Repeat_and_Alternate:
+        #             fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 4.4), sharex=False, sharey=True, constrained_layout=True)
+        #         else:
+        #             fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 6), sharex=False, sharey=True, constrained_layout=True)
+        #         fig.suptitle(name, fontsize=12)
+        #         # Plot each sequences with circle color corresponding to regressor value
+        #         for nseq in range(number_of_sequences):
+        #             if exclude_Repeat_and_Alternate:
+        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
+        #             else:
+        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
+        #             ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
+        #             metadata = metadata_all[nseq][name]
+        #             # Normalize between 0 and 1 based on possible values across sequences, in order to set the color
+        #             metadata = (metadata - minvalue)/(maxvalue-minvalue)
+        #             # stimID is always 1, so we use seqtxtXY instead...
+        #             if name == 'StimID':
+        #                 for ii in range(len(seqtxtXY)):
+        #                     if seqtxtXY[ii] == 'x':
+        #                         metadata[metadata.index[ii]] = 0
+        #                     elif seqtxtXY[ii] == 'Y':
+        #                         metadata[metadata.index[ii]] = 1
+        #             for stimpos in range(0, 16):
+        #                 value = metadata[metadata.index[stimpos]]
+        #                 if ~np.isnan(value):
+        #                     circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor=cm(value), edgecolor='k', linewidth=1)
+        #                 else:
+        #                     circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor='white',  edgecolor='k', linewidth=1)
+        #                 ax[nseq].add_artist(circle)
+        #             ax[nseq].set_xlim([0, 17])
+        #             for key in ('top', 'right', 'bottom', 'left'):
+        #                 ax[nseq].spines[key].set(visible=False)
+        #             ax[nseq].set_xticks([], [])
+        #             ax[nseq].set_yticks([], [])
+        #         # Add "xY" using the same yval for all
+        #         ylim = ax[nseq].get_ylim()
+        #         yval = ylim[1] - ylim[1] * 0.1
+        #         for nseq in range(number_of_sequences):
+        #             if exclude_Repeat_and_Alternate:
+        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
+        #             else:
+        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
+        #             for xx in range(16):
+        #                 ax[nseq].text(xx + 1, 0.5, seqtxtXY[xx], horizontalalignment='center', verticalalignment='center', fontsize=12)
+        #         fig_name = op.join(results_path, name + '_regressor.png')
+        #         print('Saving ' + fig_name)
+        #         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
+        #         plt.close(fig)
 
         # ====== filter items ====== #
         before = len(epochs)
         epochs = epochs[filters[analysis_name]]
         print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
+
+        # ====== Updating complexity values !! ====== #
+        print('Updating complexity values in metadata using config.complexity... !')
+        for ii in epochs.metadata.index:
+            seqID = epochs.metadata.at[ii, 'SequenceID']
+            epochs.metadata.at[ii,'Complexity'] = config.complexity[seqID]
 
         # ====== apply baseline ? ====== #
         if use_baseline:
@@ -215,7 +221,10 @@ if DoFirstLevel:
             epochs.metadata[name] = scale(epochs.metadata[name])
 
         # ====== Linear model (all items) ====== #
-        epochs = epochs.pick_types(meg=True, eeg=True)
+        if config.noEEG:
+            epochs = epochs.pick_types(meg=True, eeg=False)
+        else:
+            epochs = epochs.pick_types(meg=True, eeg=True)
         df = epochs.metadata
         epochs.metadata = df.assign(Intercept=1)  # Add an intercept for later
         regressors_names = ["Intercept"] + names
@@ -257,22 +266,25 @@ if DoFirstLevel:
             betas = np.mean(betas, axis=0)
             scores = np.mean(scores, axis=0)
 
-            np.save(op.join(sub_results_path, suffix + 'score' + '.npy'),scores)
+            np.save(op.join(sub_results_path, 'score' + suffix + '.npy'),scores)
 
             for ii, name_reg in enumerate(regressors_names):
                 res[name_reg].beta._data = np.asarray(betas[ii, :, :])
 
         # Save regression results
         for name in regressors_names:
-            res[name].beta.save(op.join(sub_results_path, suffix + name + '.fif'))
+            res[name].beta.save(op.join(sub_results_path, name + suffix + '.fif'))
 
 
         # ===== create evoked for each level of each regressor ===== #
-        path_evo = op.join(config.meg_dir, subject, 'evoked')
+        if config.noEEG:
+            path_evo0 = op.join(config.meg_dir, subject, 'noEEG')
+        else:
+            path_evo0 = op.join(config.meg_dir, subject)
         if cleaned:
-            path_evo = op.join(config.meg_dir, subject, 'evoked_cleaned')
+            path_evo = op.join(path_evo0, 'evoked_cleaned')
         if resid_epochs:
-            path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
+            path_evo = op.join(path_evo0, 'evoked_resid')
         for name in names:
             # remove files from a previous version of the analysis
             for filename in glob.glob(op.join(path_evo, name) + '*'):
@@ -281,12 +293,12 @@ if DoFirstLevel:
             levels = np.unique(epochs.metadata[name])
             for x, level in enumerate(levels):
                 fname = op.join(path_evo, name + '_level%02.0f' % x)
-                epochs[name + ' == "' + str(level) + '"'].average().save(fname + '-ave.fif')
+                epochs[name + ' == ' + str(level)].average().save(fname + '-ave.fif')
 
         # ===== also create evoked for each sequence (i.e. only with epochs used in the regression) ===== #
         for nseq in range(number_of_sequences):
             fname = op.join(path_evo, analysis_name + '_analysis_SequenceID_%02.0f' % (nseq+1))
-            epochs['SequenceID == "' + str(nseq+1) + '"'].average().save(fname + '-ave.fif')
+            epochs['SequenceID == ' + str(nseq+1)].average().save(fname + '-ave.fif')
 
     # =========== LOAD INDIVIDUAL REGRESSION RESULTS AND SAVE THEM AS GROUP FIF FILES =========== #
     # ============================= (necessary only the first time) ============================= #
@@ -294,12 +306,13 @@ if DoFirstLevel:
     # Load data from all subjects
     tmpdat = dict()
     for name in regressors_names:
-        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name=name, root_path=op.join(results_path, 'data'))
+        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name=name+ suffix, root_path=op.join(results_path, 'data'))
 
     # Store as epo objects
     for name in regressors_names:
-        dat = tmpdat[name][name[0:-3]]  # the dict key has 3 less characters than the original... because I did not respect MNE naming conventions ??
-        exec(name + "_epo = mne.EpochsArray(np.asarray([dat[i][0].data for i in range(len(dat))]), dat[0][0].info, tmin=-0.1)")
+        # dat = tmpdat[name][name[0:-3]]  # the dict key has 3 less characters than the original... because I did not respect MNE naming conventions ??
+        dat = tmpdat[name][name]
+        exec(name + "_epo = mne.EpochsArray(np.asarray([dat[i][0].data for i in range(len(dat))]), dat[0][0].info, tmin="+str(np.round(dat[0][0].times[0],3))+")")
 
     # Save group fif files
     out_path = op.join(results_path, 'data', 'group')
@@ -374,7 +387,7 @@ if DoSecondLevel:
                 stc_timewin = stc_timewin.mean()
                 brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
                                          subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
-                                         colormap='hot', colorbar=False, time_viewer=False)
+                                         colormap='hot', colorbar=False, time_viewer=False, backend='mayavi')
                 screenshot = brain.screenshot()
                 brain.close()
                 nonwhite_pix = (screenshot != 255).any(-1)
@@ -418,7 +431,7 @@ if DoSecondLevel:
     savepath = op.join(fig_path, 'Signals')
     utils.create_folder(savepath)
     plt.close('all')
-    for ch_type in ['eeg', 'grad', 'mag']:
+    for ch_type in config.ch_types:
         fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
         ax = axes.ravel()[::1]
@@ -451,8 +464,8 @@ if DoSecondLevel:
 
     # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
     ylim_eeg = 0.3
-    ylim_mag = 20
-    ylim_grad = 4
+    ylim_mag = 30
+    ylim_grad = 6
     # Butterfly plots - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
     ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
@@ -460,12 +473,12 @@ if DoSecondLevel:
     times = 'peaks'
     for x, regressor_name in enumerate(betas.keys()):
         evokeds = betas[regressor_name].average()
-        # EEG
-        fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
-        fig_name = savepath + op.sep + ('EEG_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+        if 'eeg' in config.ch_types: # EEG
+            fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
+            fig_name = savepath + op.sep + ('EEG_' + regressor_name + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
         # MAG
         fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name, topomap_args=topomap_args, picks='mag', times=times, show=False)
         fig_name = savepath + op.sep + ('MAG_' + regressor_name + '.png')
@@ -484,11 +497,11 @@ if DoSecondLevel:
     # =========================================================== #
     savepath = op.join(fig_path, 'Stats')
     utils.create_folder(savepath)
-    nperm = 1000  # number of permutations
+    nperm = 5000  # number of permutations
     threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
     p_threshold = 0.05
     tmin = 0.000  # timewindow to test (crop data)
-    tmax = 0.500  # timewindow to test (crop data)
+    tmax = 0.350  # timewindow to test (crop data)
     for ch_type in config.ch_types:
         for x, regressor_name in enumerate(betas.keys()):
             data_stat = copy.deepcopy(betas[regressor_name])
