@@ -22,11 +22,11 @@ N_JOBS = 10
 # Here we use fewer N_JOBS to prevent potential memory problems
 parallel, run_func, _ = parallel_func(epoching_funcs.run_epochs, n_jobs=N_JOBS)
 
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list)
+# epoch_on_first_element = True
+# parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list)
 
 epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element, baseline=False) for subject in config.subjects_list)
+parallel(run_func(subject, epoch_on_first_element, baseline=None) for subject in config.subjects_list) # WARNING: baseline should be "None" and not "False"
 
 
 # # ______________________________________________________________________________________
@@ -46,11 +46,11 @@ parallel(run_func(subject, epoch_on_first_element, baseline=False) for subject i
 # parallel(run_func(subject, epoch_on_first_element) for subject in config.subjects_list)
 
 # AutoReject "local" plot/print log function parallel
-parallel, run_func, _ = parallel_func(autoreject_funcs.ar_log_summary, n_jobs=config.N_JOBS)
-epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
+# parallel, run_func, _ = parallel_func(autoreject_funcs.ar_log_summary, n_jobs=config.N_JOBS)
+# epoch_on_first_element = False
+# parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
+# epoch_on_first_element = True
+# parallel(run_func(subject, epoch_on_first_element, make_figures=False) for subject in config.subjects_list)
 
 # AutoReject "global" print threshold function parallel
 parallel, run_func, _ = parallel_func(autoreject_funcs.arGlob_thesholds_summary, n_jobs=config.N_JOBS)
