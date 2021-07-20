@@ -600,11 +600,10 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         print("Output: ", epochs_fname)
         epochsARglob.save(epochs_fname, overwrite=True)
         # Save autoreject thresholds
-        pickle.dump(reject, open(epochs_fname[:-4] +suffix+ '_ARglob_thresholds.obj', 'wb'))
+        pickle.dump(reject, open(epochs_fname[:-4] + '_ARglob_thresholds.obj', 'wb'))
 
         # Running AutoReject "local" (https://autoreject.github.io)
         if ARlocal:
-
             ar = AutoReject()
             epochsAR, reject_log = ar.fit_transform(epochs, return_log=True)
             print('  Writing "AR local" cleaned epochs to disk')
