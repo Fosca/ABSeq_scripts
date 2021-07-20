@@ -70,10 +70,10 @@ for subject in subjects_list:
 # sanitycheck_plot
 # ========================================================================================================================== #
 def script_sanitycheck_plotactivation():
-    # Exclude some subjects ?
-    config.exclude_subjects.append('sub08-cc_150418')
-    config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-    config.subjects_list.sort()
+    # # Exclude some subjects ?
+    # config.exclude_subjects.append('sub08-cc_150418')
+    # config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+    # config.subjects_list.sort()
 
     outfold = op.join(config.fig_path, 'sources_activation')
     utils.create_folder(outfold)
@@ -81,7 +81,7 @@ def script_sanitycheck_plotactivation():
     time_init = 0.170
     for subject in subjects_list:
         source_estimation_funcs.source_estimates(subject, evoked_filter_name='items_standard_all', evoked_filter_not=None, apply_baseline=True)
-        stc = mne.read_source_estimate(op.join(config.meg_dir, subject, 'evoked_cleaned', 'items_standard_all_dSPM_inverse'))
+        stc = mne.read_source_estimate(op.join(config.meg_dir, subject, 'noEEG', 'evoked_cleaned', 'items_standard_all_dSPM_inverse'))
         # stc.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject=subject, clim=dict(kind='value', lims=[2, 7.5, 13]), subjects_dir=fsMRI_dir, initial_time=time_init, smoothing_steps=5, time_viewer=False)
         morph = mne.compute_source_morph(stc, subject_from=subject, subjects_dir=fsMRI_dir, subject_to='fsaverage')
         stc_fsaverage = morph.apply(stc)
