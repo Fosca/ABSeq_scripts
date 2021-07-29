@@ -10,9 +10,9 @@ import seaborn as sns
 import mne
 from jr.plot import pretty_decod
 
-config.exclude_subjects.append('sub10-gp_190568')
-config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-config.subjects_list.sort()
+# config.exclude_subjects.append('sub10-gp_190568')
+# config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+# config.subjects_list.sort()
 
 scores_regression_surprise = []
 for subj in config.subjects_list:
