@@ -15,7 +15,9 @@ import os
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import r2_score
 from sklearn import linear_model
-
+import matplotlib.pyplot as plt
+from ABseq_func import source_estimation_funcs
+import mne
 
 def run_linear_regression(subject, cleaned=True):
 
@@ -116,6 +118,7 @@ def run_linear_regression_v2(analysis_name, regressor_names, subject, cleaned=Tr
     # RepeatAlter[0].plot_joint()
     # OpenedChunks[0].plot_joint()
     # plt.close('all')
+
 
 def run_linear_reg_surprise_repeat_alt(subject, with_complexity=False, cross_validate=True):
 
@@ -407,3 +410,94 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
     # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
+def plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=False):
+    savepath = op.join(fig_path, 'Sources')
+    utils.create_folder(savepath)
+
+    all_stcs = dict()
+    all_betasevoked = dict()
+    for x, regressor_name in enumerate(betas.keys()):
+        all_stcs[regressor_name] = []
+        all_betasevoked[regressor_name] = []
+        for nsub, subject in enumerate(config.subjects_list):
+            print(regressor_name + ' regressor: sources for subject ' + str(nsub))
+            data = betas[regressor_name][nsub].average()  # 'fake' average since evoked was stored as 1 epoch
+            stc = source_estimation_funcs.normalized_sources_from_evoked(subject, data, remap_grads=remap_grads)
+            all_stcs[regressor_name].append(stc)
+            all_betasevoked[regressor_name].append(data)
+
+        # Group mean stc + betas
+        n_subjects = len(all_stcs[regressor_name])
+        mean_stc = all_stcs[regressor_name][0].copy()  # get copy of first instance
+        for sub in range(1, n_subjects):
+            mean_stc._data += all_stcs[regressor_name][sub].data
+        mean_stc._data /= n_subjects
+        mean_betas = mne.grand_average(all_betasevoked[regressor_name])
+
+        # Create figures
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '.png')
+        figure_title = analysis_name + ' regression: ' + regressor_name
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims=None)
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at70ms.png')
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.070, ch_type='mag', colormap='viridis', colorlims='auto', signallims=None)
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at140ms.png')
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.140, ch_type='mag', colormap='viridis', colorlims='auto', signallims=None)
+
+        # Timecourse source figure
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_timecourse.png')
+        times_to_plot = [.0, .050, .100, .150, .200, .250, .300]
+        win_size = .050
+        stc = mean_stc
+        maxval = np.max(stc._data)
+        colorlims = [maxval * .30, maxval * .40, maxval * .80]
+        # plot and screenshot for each timewindow
+        stc_screenshots = []
+        for t in times_to_plot:
+            twin_min = t
+            twin_max = t + win_size
+            stc_timewin = stc.copy()
+            stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+            stc_timewin = stc_timewin.mean()
+            brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
+                                     subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
+                                     colormap='hot', colorbar=False, time_viewer=False, backend='mayavi')
+            screenshot = brain.screenshot()
+            brain.close()
+            nonwhite_pix = (screenshot != 255).any(-1)
+            nonwhite_row = nonwhite_pix.any(1)
+            nonwhite_col = nonwhite_pix.any(0)
+            cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+            plt.close('all')
+            stc_screenshots.append(cropped_screenshot)
+        # main figure
+        fig, axes = plt.subplots(len(times_to_plot), 1, figsize=(len(times_to_plot) * 1.1, 4))
+        fig.suptitle(regressor_name, fontsize=8, fontweight='bold')
+        for idx in range(len(times_to_plot)):
+            axes[idx].imshow(stc_screenshots[idx])
+            axes[idx].axis('off')
+            twin_min = times_to_plot[idx]
+            twin_max = times_to_plot[idx] + win_size
+            axes[idx].set_title('[%d - %d ms]' % (twin_min * 1000, twin_max * 1000), fontsize=6)
+        # tweak margins and spacing
+        fig.subplots_adjust(left=0.1, right=0.9, bottom=0.01, top=0.9, wspace=1, hspace=0.5)
+        fig.savefig(output_file, bbox_inches='tight', dpi=600)
+        print('========> ' + output_file + " saved !")
+        plt.close(fig)
+
+        # Or explore sources activation
+        # maxvtx,  max_t_val = mean_stc.get_peak()
+        # brain = mean_stc.plot(views=['lat'], surface='pial', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
+        #                       subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), initial_time=max_t_val, smoothing_steps=5, time_viewer=True) # show_traces=True, (not available with MNE 0.19 ?)
+        # mni_max = mne.vertex_to_mni(maxvtx, 0,  subject='fsaverage', subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'))[0]
+        # print('Peak at {:.0f}'.format(mni_max[0]) + ',{:.0f}'.format(mni_max[1]) + ', {:.0f}'.format(mni_max[2]))
+        # plot the peak activation
+        # plt.figure()
+        # plt.axes([.1, .275, .85, .625])
+        # hl = plt.plot(stc.times, stc.data[maxvtx], 'b')[0]
+        # lt.xlabel('Time (s)')
+        # plt.ylabel('Source amplitude (dSPM)')
+        # plt.xlim(stc.times[0], stc.times[-1])
+        # plt.figlegend([hl], ['Peak at = %s' % mni_max.round(2)], 'lower center')
+        # plt.show()
+
+    return all_stcs, all_betasevoked  # can be useful
