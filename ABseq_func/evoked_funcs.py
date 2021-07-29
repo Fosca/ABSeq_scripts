@@ -460,7 +460,10 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
         - ?? Standard items violpositions [_standard] (non violated items from violated sequences with matched postions): for each sequenceID & position (7 x 4) [_seqN_posN] ??
     """
     # create folder for evoked
-    path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
+    if config.noEEG:
+        path_evo = op.join(config.meg_dir, subject, 'noEEG', 'evoked_resid')
+    else:
+        path_evo = op.join(config.meg_dir, subject, 'evoked_resid')
     utils.create_folder(path_evo)
 
     # # =======================================================
@@ -491,25 +494,25 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
     fname_in = op.join(resid_path, 'residuals-epo.fif')
     epochs_items = mne.read_epochs(fname_in, preload=True)
 
-    epochs_items['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
-    epochs_items['ViolationInSequence == "0" and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
-    epochs_items['ViolationInSequence == "0" and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
+    epochs_items['ViolationInSequence == 0'].average().save(op.join(path_evo, 'items_standard_all-ave.fif'))
+    epochs_items['ViolationInSequence == 0 and TrialNumber > 11'].average().save(op.join(path_evo, 'items_teststandard_all-ave.fif'))
+    epochs_items['ViolationInSequence == 0 and TrialNumber < 11'].average().save(op.join(path_evo, 'items_habituation_all-ave.fif'))
     epochs_items['ViolationOrNot == 0'].average().save(op.join(path_evo, 'items_viol_all-ave.fif'))
     epochs_balanced = epoching_funcs.balance_epochs_violation_positions(epochs_items)
     epochs_balanced['ViolationInSequence == "0"'].average().save(op.join(path_evo, 'items_standard_balanced_all-ave.fif'))
 
     for k in range(1, 8):
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0"' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationInSequence == "0" and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
-        epochs_items['SequenceID == "%i" and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
-        epochs_balanced['SequenceID == "%i" and ViolationOrNot == "0"' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0' % k].average().save(op.join(path_evo, 'items_standard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber > 11' % k].average().save(op.join(path_evo, 'items_teststandard_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationInSequence == 0 and TrialNumber < 11' % k].average().save(op.join(path_evo, 'items_habituation_seq%i-ave.fif' % k))
+        epochs_items['SequenceID == %i and ViolationOrNot == 1' % k].average().save(op.join(path_evo, 'items_viol_seq%i-ave.fif' % k))
+        epochs_balanced['SequenceID == %i and ViolationOrNot == 0' % k].average().save(op.join(path_evo, 'items_standard_balanced_seq%i-ave.fif' % k))
         # determine the position of the deviants
-        tmp = epochs_items['SequenceID == "%i" and ViolationInSequence > 0' % k]
+        tmp = epochs_items['SequenceID == %i and ViolationInSequence > 0' % k]
         devpos = np.unique(tmp.metadata.ViolationInSequence)
         for pos_viol in devpos:
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
-            epochs_items['SequenceID == "%i" and  ViolationInSequence == "%i" and ViolationOrNot == "0"' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 1' % (k, pos_viol)].average().save(op.join(path_evo, 'items_viol_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
+            epochs_items['SequenceID == %i and  ViolationInSequence == %i and ViolationOrNot == 0' % (k, pos_viol)].average().save(op.join(path_evo, 'items_standard_seq%i_pos%i-ave.fif' % (k, int(pos_viol))))
 
     del epochs_items
 
