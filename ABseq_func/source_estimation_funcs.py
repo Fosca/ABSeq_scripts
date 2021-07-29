@@ -8,7 +8,7 @@ import shutil
 import os
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
+import warnings
 
 # =========== DO THIS BEFORE LAUNCHING PYTHON =========== #
 # required for mne.bem.make_watershed_bem
@@ -54,22 +54,29 @@ def create_source_space(subject, fsMRI_dir):
     print('Subject ' + subject + ': create_source_space ======================')
 
     meg_subject_dir = op.join(config.meg_dir, subject)
+
     # Create source space
     src = mne.setup_source_space(subject, spacing=config.spacing, subjects_dir=fsMRI_dir)
     mne.write_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'), src, overwrite=True)
 
 
-def forward_solution(subject, fsMRI_dir):
+def forward_solution(subject, fsMRI_dir, remap_grads=False):
     print('Subject ' + subject + ': forward_solution ======================')
 
     meg_subject_dir = op.join(config.meg_dir, subject)
+
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
     evoked = evoked[0]
 
     ######### REMOVE EEG (from object used for info) ########
-    evoked = evoked.pick_types( meg=True, eeg=False, eog=False)
+    if config.noEEG:
+        evoked = evoked.pick_types( meg=True, eeg=False, eog=False)
+        ######### REMAP GRADS TO MAG ########
+    if remap_grads:
+        print('Remapping grads to mags')
+        evoked = evoked.as_type('mag')
     #############################
 
     # BEM solution
@@ -79,13 +86,17 @@ def forward_solution(subject, fsMRI_dir):
     # Source space
     src = mne.read_source_spaces(op.join(meg_subject_dir, subject + '-oct6-src.fif'))
     # Forward solution
+    print('Computing forward solution')
     fwd = mne.make_forward_solution(evoked.info, fname_trans, src, fname_bem, mindist=config.mindist)
-    extension = '_%s-fwd' % (config.spacing)
+    if remap_grads:
+        extension = '_%s-fwd-remapped' % (config.spacing)
+    else:
+        extension = '_%s-fwd' % (config.spacing)
     fname_fwd = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     mne.write_forward_solution(fname_fwd, fwd, overwrite=True)
 
 
-def compute_noise_cov(subject, makefigures=True):
+def compute_noise_cov(subject, makefigures=True, remap_grads=False):
     print('Subject ' + subject + ': noise covariance ======================')
 
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -104,9 +115,13 @@ def compute_noise_cov(subject, makefigures=True):
     epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=True, AR_type='global')
 
     ######### REMOVE EEG ########
-    epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
+    if config.noEEG:
+        epochs = epochs.pick_types(meg=True, eeg=False, eog=False)
+    ######### REMAP GRADS TO MAG ########
+    if remap_grads:
+        print('Remapping grads to mags')
+        epochs = epochs.as_type('mag')
     #############################
-
 
     if not epochs.baseline:
         print('Epochs were not baseline corrected! Applying (-0.200, 0.0) baseline...')
@@ -130,12 +145,12 @@ def compute_noise_cov(subject, makefigures=True):
     return cov
 
 
-def inverse_operator(subject):
+def inverse_operator(subject, remap_grads=False):
     print('Subject ' + subject + ': inverse_operator ======================')
-
     meg_subject_dir = op.join(config.meg_dir, subject)
+
     # Noise covariance
-    cov = compute_noise_cov(subject, makefigures=False)
+    cov = compute_noise_cov(subject, makefigures=False, remap_grads=remap_grads)
     # Load some evoked data (just for info?)
     fname_evoked = op.join(meg_subject_dir, 'evoked_cleaned', 'items_standard_all-ave.fif')
     evoked = mne.read_evokeds(fname_evoked)
@@ -144,14 +159,22 @@ def inverse_operator(subject):
     ######### REMOVE EEG (from object used for info) ########
     evoked = evoked.copy().pick_types( meg=True, eeg=False, eog=False)
     #############################
+    if remap_grads:
+        evoked = evoked.as_type('mag')
 
     # Load forward solution
-    extension = '_%s-fwd' % (config.spacing)
+    if remap_grads:
+        extension = '_%s-fwd-remapped' % (config.spacing)
+    else:
+        extension = '_%s-fwd' % (config.spacing)
     fname_fwd = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     forward = mne.read_forward_solution(fname_fwd)
     # Inverse operator
     inverse_operator = mne.minimum_norm.make_inverse_operator(evoked.info, forward, cov, loose=0.2, depth=0.8)
-    extension = '_%s-inv' % (config.spacing)
+    if remap_grads:
+        extension = '_%s-inv-remapped' % (config.spacing)
+    else:
+        extension = '_%s-inv' % (config.spacing)
     fname_inv = op.join(meg_subject_dir, subject + config.base_fname.format(**locals()))
     mne.minimum_norm.write_inverse_operator(fname_inv, inverse_operator)
 
@@ -294,11 +317,17 @@ def source_morph(subject, source_evoked_name):
     return stc_fsaverage
 
 
-def normalized_sources_from_evoked(subject, evoked):
+def normalized_sources_from_evoked(subject, evoked, remap_grads=False):
+    ####
+    warnings.filterwarnings("ignore")
+    ####
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     snr = 3.0
     lambda2 = 1.0 / snr ** 2
-    inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv.fif'))
+    if remap_grads:
+        inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv-remapped.fif'))
+    else:
+        inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv.fif'))
     stc = mne.minimum_norm.apply_inverse(evoked, inverse_operator, lambda2, "dSPM", pick_ori=None)
     morph = mne.compute_source_morph(stc, subject_from=subject, subjects_dir=fsMRI_dir, subject_to='fsaverage')
     stc_fsaverage = morph.apply(stc)
@@ -333,15 +362,17 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     else:
         timeval = timepoint
     if colorlims == 'auto':
-        clim = 'auto'
+        # clim = 'auto'
+        clim = dict(kind='percent', lims=[97, 98.5, 99.9])
     else:
         clim = dict(kind='value', lims=colorlims)
 
     # Plot the STC, get the brain image, crop it:
     brain = stc.plot(views='lat', hemi='split', size=(800, 400), subject='fsaverage',
-                     subjects_dir=fsMRI_dir, initial_time=timeval, background='w',
-                     colorbar=False, clim=clim, colormap=colormap,
-                     time_viewer=False, backend='mayavi') #, show_traces=False) does not work with mne 0.19
+                     subjects_dir=fsMRI_dir, initial_time=timeval*1000, background='w',
+                     colorbar=False, clim=clim, colormap=colormap, time_unit='ms',
+                     time_viewer=False, add_data_kwargs= dict(time_label_size=0),
+                     backend='mayavi')
     screenshot = brain.screenshot()
     brain.close()
     nonwhite_pix = (screenshot != 255).any(-1)
@@ -349,71 +380,91 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     nonwhite_col = nonwhite_pix.any(0)
     cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
 
-    # Tweak the figure style
-    plt.rcParams.update({
-        'ytick.labelsize': 'small',
-        'xtick.labelsize': 'small',
-        'axes.labelsize': 'small',
-        'axes.titlesize': 'medium',
-        'grid.color': '0.75',
-        'grid.linestyle': ':'})
+    # Tweak the figure style ---/old
+    # plt.rcParams.update({
+    #     'ytick.labelsize': 'small',
+    #     'xtick.labelsize': 'small',
+    #     'axes.labelsize': 'small',
+    #     'axes.titlesize': 'medium',
+    #     'grid.color': '0.75',
+    #     'grid.linestyle': ':'})
+
+    # font size?
+    plt.rcParams.update({'font.size': 12})
 
     # figsize unit is inches
-    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(7, 5), gridspec_kw=dict(height_ratios=[3, 4]))
+    # fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(7, 5), gridspec_kw=dict(height_ratios=[3, 4]))
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(6, 7), gridspec_kw=dict(height_ratios=[4, 3]))
     fig.suptitle(figure_title, fontsize=12, fontweight='bold')
     evoked_idx = 0
     brain_idx = 1
 
     # plot the evoked in the desired subplot, and add a line at peak activation
-    evoked.pick_types(ch_type).plot(axes=axes[evoked_idx])
-    peak_line = axes[evoked_idx].axvline(timeval, color='#66CCEE', ls='--')
-    # custom legend
-    axes[evoked_idx].legend(
-        [axes[evoked_idx].lines[0], peak_line], ['MEG data', 'Peak time'],
-        frameon=True, columnspacing=0.1, labelspacing=0.1,
-        fontsize=8, fancybox=True, handlelength=1.8)
+    evoked.pick_types(ch_type).plot(spatial_colors=True, time_unit='ms', xlim=[-50, 350], axes=axes[evoked_idx], sphere=None)
+    peak_line = axes[evoked_idx].axvline(timeval*1000, color='#808080', ls='--')
+    # # custom legend
+    # axes[evoked_idx].legend(
+    #     [axes[evoked_idx].lines[0], peak_line], ['MEG data', 'Peak time'],
+    #     frameon=True, columnspacing=0.1, labelspacing=0.1,
+    #     fontsize=8, fancybox=True, handlelength=1.8)
+
     # remove the "N_ave" annotation
     axes[evoked_idx].texts = []
+
+    # remove the "Magnetometers (102 channels)" annotation
+    axes[evoked_idx].set_title(None)
+
+    # remove the colored topomap
+    fig.axes[2].remove()
+
     # Remove spines and add grid
-    axes[evoked_idx].grid(True)
-    axes[evoked_idx].set_axisbelow(True)
+    # axes[evoked_idx].grid(True)
+    # axes[evoked_idx].set_axisbelow(True)
+    # axes[evoked_idx].spines['bottom'].set_position('zero')
+    # axes[evoked_idx].set_axisbelow(False)
     for key in ('top', 'right'):
         axes[evoked_idx].spines[key].set(visible=False)
     # Tweak the ticks and limits
     if signallims == 'fixed':
         if ch_type == 'mag':
             axes[evoked_idx].set(yticks=np.arange(-100, 101, 50), xticks=np.arange(-0.1, 0.751, 0.1))
-            axes[evoked_idx].set(ylim=[-100, 100], xlim=[-0.1, 0.750])
+            axes[evoked_idx].set(ylim=[-100, 100])
         elif ch_type == 'grad':
             axes[evoked_idx].set(yticks=np.arange(-50, 51, 25), xticks=np.arange(-0.1, 0.751, 0.1))
-            axes[evoked_idx].set(ylim=[-50, 50], xlim=[-0.1, 0.750])
+            axes[evoked_idx].set(ylim=[-50, 50])
+    else:
+        axes[evoked_idx].set(xticks=np.arange(-100, 600, 100), xlim=[-50, 350])
+    axes[evoked_idx].axvline(0, linestyle='-', color='black', linewidth=1)
+    axes[evoked_idx].set_ylabel('Beta')
 
     # now add the brain to the lower axes
     axes[brain_idx].imshow(cropped_screenshot)
     axes[brain_idx].axis('off')
-    axes[brain_idx].set_title('Peak = ' + str('%d' % (timeval * 1000)) + ' ms')
+    axes[brain_idx].set_title('Peak = ' + str('%d' % (timeval * 1000)) + ' ms', y=-0.2, fontdict={'fontsize': plt.rcParams['font.size']})
 
     # add a vertical colorbar with the same properties as the 3D one
     divider = make_axes_locatable(axes[brain_idx])
-    cax = divider.append_axes('right', size='5%', pad=0.2)
+    cax = divider.append_axes('right', size='3%', pad=0.2)
     if mne.__version__ == '0.21.0':
         fmin = brain.data['fmin']
         fmid = brain.data['fmid']
         fmax = brain.data['fmax']
     else:
-        fmin = brain.get_data_properties()['fmin']
-        fmid = brain.get_data_properties()['fmid']
-        fmax = brain.get_data_properties()['fmax']
+        fmin = np.round(brain.get_data_properties()['fmin']*100,1)
+        fmid = np.round(brain.get_data_properties()['fmid']*100,1)
+        fmax = np.round(brain.get_data_properties()['fmax']*100,1)
     cbar = mne.viz.plot_brain_colorbar(cax,  dict(kind='value', lims=[fmin, fmid, fmax]), colormap, label='Activation')
 
     # tweak margins and spacing
-    fig.subplots_adjust(left=0.15, right=0.9, bottom=0.02, top=0.87, wspace=0.1, hspace=0.2)
+    # fig.subplots_adjust(left=0.15, right=0.9, bottom=0.02, top=0.87, wspace=0.1, hspace=0.2)
+    fig.subplots_adjust(left=0.15, right=0.9, bottom=0.02, top=0.87, wspace=0.1, hspace=0.3)
 
     # add A/B subplot labels
     # for ax, label in zip(axes, 'AB'):
     #     ax.text(0.03, ax.get_position().ymax, label, transform=fig.transFigure,
     #             fontsize=12, fontweight='bold', va='top', ha='left')
     fig.savefig(output_file, bbox_inches='tight', dpi=600)
+    # fig.savefig('tmp_test2.png', bbox_inches='tight', dpi=600)
     print('========> ' + output_file + " saved !")
     plt.close(fig)
 
