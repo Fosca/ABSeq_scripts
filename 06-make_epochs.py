@@ -26,7 +26,7 @@ parallel, run_func, _ = parallel_func(epoching_funcs.run_epochs, n_jobs=N_JOBS)
 # parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list)
 
 epoch_on_first_element = False
-parallel(run_func(subject, epoch_on_first_element, baseline=None) for subject in config.subjects_list) # WARNING: baseline should be "None" and not "False"
+parallel(run_func(subject, epoch_on_first_element, baseline=True) for subject in config.subjects_list) # WARNING: baseline parameter is "True/None" and not "True/False"
 
 
 # # ______________________________________________________________________________________
@@ -56,6 +56,6 @@ parallel(run_func(subject, epoch_on_first_element, baseline=None) for subject in
 parallel, run_func, _ = parallel_func(autoreject_funcs.arGlob_thesholds_summary, n_jobs=config.N_JOBS)
 epoch_on_first_element = False
 parallel(run_func(subject, epoch_on_first_element, count_epochs=True) for subject in config.subjects_list)
-epoch_on_first_element = True
-parallel(run_func(subject, epoch_on_first_element, count_epochs=True) for subject in config.subjects_list)
+# epoch_on_first_element = True
+# parallel(run_func(subject, epoch_on_first_element, count_epochs=True) for subject in config.subjects_list)
 
