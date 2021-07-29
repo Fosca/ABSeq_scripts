@@ -31,6 +31,7 @@ from importlib import reload
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import r2_score
 from sklearn import linear_model
+
 # Exclude some subjects
 # config.exclude_subjects.append('sub10-gp_190568')
 # config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
@@ -48,8 +49,9 @@ exclude_Repeat_and_Alternate = False
 cross_validate = True
 cleaned = True  # epochs cleaned with autoreject or not, only when using original epochs (resid_epochs=False)
 resid_epochs = False  # use epochs created by regressing out surprise effects, instead of original epochs
-use_baseline = False  # apply baseline to the epochs before running the regression
+use_baseline = True  # apply baseline to the epochs before running the regression
 lowpass_epochs = False  # option to filter epochs with  30Hz lowpass filter
+remap_grads = True  # combine mag et grads, cf https://mne.tools/stable/auto_examples/preprocessing/virtual_evoked.html
 suffix = ''
 if cross_validate:
     suffix = '_cv'
@@ -63,10 +65,10 @@ DoSecondLevel = True  # Run the group level statistics
 
 # Filter (for each analysis_name) to keep or exclude some epochs
 filters = dict()
-filters['StandComplexity'] = ['ViolationInSequence == 0 and StimPosition > 1']
+filters['StandComplexity'] = ['TrialNumber > 10 and ViolationInSequence == 0 and StimPosition > 1']
 filters['ViolComplexity'] = ['ViolationOrNot == 1']
 filters['StandMultiStructure'] = ['ViolationInSequence == 0 and StimPosition > 1']
-filters['HabComplexity'] = ['TrialNumber <= 10'] # and StimPosition > 1'] ## WE DO NOT EXCLUDE 1st ITEM ?!
+filters['HabComplexity'] = ['TrialNumber <= 10 and StimPosition > 1']
 
 if exclude_Repeat_and_Alternate:
     for key in filters.keys():
@@ -98,7 +100,8 @@ if DoFirstLevel:
         # Load epochs data (& update metadata in case new things were added)
         if resid_epochs and resid_epochs_type == 'reg_repeataltern_surpriseOmegainfinity':
             resid_path = op.join(config.result_path, 'linear_models', 'reg_repeataltern_surpriseOmegainfinity', subject)
-            fname_in = op.join(resid_path, suffix + 'residuals-epo.fif')
+            fname_in = op.join(resid_path, 'residuals-epo.fif'); print('!!!!! OLD VERSION OF RESID !!!!!!')
+            # fname_in = op.join(resid_path, suffix + 'residuals-epo.fif')
             print("Input: ", fname_in)
             epochs = mne.read_epochs(fname_in, preload=True)
         elif resid_epochs:
@@ -110,96 +113,16 @@ if DoFirstLevel:
             else:
                 epochs = epoching_funcs.load_epochs_items(subject, cleaned=False)
                 epochs = epoching_funcs.update_metadata_rejected(subject, epochs)
+
+        # ====== REMAP GRAD TO MAGS !! ====== #
+        if remap_grads:
+            print('Remapping grads to mags')
+            epochs = epochs.as_type('mag')
+            print(str(len(epochs.ch_names)) + ' remaining channels!')
+
         if lowpass_epochs:
             print('Low pass filtering...')
             epochs = epochs.filter(l_freq=None, h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
-
-        # # ====== display regressors on original sequences - note: StimID will always be 1 ===== #
-        # if not resid_epochs and subject == config.subjects_list[0]:  # do it only once (first subject):
-        #     metadata_seq1 = []
-        #     metadata_seq2 = []
-        #     metadata_seq3 = []
-        #     metadata_seq4 = []
-        #     metadata_seq5 = []
-        #     metadata_seq6 = []
-        #     metadata_seq7 = []
-        #     for stimpos in range(1, 17):  # get metadata info for the 16 items from standard sequences
-        #         metadata_seq1.append(epochs['SequenceID == 1 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq2.append(epochs['SequenceID == 2 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq3.append(epochs['SequenceID == 3 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq4.append(epochs['SequenceID == 4 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq5.append(epochs['SequenceID == 5 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq6.append(epochs['SequenceID == 6 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #         metadata_seq7.append(epochs['SequenceID == 7 and StimID == 1 and ViolationInSequence == 0 and StimPosition == "' + str(stimpos) + '"'][0].metadata)  # use the first epoch meeting the conditions
-        #     metadata_seq1 = pd.concat(metadata_seq1)
-        #     metadata_seq2 = pd.concat(metadata_seq2)
-        #     metadata_seq3 = pd.concat(metadata_seq3)
-        #     metadata_seq4 = pd.concat(metadata_seq4)
-        #     metadata_seq5 = pd.concat(metadata_seq5)
-        #     metadata_seq6 = pd.concat(metadata_seq6)
-        #     metadata_seq7 = pd.concat(metadata_seq7)
-        #     if exclude_Repeat_and_Alternate:
-        #         metadata_all = [metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
-        #     else:
-        #         metadata_all = [metadata_seq1, metadata_seq2, metadata_seq3, metadata_seq4, metadata_seq5, metadata_seq6, metadata_seq7]
-        #
-        #     # Plot
-        #     for name in names:
-        #         # Prepare colors range
-        #         cm = plt.get_cmap('viridis')
-        #         metadata_allseq = pd.concat(metadata_all)
-        #         metadata_allseq_reg = metadata_allseq[name]
-        #         minvalue = np.nanmin(metadata_allseq_reg)
-        #         maxvalue = np.nanmax(metadata_allseq_reg)
-        #         # Open figure
-        #         if exclude_Repeat_and_Alternate:
-        #             fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 4.4), sharex=False, sharey=True, constrained_layout=True)
-        #         else:
-        #             fig, ax = plt.subplots(number_of_sequences, 1, figsize=(8.7, 6), sharex=False, sharey=True, constrained_layout=True)
-        #         fig.suptitle(name, fontsize=12)
-        #         # Plot each sequences with circle color corresponding to regressor value
-        #         for nseq in range(number_of_sequences):
-        #             if exclude_Repeat_and_Alternate:
-        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
-        #             else:
-        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
-        #             ax[nseq].set_title(seqname, loc='left', weight='bold', fontsize=12)
-        #             metadata = metadata_all[nseq][name]
-        #             # Normalize between 0 and 1 based on possible values across sequences, in order to set the color
-        #             metadata = (metadata - minvalue)/(maxvalue-minvalue)
-        #             # stimID is always 1, so we use seqtxtXY instead...
-        #             if name == 'StimID':
-        #                 for ii in range(len(seqtxtXY)):
-        #                     if seqtxtXY[ii] == 'x':
-        #                         metadata[metadata.index[ii]] = 0
-        #                     elif seqtxtXY[ii] == 'Y':
-        #                         metadata[metadata.index[ii]] = 1
-        #             for stimpos in range(0, 16):
-        #                 value = metadata[metadata.index[stimpos]]
-        #                 if ~np.isnan(value):
-        #                     circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor=cm(value), edgecolor='k', linewidth=1)
-        #                 else:
-        #                     circle = plt.Circle((stimpos + 1, 0.5), 0.4, facecolor='white',  edgecolor='k', linewidth=1)
-        #                 ax[nseq].add_artist(circle)
-        #             ax[nseq].set_xlim([0, 17])
-        #             for key in ('top', 'right', 'bottom', 'left'):
-        #                 ax[nseq].spines[key].set(visible=False)
-        #             ax[nseq].set_xticks([], [])
-        #             ax[nseq].set_yticks([], [])
-        #         # Add "xY" using the same yval for all
-        #         ylim = ax[nseq].get_ylim()
-        #         yval = ylim[1] - ylim[1] * 0.1
-        #         for nseq in range(number_of_sequences):
-        #             if exclude_Repeat_and_Alternate:
-        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 3)
-        #             else:
-        #                 seqname, seqtxtXY, violation_positions = epoching_funcs.get_seqInfo(nseq + 1)
-        #             for xx in range(16):
-        #                 ax[nseq].text(xx + 1, 0.5, seqtxtXY[xx], horizontalalignment='center', verticalalignment='center', fontsize=12)
-        #         fig_name = op.join(results_path, name + '_regressor.png')
-        #         print('Saving ' + fig_name)
-        #         plt.savefig(fig_name, bbox_inches='tight', dpi=300)
-        #         plt.close(fig)
 
         # ====== filter items ====== #
         before = len(epochs)
@@ -207,7 +130,7 @@ if DoFirstLevel:
         print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
 
         # ====== Updating complexity values !! ====== #
-        print('Updating complexity values in metadata using config.complexity... !')
+        print('Updating complexity values in metadata using config.complexity...')
         for ii in epochs.metadata.index:
             seqID = epochs.metadata.at[ii, 'SequenceID']
             epochs.metadata.at[ii,'Complexity'] = config.complexity[seqID]
@@ -216,7 +139,7 @@ if DoFirstLevel:
         if use_baseline:
             epochs = epochs.apply_baseline(baseline=(-0.050, 0))
 
-        # ====== normalization ? ====== #
+        # ====== normalization of regressors ====== #
         for name in names:
             epochs.metadata[name] = scale(epochs.metadata[name])
 
@@ -225,6 +148,7 @@ if DoFirstLevel:
             epochs = epochs.pick_types(meg=True, eeg=False)
         else:
             epochs = epochs.pick_types(meg=True, eeg=True)
+
         df = epochs.metadata
         epochs.metadata = df.assign(Intercept=1)  # Add an intercept for later
         regressors_names = ["Intercept"] + names
@@ -292,7 +216,7 @@ if DoFirstLevel:
             # save data for each level level
             levels = np.unique(epochs.metadata[name])
             for x, level in enumerate(levels):
-                fname = op.join(path_evo, name + '_level%02.0f' % x)
+                fname = op.join(path_evo, analysis_name + '_analysis_' + name + '_level%02.0f' % x)
                 epochs[name + ' == ' + str(level)].average().save(fname + '-ave.fif')
 
         # ===== also create evoked for each sequence (i.e. only with epochs used in the regression) ===== #
@@ -310,7 +234,6 @@ if DoFirstLevel:
 
     # Store as epo objects
     for name in regressors_names:
-        # dat = tmpdat[name][name[0:-3]]  # the dict key has 3 less characters than the original... because I did not respect MNE naming conventions ??
         dat = tmpdat[name][name]
         exec(name + "_epo = mne.EpochsArray(np.asarray([dat[i][0].data for i in range(len(dat))]), dat[0][0].info, tmin="+str(np.round(dat[0][0].times[0],3))+")")
 
@@ -337,101 +260,20 @@ if DoSecondLevel:
     fig_path = op.join(results_path, 'figures')
     utils.create_folder(fig_path)
 
-    # ================= PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS /  ================ #
+    if remap_grads:
+        ch_types = ['mag']
+    else:
+        ch_types = config.ch_types
+
+    # ================= PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ================ #
     if Do3Dplot:
-        savepath = op.join(fig_path, 'Sources')
-        utils.create_folder(savepath)
-        all_stcs = dict()
-        all_betasevoked = dict()
-        for x, regressor_name in enumerate(betas.keys()):
-            all_stcs[regressor_name] = []
-            all_betasevoked[regressor_name] = []
-            for nsub, subject in enumerate(config.subjects_list):
-                print(regressor_name + ' regressor: sources for subject ' + str(nsub))
-                data = betas[regressor_name][nsub].average()  # 'fake' average since evoked was stored as 1 epoch
-                stc = source_estimation_funcs.normalized_sources_from_evoked(subject, data)
-                all_stcs[regressor_name].append(stc)
-                all_betasevoked[regressor_name].append(data)
-
-            # Group mean stc + betas
-            n_subjects = len(all_stcs[regressor_name])
-            mean_stc = all_stcs[regressor_name][0].copy()  # get copy of first instance
-            for sub in range(1, n_subjects):
-                mean_stc._data += all_stcs[regressor_name][sub].data
-            mean_stc._data /= n_subjects
-            mean_betas = mne.grand_average(all_betasevoked[regressor_name])
-
-            # Create figures
-            output_file = op.join(savepath, 'Sources_' + regressor_name + '.png')
-            figure_title = analysis_name + ' regression: ' + regressor_name
-            source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='grad', colormap='hot', colorlims='auto', signallims=None)
-            output_file = op.join(savepath, 'Sources_' + regressor_name + '_at80ms.png')
-            source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.080, ch_type='grad', colormap='viridis', colorlims='auto', signallims=None)
-            output_file = op.join(savepath, 'Sources_' + regressor_name + '_at170ms.png')
-            source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.170, ch_type='grad', colormap='viridis', colorlims='auto', signallims=None)
-
-            # Timecourse source figure
-            output_file = op.join(savepath, 'Sources_' + regressor_name + '_timecourse.png')
-            times_to_plot = [.0, .100, .200, .300, .400, .500]
-            win_size = .100
-            stc = mean_stc
-            maxval = np.max(stc._data)
-            colorlims = [maxval*.30, maxval*.40, maxval*.80]
-            # plot and screenshot for each timewindow
-            stc_screenshots = []
-            for t in times_to_plot:
-                twin_min = t
-                twin_max = t + win_size
-                stc_timewin = stc.copy()
-                stc_timewin.crop(tmin=twin_min, tmax=twin_max)
-                stc_timewin = stc_timewin.mean()
-                brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim=dict(kind='value', lims=colorlims),
-                                         subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), background='w', smoothing_steps=5,
-                                         colormap='hot', colorbar=False, time_viewer=False, backend='mayavi')
-                screenshot = brain.screenshot()
-                brain.close()
-                nonwhite_pix = (screenshot != 255).any(-1)
-                nonwhite_row = nonwhite_pix.any(1)
-                nonwhite_col = nonwhite_pix.any(0)
-                cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
-                plt.close('all')
-                stc_screenshots.append(cropped_screenshot)
-            # main figure
-            fig, axes = plt.subplots(len(times_to_plot), 1, figsize=(len(times_to_plot)*1.1, 4))
-            fig.suptitle(regressor_name, fontsize=8, fontweight='bold')
-            for idx in range(len(times_to_plot)):
-                axes[idx].imshow(stc_screenshots[idx])
-                axes[idx].axis('off')
-                twin_min = times_to_plot[idx]
-                twin_max = times_to_plot[idx] + win_size
-                axes[idx].set_title('[%d - %d ms]' % (twin_min * 1000, twin_max * 1000), fontsize=6)
-            # tweak margins and spacing
-            fig.subplots_adjust(left=0.1, right=0.9, bottom=0.01, top=0.9, wspace=1, hspace=0.5)
-            fig.savefig(output_file, bbox_inches='tight', dpi=600)
-            print('========> ' + output_file + " saved !")
-            plt.close(fig)
-
-            # Or explore sources activation
-            # maxvtx,  max_t_val = mean_stc.get_peak()
-            # brain = mean_stc.plot(views=['lat'], surface='pial', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
-            #                       subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), initial_time=max_t_val, smoothing_steps=5, time_viewer=True) # show_traces=True, (not available with MNE 0.19 ?)
-            # mni_max = mne.vertex_to_mni(maxvtx, 0,  subject='fsaverage', subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'))[0]
-            # print('Peak at {:.0f}'.format(mni_max[0]) + ',{:.0f}'.format(mni_max[1]) + ', {:.0f}'.format(mni_max[2]))
-            # plot the peak activation
-            # plt.figure()
-            # plt.axes([.1, .275, .85, .625])
-            # hl = plt.plot(stc.times, stc.data[maxvtx], 'b')[0]
-            # lt.xlabel('Time (s)')
-            # plt.ylabel('Source amplitude (dSPM)')
-            # plt.xlim(stc.times[0], stc.times[-1])
-            # plt.figlegend([hl], ['Peak at = %s' % mni_max.round(2)], 'lower center')
-            # plt.show()
+        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=remap_grads)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
     savepath = op.join(fig_path, 'Signals')
     utils.create_folder(savepath)
     plt.close('all')
-    for ch_type in config.ch_types:
+    for ch_type in ch_types:
         fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
         ax = axes.ravel()[::1]
@@ -473,24 +315,24 @@ if DoSecondLevel:
     times = 'peaks'
     for x, regressor_name in enumerate(betas.keys()):
         evokeds = betas[regressor_name].average()
-        if 'eeg' in config.ch_types: # EEG
+        if 'eeg' in ch_types: # EEG
             fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
             fig_name = savepath + op.sep + ('EEG_' + regressor_name + '.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name)
             plt.close(fig)
-        # MAG
-        fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name, topomap_args=topomap_args, picks='mag', times=times, show=False)
-        fig_name = savepath + op.sep + ('MAG_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
-        # #GRAD
-        fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name, topomap_args=topomap_args, picks='grad', times=times, show=False)
-        fig_name = savepath + op.sep + ('GRAD_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
+        if 'mag' in ch_types: # MAG
+            fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name, topomap_args=topomap_args, picks='mag', times=times, show=False)
+            fig_name = savepath + op.sep + ('MAG_' + regressor_name + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
+        if 'grad' in ch_types: # GRAD
+            fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name, topomap_args=topomap_args, picks='grad', times=times, show=False)
+            fig_name = savepath + op.sep + ('GRAD_' + regressor_name + '.png')
+            print('Saving ' + fig_name)
+            plt.savefig(fig_name)
+            plt.close(fig)
 
     # =========================================================== #
     # Group stats
@@ -502,7 +344,7 @@ if DoSecondLevel:
     p_threshold = 0.05
     tmin = 0.000  # timewindow to test (crop data)
     tmax = 0.350  # timewindow to test (crop data)
-    for ch_type in config.ch_types:
+    for ch_type in ch_types:
         for x, regressor_name in enumerate(betas.keys()):
             data_stat = copy.deepcopy(betas[regressor_name])
             data_stat.crop(tmin=tmin, tmax=tmax)  # crop
@@ -565,7 +407,7 @@ if DoSecondLevel:
 
             if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
                 # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
-                filter_name = regressor_name + '_level'
+                filter_name = analysis_name + '_analysis_' + regressor_name + '_level'
                 if resid_epochs:
                     evoked_reg, _ = evoked_funcs.load_evoked(subject='all', filter_name=filter_name, filter_not=None, cleaned=True, evoked_resid=True)
                 else:
@@ -655,93 +497,3 @@ if DoSecondLevel:
                 print('Saving ' + fig_name)
                 fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                 plt.close('all')
-
-
-def tmp_script_repeataltern_surprise_regression_figures():
-    analysis_name = 'reg_repeataltern_surpriseOmegainfinity'
-    regress_path = op.join(config.result_path, 'linear_models', analysis_name)
-    names = ["intercept", "RepeatAlter", "RepeatAlternp1", "surpriseN", "surpriseNp1"]
-
-    # =========== LOAD INDIVIDUAL REGRESSION RESULTS =========== #
-    # Load data from all subjects
-    betas = dict()
-    for name in names:
-        import glob
-        evoked_dict = []
-        for subj in config.subjects_list:
-            path_evo = op.join(regress_path, subj)
-            mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif'))
-            evoked_dict.append(mne.read_evokeds(op.join(path_evo, 'beta_' + name + '-ave.fif')))
-
-        betas[name] = mne.combine_evoked([evoked_dict[i][0] for i in range(len(config.subjects_list))], weights='equal')
-
-    # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
-    fig_path = op.join(config.fig_path, 'Linear_regressions', analysis_name)
-    utils.create_folder(fig_path)
-
-    # Loop over the 3 ch_types
-    plt.close('all')
-    ch_types = config.ch_types
-    for ch_type in ch_types:
-        fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
-        fig.suptitle(ch_type, fontsize=12, weight='bold')
-        ax = axes.ravel()[::1]
-        # Loop over the different betas
-        for x, regressor_name in enumerate(betas.keys()):
-            # ---- Data
-            evokeds = betas[regressor_name]
-            if ch_type == 'eeg':
-                betadata = evokeds.copy().pick_types(eeg=True, meg=False).data
-            elif ch_type == 'mag':
-                betadata = evokeds.copy().pick_types(eeg=False, meg='mag').data
-            elif ch_type == 'grad':
-                betadata = evokeds.copy().pick_types(eeg=False, meg='grad').data
-            minT = min(evokeds.times) * 1000
-            maxT = max(evokeds.times) * 1000
-            # ---- Plot
-            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
-            ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
-            for xx in range(3):
-                ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-            ax[x].set_xlabel('Time (ms)')
-            ax[x].set_ylabel('Channels')
-            ax[x].set_title(regressor_name, loc='center', weight='normal')
-            fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
-        fig_name = fig_path + op.sep + ('betas_' + ch_type + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name, dpi=300)
-        plt.close(fig)
-
-    # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
-    ylim_eeg = 20
-    ylim_mag = 600
-    ylim_grad = 200
-
-    # Butterfly plots for violations (one graph per sequence) - in EEG/MAG/GRAD
-    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
-    ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
-    topomap_args = dict(time_unit='s')
-    times = 'peaks'
-    for x, regressor_name in enumerate(betas.keys()):
-        evokeds = betas[regressor_name]
-        # EEG
-        fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name,
-                                 topomap_args=topomap_args, picks='eeg', times=times, show=False)
-        fig_name = fig_path + op.sep + ('EEG_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
-        # MAG
-        fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name,
-                                 topomap_args=topomap_args, picks='mag', times=times, show=False)
-        fig_name = fig_path + op.sep + ('MAG_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
-        # #GRAD
-        fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name,
-                                 topomap_args=topomap_args, picks='grad', times=times, show=False)
-        fig_name = fig_path + op.sep + ('GRAD_' + regressor_name + '.png')
-        print('Saving ' + fig_name)
-        plt.savefig(fig_name)
-        plt.close(fig)
