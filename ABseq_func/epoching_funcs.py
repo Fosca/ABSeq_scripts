@@ -43,37 +43,37 @@ def load_surprise_mat(config):
 def get_seqID(presented_sequences):
     if presented_sequences[0] == '0000000000000000' or presented_sequences[0] == '1111111111111111':
         seqID = 1
-        complexity = 4
+        complexity = config.complexity[seqID]
         sequence_entropy = np.nan
         violation_positions = [9, 12, 13, 15]
     elif presented_sequences[0] == '0101010101010101' or presented_sequences[0] == '1010101010101010':
         seqID = 2
-        complexity = 6
+        complexity = config.complexity[seqID]
         sequence_entropy = np.nan
         violation_positions = [9, 12, 14, 15]
     elif presented_sequences[0] == '0011001100110011' or presented_sequences[0] == '1100110011001100':
         seqID = 3
-        complexity = 6
+        complexity = config.complexity[seqID]
         sequence_entropy = 1.988
         violation_positions = [10, 11, 14, 15]
     elif presented_sequences[0] == '0000111100001111' or presented_sequences[0] == '1111000011110000':
         seqID = 4
-        complexity = 6
+        complexity = config.complexity[seqID]
         sequence_entropy = 1.617
         violation_positions = [9, 12, 13, 15]
     elif presented_sequences[0] == '0011010100110101' or presented_sequences[0] == '1100101011001010':
         seqID = 5
-        complexity = 12
+        complexity = config.complexity[seqID]
         sequence_entropy = 1.837
         violation_positions = [10, 11, 14, 15]
     elif presented_sequences[0] == '0000111100110101' or presented_sequences[0] == '1111000011001010':
         seqID = 6
-        complexity = 14
+        complexity = config.complexity[seqID]
         sequence_entropy = 1.988
         violation_positions = [10, 11, 14, 15]
     elif presented_sequences[0] == '0100011110110001' or presented_sequences[0] == '1011100001001110':
         seqID = 7
-        complexity = 23
+        complexity = config.complexity[seqID]
         sequence_entropy = 1.988
         violation_positions = [9, 12, 14, 15]
     else:
@@ -145,6 +145,8 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
     """
     run_info_subject_dir = op.join(config.run_info_dir, subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
+    if config.noEEG:
+        meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
 
     if clean:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
@@ -436,6 +438,7 @@ def balance_epochs_violation_positions(epochs,balance_param='local_position_sequ
 
     return epochs_balanced
 
+
 def metadata_balance_epochs_violation_positions(metadata):
     """
     This function balances violations and standards by position for each sequence by adding a yes/no column in metadata, for standard with matched positions
@@ -458,9 +461,6 @@ def metadata_balance_epochs_violation_positions(metadata):
         metadata['balanced_standard'].iloc[idx] = 'yes'
         # metadata.iloc[idx, 'balanced_standard'] = 'yes'
     return metadata
-
-# ---------------------------------------------------------------------------------------------------------------- #
-    # ---------------------------------------------------------------------------------------------------------------- #
 
 
 def run_epochs(subject, epoch_on_first_element, baseline=True):
