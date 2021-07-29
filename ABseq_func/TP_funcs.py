@@ -86,9 +86,12 @@ def append_surprise_to_metadata_clean(subject):
     """
 
     meg_subject_dir = op.join(config.meg_dir, subject)
+    if config.noEEG:
+        meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
+
     metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
 
-    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None, recompute=False)
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
     good_idx = [len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))]
 
