@@ -9,31 +9,33 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import sem
 from scipy.signal import savgol_filter
 import matplotlib.ticker as ticker
-from ABseq_func import evoked_funcs
+from ABseq_func import evoked_funcs, epoching_funcs
 import copy
+from mne.channels.layout import _merge_grad_data as rms_grad
 
 
 def run_cluster_permutation_test_1samp(data, ch_type='eeg', nperm=2 ** 12, threshold=None, n_jobs=6, tail=0):
     # If threshold is None, it will choose a t-threshold equivalent to p < 0.05 for the given number of observations
     # (only valid when using an t-statistic).
+    data_tmp = data.copy()
 
     # compute connectivity
-    if mne.__version__ == '0.22.0':
-        adjacency = mne.channels.find_ch_adjacency(data.info, ch_type=ch_type)[0]
+    if mne.__version__ == '0.22.0' or mne.__version__ == '0.23.0':
+        adjacency = mne.channels.find_ch_adjacency(data_tmp.info, ch_type=ch_type)[0]
     else:
-        connectivity = mne.channels.find_ch_connectivity(data.info, ch_type=ch_type)[0]
+        connectivity = mne.channels.find_ch_connectivity(data_tmp.info, ch_type=ch_type)[0]
 
     # subset of the data, as array
     if ch_type == 'eeg':
-        data.pick_types(meg=False, eeg=True)
-        data_array_chtype = np.array([data[c].get_data() for c in range(len(data))])
+        data_tmp.pick_types(meg=False, eeg=True)
+        data_array_chtype = np.array([data_tmp[c].get_data() for c in range(len(data_tmp))])
     else:
-        data.pick_types(meg=ch_type, eeg=False)
-        data_array_chtype = np.array([data[c].get_data() for c in range(len(data))])
+        data_tmp.pick_types(meg=ch_type, eeg=False)
+        data_array_chtype = np.array([data_tmp[c].get_data() for c in range(len(data_tmp))])
     data_array_chtype = np.transpose(np.squeeze(data_array_chtype), (0, 2, 1))  # transpose for clustering
 
     # stat func
-    if mne.__version__ == '0.22.0':
+    if mne.__version__ == '0.22.0' or mne.__version__ == '0.23.0':
         cluster_stats = permutation_cluster_1samp_test(data_array_chtype, threshold=threshold, n_jobs=n_jobs, verbose=True,
                                                        tail=tail, n_permutations=nperm, adjacency=adjacency,
                                                        out_type='indices')
@@ -185,11 +187,12 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         mask = np.zeros((T_obs_map.shape[0], 1), dtype=bool)
         mask[cinfo['channels_cluster'], :] = True
         fig, ax_topo = plt.subplots(1, 1, figsize=(7, 2.))
-        if (mne.__version__ == '0.22.0') & (ch_type != 'grad'):
+        if (mne.__version__ == '0.22.0' or mne.__version__ == '0.23.0') & (ch_type != 'grad'):
             # issue when plotting grad (pairs) when there is a mask ??!
-            image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head',  mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+            image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False, ch_type=ch_type)
         else:
-            image, _ = plot_topomap(T_obs_map, cluster_info['pos'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False)
+            image, _ = plot_topomap(T_obs_map, cluster_info['data_info'], extrapolate='head', mask=mask, axes=ax_topo, vmin=T_obs_min, vmax=T_obs_max, show=False, ch_type='mag')
+
         divider = make_axes_locatable(ax_topo)
         # add axes for colorbar
         ax_colorbar = divider.append_axes('right', size='5%', pad=0.05)
@@ -241,9 +244,9 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     units = dict(eeg='uV', grad='fT/cm', mag='fT')
 
     if legend:
-        fig, ax = plt.subplots(1, 1, figsize=(6, 4))
+        fig, ax = plt.subplots(1, 1, figsize=(5, 5))
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+        fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
     if blackfig:
         textcolor = 'white'
         linecolor = 'white'
@@ -263,14 +266,22 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         NUM_COLORS = len(condnames)
         cm = plt.get_cmap('viridis')
         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+
+    condnames_lgd = condnames.copy()
+    if condnames[-1][-14:] == 'SequenceID_07-' and len(condnames) == 7:
+        # Use sequences names in order as labels
+        for seqID in range(1, 8):
+            seqname, _, _ = epoching_funcs.get_seqInfo(seqID)
+            condnames_lgd[seqID-1] = seqname
+
     for ncond, condname in enumerate(condnames):
         data = evoked_dict[condname].copy()
-        evoked_funcs.plot_evoked_with_sem_1cond(data, condname[:-1], ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
+        evoked_funcs.plot_evoked_with_sem_1cond(data, condnames_lgd[ncond], ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
     ymin, ymax = ax.get_ylim()
-    ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='orange', alpha=0.2)
+    ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='grey', alpha=0.2, linewidth=0.0)
     if legend:
         # plt.legend(loc='best', fontsize=6)
-        l = plt.legend(fontsize=7, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
+        l = plt.legend(fontsize=9, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
         for text in l.get_texts():
             text.set_color(textcolor)
     for key in ('top', 'right'):  # Remove spines
@@ -280,7 +291,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
     ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
-    ax.set_xlim([-50, 600])
+    ax.set_xlim([-50, 350])
     ax.set_ylim([ymin, ymax])
     ax.set_ylabel(units[ch_type], color=textcolor)
     ax.spines['bottom'].set_color(linecolor)
@@ -371,13 +382,13 @@ def plot_clusters_evo_bars(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='
     ax.spines['left'].set_color(linecolor)
     ax.tick_params(axis='x', colors=textcolor, length=0)
     ax.tick_params(axis='y', colors=textcolor)
-    times = data[0][0].times * 1000 + 100  # since clusters starts at 0 and epochs at -100
+    times = data[0][0].times * 1000 + 50  # since clusters starts at 0 and epochs at -50
     plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1) + '_[%d-%dms]' % (times[t_inds[0]], times[t_inds[-1]]), fontsize=9, color=textcolor)
     fig.tight_layout(pad=0.5, w_pad=0)
     return fig
 
 
-def stats(X,tail=0):
+def stats(X, tail=0):
     """Statistical test applied across subjects"""
     from mne.stats import spatio_temporal_cluster_1samp_test
 
@@ -387,7 +398,7 @@ def stats(X,tail=0):
 
     # stats function report p_value for each cluster
     T_obs_, clusters, p_values, _ = spatio_temporal_cluster_1samp_test(
-        X, out_type='mask', n_permutations=2 ** 12, n_jobs=-1, verbose=False,tail=tail)
+        X, out_type='mask', n_permutations=2 ** 12, n_jobs=-1, verbose=False, tail=tail)
 
     # format p_values to get same dimensionality as X
     p_values_ = np.ones_like(X[0]).T
