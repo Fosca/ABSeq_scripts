@@ -18,7 +18,7 @@ regressors_names = ['Intercept','surprise_100','Surprisenp1','RepeatAlter','Repe
 # --- update the metadata fields for the epochs (clean and dirty) and save them again ----
 regression_funcs.update_metadata_epochs_and_save_epochs(subject)
 # - prepare the epochs (removing the ones that have nans for the fields of interest) and define the results path and suffix ---
-epochs, results_path, suffix = regression_funcs.prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix,linear_reg_path)
+epochs, results_path, suffix = regression_funcs.prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,apply_baseline,suffix)
 # --- run the regression with 4 folds ----
 betas, scores = regression_funcs.run_regression_CV(epochs,regressors_names)
 #  save the outputs of the regression : score, betas and residuals

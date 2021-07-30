@@ -127,7 +127,7 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     for name in regressors_names:
         epochs.metadata[name] = scale(epochs.metadata[name])
         to_append_to_results_path += '_' + name
-    results_path +=to_append_to_results_path[:1]+ '/'
+    results_path = results_path + to_append_to_results_path[1:]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
     if remap_grads:
         print('Remapping grads to mags')
