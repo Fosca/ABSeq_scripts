@@ -99,7 +99,9 @@ def filter_string_for_metadata():
 
 def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix,linear_reg_path):
     """
-
+    This function loads and removes the epochs that have nan fields in the metadata for the regressors of interest in the analysis
+    It performs the additional modifications to the epochs (filtering, remapping, baselining) that are asked
+    It generates the results path string where the results should be stored
     """
     epo_fname = linear_reg_path + epochs_fname
     results_path = os.path.dirname(epo_fname) + '/'
@@ -142,7 +144,11 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
 
 
 def run_regression_CV(epochs, regressors_names):
-    # cross validate 4 folds
+    """
+    Wrapper function to run the linear regression on the epochs for the list of regressors contained in regressors names
+    It does it by cross validating 4 times
+    """
+
     skf = StratifiedKFold(n_splits=4)
     y_balancing = epochs.metadata["SequenceID"].values * 100 + epochs.metadata["StimPosition"].values
 
@@ -181,6 +187,10 @@ def run_regression_CV(epochs, regressors_names):
 
 
 def save_regression_outputs(subject, results_path, regressors_names, betas, scores):
+    """
+    This function saves in the results_path the regression score, betas and residuals.
+    """
+
     utils.create_folder(results_path)
     np.save(op.join(results_path, subject + '-' + 'scores' + suffix + '.npy'), scores)
     # save betas
