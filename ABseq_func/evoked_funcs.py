@@ -11,6 +11,10 @@ from scipy.stats import sem
 import matplotlib.ticker as ticker
 import copy
 
+
+
+
+
 def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
     # Figures folder
     if violation_or_not:
