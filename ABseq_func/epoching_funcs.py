@@ -135,6 +135,7 @@ def update_metadata_rejected(subject, epochs_items):
 # ====================== change 31/3/2020 ========================
 
 def update_metadata(subject, clean=False, new_field_name=None, new_field_values=None,recompute=True):
+
     """
     This function appends data to the metadata
     :param subject:
@@ -147,7 +148,6 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
     meg_subject_dir = op.join(config.meg_dir, subject)
     if config.noEEG:
         meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
-
     if clean:
         metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
         if op.exists(metadata_path) and not recompute:
@@ -327,7 +327,7 @@ def convert_csv_info_to_metadata(csv_path):
     return metadata
 
 
-def load_epochs_items(subject, cleaned=True, AR_type='global'):
+def load_epochs_items(subject, cleaned=True, AR_type='global',return_fname=False):
 
     print("Processing subject: %s" % subject)
     meg_subject_dir = op.join(config.meg_dir, subject)
@@ -347,6 +347,10 @@ def load_epochs_items(subject, cleaned=True, AR_type='global'):
     fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
     print("Input: ", fname_in)
     epochs = mne.read_epochs(fname_in, preload=True)
+
+    if return_fname:
+        return epochs, fname_in
+
     return epochs
 
 
@@ -661,7 +665,6 @@ def brackets_for_sequences(seqID):
         #repeat
         expr = "[AAAAAAAAAAAAAAAA]"
         hierarchy_level = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-
     elif seqID == 2:
         #alternate
         expr = "[ABABABABABABABAB]"
@@ -693,7 +696,6 @@ def compute_structure_from_brackets(seqID):
     This function outputs the number of nodes open and if there was an opening or a closing of how many nodes
     """
     expr = brackets_for_sequences(seqID)
-
     pos = 0
     open = 0
     level_hierarch_list = []
@@ -708,6 +710,4 @@ def compute_structure_from_brackets(seqID):
             print("step done")
             pos +=1
             level_hierarch_list.append(open)
-
-
             print(car)

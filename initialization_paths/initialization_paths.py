@@ -11,7 +11,7 @@ sys.path.append("//Users/fosca/Documents/Fosca/Post_doc/Projects/ABSeq/scripts/T
 import MarkovModel_Python
 
 path = "/neurospin/meg/meg_tmp/Geom_Seq_Fosca_2017/Geom_Seq_scripts/Analysis_scripts/packages/"
-list_packages = ['jr-tools']
+list_packages = ['jr-tools','autoreject']
 
 for package in list_packages:
     sys.path.append(path+package)

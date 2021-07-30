@@ -10,7 +10,6 @@ Regressors to include (to indicate in "names=") are taken from epochs.metadata
 Can use the residuals of a previous regression (with surprise) instead of original epochs (resid_epochs = True/False)
 Uses filters (using epochs.metadata) to include/exclude some epochs in the regression (e.g. filters[analysis_name] = ['ViolationOrNot == 1'] for deviant items only)
 Regressors are always normalized with "scale" (sklearn.preprocessing)
-
 """
 
 from __future__ import division
@@ -63,6 +62,8 @@ if resid_epochs:
 DoFirstLevel = False  # To compute the regression and evoked for each subject
 DoSecondLevel = True  # Run the group level statistics
 
+
+
 # Filter (for each analysis_name) to keep or exclude some epochs
 filters = dict()
 filters['StandComplexity'] = ['TrialNumber > 10 and ViolationInSequence == 0 and StimPosition > 1']
@@ -88,7 +89,6 @@ if use_baseline:
 utils.create_folder(results_path)
 
 if DoFirstLevel:
-
     # ========================= RUN LINEAR REGRESSION FOR EACH SUBJECT ========================== #
     for subject in config.subjects_list:
         # linear_reg_funcs.run_linear_regression_v2(analysis_name, names, subject, cleaned=True)
@@ -138,7 +138,6 @@ if DoFirstLevel:
         # ====== apply baseline ? ====== #
         if use_baseline:
             epochs = epochs.apply_baseline(baseline=(-0.050, 0))
-
         # ====== normalization of regressors ====== #
         for name in names:
             epochs.metadata[name] = scale(epochs.metadata[name])
@@ -151,19 +150,18 @@ if DoFirstLevel:
 
         df = epochs.metadata
         epochs.metadata = df.assign(Intercept=1)  # Add an intercept for later
+
         regressors_names = ["Intercept"] + names
         res = linear_regression(epochs, epochs.metadata[regressors_names], names=regressors_names)
 
         if cross_validate:
             skf = StratifiedKFold(n_splits=4)
             y_balancing = epochs.metadata["SequenceID"].values * 100 + epochs.metadata["StimPosition"].values
-
             betas = []
             scores = []
-
             fold_number = 1
             for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
-                print("======= running a new fold =======")
+                print("======= running regression for fold %i ======="%fold_number)
 
                 # predictor matrix
                 preds_matrix_train = np.asarray(epochs[train_index].metadata[regressors_names].values)
@@ -198,7 +196,6 @@ if DoFirstLevel:
         # Save regression results
         for name in regressors_names:
             res[name].beta.save(op.join(sub_results_path, name + suffix + '.fif'))
-
 
         # ===== create evoked for each level of each regressor ===== #
         if config.noEEG:

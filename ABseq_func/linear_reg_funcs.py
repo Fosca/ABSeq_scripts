@@ -3,8 +3,6 @@ from __future__ import division
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 from scipy.io import loadmat
-import sys
-sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 from mne.stats import linear_regression, fdr_correction, bonferroni_correction, permutation_cluster_1samp_test
 import os.path as op
 import numpy as np
@@ -18,6 +16,11 @@ from sklearn import linear_model
 import matplotlib.pyplot as plt
 from ABseq_func import source_estimation_funcs
 import mne
+
+
+
+
+
 
 def run_linear_regression(subject, cleaned=True):
 
@@ -257,6 +260,7 @@ def repeat_alternate_from_metadata(metadata):
     return metadata
 
 
+
 def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
 
     # remove old files
@@ -403,10 +407,8 @@ def run_linear_reg_surprise_repeat_alt_latest(subject,cross_validate=True):
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
-
     # save the residuals epoch in the same folder
     residual_epochs.save(out_path + op.sep +suffix+ 'residuals-epo.fif', overwrite=True)
-
     # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
