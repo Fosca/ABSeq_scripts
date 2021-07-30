@@ -58,7 +58,7 @@ def update_metadata_epochs_and_save_epochs(subject):
 
     return True
 
-
+# ----------------------------------------------------------------------------------------------------------------------
 def filter_good_epochs_for_regression_analysis(subject,clean=True,fields_of_interest = ['surprise_100','RepeatAlternp1']):
     """
     This function removes the epochs that have Nans in the fields of interest specified in the list
@@ -76,7 +76,7 @@ def filter_good_epochs_for_regression_analysis(subject,clean=True,fields_of_inte
 
     return epochs
 
-
+# ----------------------------------------------------------------------------------------------------------------------
 def filter_string_for_metadata():
     """
     function that generates a dictionnary for conveniant selection of type of epochs
@@ -95,14 +95,24 @@ def filter_string_for_metadata():
 
     return filters
 
-
-
-def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix,linear_reg_path):
+# ----------------------------------------------------------------------------------------------------------------------
+def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,apply_baseline,suffix):
     """
     This function loads and removes the epochs that have nan fields in the metadata for the regressors of interest in the analysis
     It performs the additional modifications to the epochs (filtering, remapping, baselining) that are asked
     It generates the results path string where the results should be stored
+
+    :param subject: subject's NIP
+    :param cleaned: Set it to True if you want to perform the analysis on cleaned (AR global) data
+    :param regressors_names: List of fieds that exist in the metadata of the epochs
+    :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
+    :param remap_grads: True if you want to remaps the 306 channels onto 102 virtual mags
+    :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
+    :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
+    :return:
+
     """
+    linear_reg_path = config.result_path + '/linear_models/'
     epo_fname = linear_reg_path + epochs_fname
     results_path = os.path.dirname(epo_fname) + '/'
     if epochs_fname == '':
@@ -112,21 +122,18 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
         print("----- loading the data from %s ------" % epo_fname)
         epochs = mne.read_epochs(epo_fname)
     # ====== normalization of regressors ====== #
+    to_append_to_results_path = ''
     for name in regressors_names:
         epochs.metadata[name] = scale(epochs.metadata[name])
-        results_path += '_' + name
-    results_path +='/'
+        to_append_to_results_path += '_' + name
+    results_path = results_path + to_append_to_results_path[1:]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
     if remap_grads:
         print('Remapping grads to mags')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_'
-    if lowpass_epochs:
-        print('Low pass filtering...')
-        epochs = epochs.filter(l_freq=None,
-                               h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
-        suffix += 'lowpassed_'
+
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
         suffix += 'baselined_'
@@ -142,7 +149,7 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
 
     return epochs, results_path, suffix
 
-
+# ----------------------------------------------------------------------------------------------------------------------
 def run_regression_CV(epochs, regressors_names):
     """
     Wrapper function to run the linear regression on the epochs for the list of regressors contained in regressors names
@@ -185,26 +192,48 @@ def run_regression_CV(epochs, regressors_names):
 
     return betas, scores
 
-
-def save_regression_outputs(subject, results_path, regressors_names, betas, scores):
+# ----------------------------------------------------------------------------------------------------------------------
+def save_regression_outputs(subject,epochs,suffix, results_path, regressors_names, betas, scores):
     """
     This function saves in the results_path the regression score, betas and residuals.
     """
 
     utils.create_folder(results_path)
-    np.save(op.join(results_path, subject + '-' + 'scores' + suffix + '.npy'), scores)
-    # save betas
+    np.save(op.join(results_path, subject + '-' + 'scores' + suffix[:-1] + '.npy'), scores)
+
+    # save betas and residuals
+    residuals = epochs.get_data()
     for ii, name_reg in enumerate(regressors_names):
         beta = epochs.average().copy()
         beta._data = np.asarray(betas[ii, :, :])
-        beta.save(op.join(results_path, 'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
-
-    # save the residuals
-    residuals = epochs.get_data()
-    for nn in regressors_names:
+        beta.save(op.join(results_path,subject + '-'  'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
         residuals = residuals - np.asarray(
-            [epochs.metadata[nn].values[i] * lin_reg[nn].beta._data for i in range(len(epochs))])
+            [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
-    residual_epochs.save(op.join(results_path, 'residuals' + suffix + '-epo.fif'), overwrite=True)
+    residual_epochs.save(op.join(results_path,subject + '-'  'residuals' + suffix[:-1] + '-epo.fif'), overwrite=True)
+
+# ----------------------------------------------------------------------------------------------------------------------
+def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_grads=True,
+                       apply_baseline=False, suffix=''):
+    """
+    This function computes and saves the regression results when regressing on the epochs (or residuals if specified in epochs_fname)
+    :param subject: subject's NIP
+    :param regressors_names: List of fieds that exist in the metadata of the epochs
+    :epochs_fname: '' if you want to load the normal epochs otherwise specify what you want to load (path starting in the linear_model folder of the results)
+    :param cleaned: Set it to True if you want to perform the analysis on cleaned (AR global) data
+    :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
+    :param remap_grads: True if you want to remaps the 306 channels onto 102 virtual mags
+    :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
+    :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
+
+    """
+
+    # - prepare the epochs (removing the ones that have nans for the fields of interest) and define the results path and suffix ---
+    epochs, results_path, suffix = prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_names,
+                                                                 filter_name, remap_grads, apply_baseline, suffix)
+    # --- run the regression with 4 folds ----
+    betas, scores = run_regression_CV(epochs, regressors_names)
+    #  save the outputs of the regression : score, betas and residuals
+    save_regression_outputs(subject, epochs, suffix, results_path, regressors_names, betas, scores)
