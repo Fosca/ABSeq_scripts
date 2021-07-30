@@ -59,7 +59,7 @@ def from_epochs_to_surprise(subject, list_omegas,order = 1):
     for ome in list_omegas:
         print("========== DETERMINING THE SURPRISE FOR LEAKY WINDOW OF %i ITEMS ========="%ome)
         options = {'Decay': ome, 'prior_weight': 1}
-        field_name = 'surprise_%.005f'%ome
+        field_name = 'surprise_%i'%ome
         surprise = []
         for run in runs:
             metadata_run = metadata[metadata['RunNumber']==run]
@@ -80,7 +80,8 @@ def from_epochs_to_surprise(subject, list_omegas,order = 1):
 
 def append_surprise_to_metadata_clean(subject):
     """
-    This function corrects the mistake I made when computing the surprise for the epochs cleaned (doing as if the trials where close to each other)
+    Load the metadata that contains the surprise for the non-clean epochs, removes the bad epochs from the metadata
+    and this becomes the metadata for the clean epochs
     :param subject:
     :return:
     """
@@ -89,16 +90,17 @@ def append_surprise_to_metadata_clean(subject):
     if config.noEEG:
         meg_subject_dir = op.join(meg_subject_dir, 'noEEG')
 
+
     metadata_path = os.path.join(meg_subject_dir, 'metadata_item_clean.pkl')
 
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None, recompute=False)
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
     good_idx = [len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))]
 
-    metadata_clean = metadata[good_idx]
+    metadata_final = metadata[good_idx]
 
     with open(metadata_path,'wb') as fid:
-        pickle.dump(metadata_clean,fid)
+        pickle.dump(metadata_final,fid)
 
     return True
 
