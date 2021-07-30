@@ -12,7 +12,7 @@ regression_funcs.update_metadata_epochs_and_save_epochs(subject)
 
 for filter_name in filter_names:
     regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name)
-    regression_funcs.compute_regression(subject,['Complexity'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"-residualsHab-baselined_clean-epo.fif",filter_name)
+    regression_funcs.compute_regression(subject,['Complexity'],"/Hab/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"-residuals-baselined_clean-epo.fif",filter_name)
 
 
 

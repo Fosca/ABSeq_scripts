@@ -112,9 +112,10 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     :return:
 
     """
-    linear_reg_path = config.result_path + '/linear_models/'
+    linear_reg_path = config.result_path + '/linear_models/' +filter_name+'/'
     epo_fname = linear_reg_path + epochs_fname
     results_path = os.path.dirname(epo_fname) + '/'
+
     if epochs_fname == '':
         epochs = regression_funcs.filter_good_epochs_for_regression_analysis(subject, clean=cleaned,
                                                                              fields_of_interest=regressors_names)
@@ -143,7 +144,6 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     before = len(epochs)
     filters = regression_funcs.filter_string_for_metadata()
     if filter_name is not None:
-        suffix = filter_name + '-' + suffix
         epochs = epochs[filters[filter_name]]
     print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
 
