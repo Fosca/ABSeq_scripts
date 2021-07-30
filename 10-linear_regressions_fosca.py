@@ -1,3 +1,6 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
 from ABseq_func import epoching_funcs, regression_funcs
 import os.path as op
 import os
@@ -20,9 +23,10 @@ lowpass_epochs = False
 apply_baseline = True
 suffix = ''
 
-regressors_names = ['Intercept','Complexity']
-
+regressors_names = ['Intercept','surprise_100','surprisenp1','RepeatAlter','RepeatAlternp1']
 linear_reg_path = config.result_path+'/linear_models/'
+
+
 
 def suffix_regression(epochs_fname,regressors_names):
     suffix = epochs_fname

@@ -96,7 +96,6 @@ def append_surprise_to_metadata_clean(subject):
     metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None, recompute=False)
     epochs = epoching_funcs.load_epochs_items(subject, cleaned=True)
     good_idx = [len(epochs.drop_log[i])==0 for i in range(len(epochs.drop_log))]
-
     metadata_final = metadata[good_idx]
 
     with open(metadata_path,'wb') as fid:

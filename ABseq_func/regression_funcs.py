@@ -20,27 +20,26 @@ def update_metadata_epochs_and_save_epochs(subject):
     epochs_notclean, fname = epoching_funcs.load_epochs_items(subject, cleaned=False,return_fname=True)
 
     # load the metadata for the non-cleaned epochs, remove the bad ones, and this becomes the metadata for the cleaned epochs
-    metadata_clean = TP_funcs.append_surprise_to_metadata_clean(subject)
     epochs_clean, fname_clean = epoching_funcs.load_epochs_items(subject, cleaned=True,return_fname=True)
 
     # ============ build the repeatAlter and the surprise 100 for n+1 ==================
-
     # 1 - update the full epochs (not_clean) metadata with the new fields
     RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
     RepeatAlternp1_notclean.append(np.nan)
     Surprisenp1_notclean = metadata_notclean["surprise_100"].values[1:].tolist()
     Surprisenp1_notclean.append(np.nan)
-
-    metadata_notclean.assign(Intercept=1)
-    metadata_notclean.assign(RepeatAlternp1=RepeatAlternp1_notclean)
-    metadata_notclean.assign(Surprisenp1=Surprisenp1_notclean)
+    metadata_notclean = metadata_notclean.assign(Intercept=1)
+    metadata_notclean = metadata_notclean.assign(RepeatAlternp1=RepeatAlternp1_notclean)
+    metadata_notclean = metadata_notclean.assign(Surprisenp1=Surprisenp1_notclean)
     epochs_notclean.metadata = metadata_notclean
     epochs_notclean.save(fname,overwrite = True)
 
     # 2 - subselect only the good epochs indices to filter the metadata
-    good_idx = np.where([len(epochs_clean.drop_log[i]) == 0 for i in range(len(epochs_clean.drop_log))])[0]
-    RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[good_idx]
-    Surprisenp1 = np.asarray(Surprisenp1_notclean)[good_idx]
+    good_idx = [len(epochs_clean.drop_log[i]) == 0 for i in range(len(epochs_clean.drop_log))]
+    where_good = np.where(good_idx)[0]
+    RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[where_good]
+    Surprisenp1 = np.asarray(Surprisenp1_notclean)[where_good]
+    metadata_clean = metadata_notclean[good_idx]
 
     metadata_clean = metadata_clean.assign(Intercept=1)  # Add an intercept for later
     metadata_clean = metadata_clean.assign(RepeatAlternp1=RepeatAlternp1)
