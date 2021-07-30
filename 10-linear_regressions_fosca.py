@@ -10,7 +10,6 @@ epochs_fname = ''
 filter_name = 'Hab'
 cleaned = True
 remap_grads = False
-lowpass_epochs = False
 apply_baseline = True
 suffix = ''
 regressors_names = ['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1']

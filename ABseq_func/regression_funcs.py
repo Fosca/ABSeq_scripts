@@ -96,7 +96,7 @@ def filter_string_for_metadata():
     return filters
 
 
-def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix):
+def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,apply_baseline,suffix):
     """
     This function loads and removes the epochs that have nan fields in the metadata for the regressors of interest in the analysis
     It performs the additional modifications to the epochs (filtering, remapping, baselining) that are asked
@@ -123,21 +123,18 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
         print("----- loading the data from %s ------" % epo_fname)
         epochs = mne.read_epochs(epo_fname)
     # ====== normalization of regressors ====== #
+    to_append_to_results_path = ''
     for name in regressors_names:
         epochs.metadata[name] = scale(epochs.metadata[name])
-        results_path += '_' + name
-    results_path +='/'
+        to_append_to_results_path += '_' + name
+    results_path +=to_append_to_results_path[:1]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
     if remap_grads:
         print('Remapping grads to mags')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_'
-    if lowpass_epochs:
-        print('Low pass filtering...')
-        epochs = epochs.filter(l_freq=None,
-                               h_freq=30)  # default parameters (maybe should filter raw data instead of epochs...)
-        suffix += 'lowpassed_'
+
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
         suffix += 'baselined_'
@@ -203,19 +200,17 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     """
 
     utils.create_folder(results_path)
-    np.save(op.join(results_path, subject + '-' + 'scores' + suffix + '.npy'), scores)
-    # save betas
+    np.save(op.join(results_path, subject + '-' + 'scores' + suffix[:-1] + '.npy'), scores)
+
+    # save betas and residuals
+    residuals = epochs.get_data()
     for ii, name_reg in enumerate(regressors_names):
         beta = epochs.average().copy()
         beta._data = np.asarray(betas[ii, :, :])
-        beta.save(op.join(results_path, 'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
-
-    # save the residuals
-    residuals = epochs.get_data()
-    for nn in regressors_names:
+        beta.save(op.join(results_path,subject + '-'  'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
         residuals = residuals - np.asarray(
-            [epochs.metadata[nn].values[i] * lin_reg[nn].beta._data for i in range(len(epochs))])
+            [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
-    residual_epochs.save(op.join(results_path, 'residuals' + suffix + '-epo.fif'), overwrite=True)
+    residual_epochs.save(op.join(results_path,subject + '-'  'residuals' + suffix[:-1] + '-epo.fif'), overwrite=True)
