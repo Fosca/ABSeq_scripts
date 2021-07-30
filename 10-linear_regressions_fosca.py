@@ -14,7 +14,6 @@ lowpass_epochs = False
 apply_baseline = True
 suffix = ''
 regressors_names = ['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1']
-linear_reg_path = config.result_path+'/linear_models/'
 
 
 # --- update the metadata fields for the epochs (clean and dirty) and save them again ----

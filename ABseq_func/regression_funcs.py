@@ -96,13 +96,24 @@ def filter_string_for_metadata():
     return filters
 
 
-
-def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix,linear_reg_path):
+def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,lowpass_epochs,apply_baseline,suffix):
     """
     This function loads and removes the epochs that have nan fields in the metadata for the regressors of interest in the analysis
     It performs the additional modifications to the epochs (filtering, remapping, baselining) that are asked
     It generates the results path string where the results should be stored
+
+    :param subject: subject's NIP
+    :param cleaned: Set it to True if you want to perform the analysis on cleaned (AR global) data
+    :param regressors_names: List of fieds that exist in the metadata of the epochs
+    :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
+    :param remap_grads: True if you want to remaps the 306 channels onto 102 virtual mags
+    :param lowpass_epochs: True if you want to filter the data
+    :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
+    :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
+    :return:
+
     """
+    linear_reg_path = config.result_path + '/linear_models/'
     epo_fname = linear_reg_path + epochs_fname
     results_path = os.path.dirname(epo_fname) + '/'
     if epochs_fname == '':
@@ -186,7 +197,7 @@ def run_regression_CV(epochs, regressors_names):
     return betas, scores
 
 
-def save_regression_outputs(subject, results_path, regressors_names, betas, scores):
+def save_regression_outputs(subject,epochs,suffix, results_path, regressors_names, betas, scores):
     """
     This function saves in the results_path the regression score, betas and residuals.
     """
