@@ -197,26 +197,26 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     """
     This function saves in the results_path the regression score, betas and residuals.
     """
-
+    results_path = results_path+'/'+subject+'/'
     utils.create_folder(results_path)
-    np.save(op.join(results_path, subject + '-' + 'scores' + suffix[:-1] + '.npy'), scores)
+    np.save(op.join(results_path, 'scores--'+suffix[:-1] + '.npy'), scores)
 
     # save betas and residuals
     residuals = epochs.get_data()
     for ii, name_reg in enumerate(regressors_names):
         beta = epochs.average().copy()
         beta._data = np.asarray(betas[ii, :, :])
-        beta.save(op.join(results_path,subject + '-'  'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
+        beta.save(op.join(results_path,'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
         residuals = residuals - np.asarray(
             [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
-    residual_epochs.save(op.join(results_path,subject + '-'  'residuals' + suffix[:-1] + '-epo.fif'), overwrite=True)
+    residual_epochs.save(op.join(results_path,'residuals' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
 def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_grads=True,
-                       apply_baseline=False, suffix=''):
+                       apply_baseline=False, suffix='',save_evoked_for_regressor_level=True):
     """
     This function computes and saves the regression results when regressing on the epochs (or residuals if specified in epochs_fname)
     :param subject: subject's NIP
@@ -233,7 +233,41 @@ def compute_regression(subject, regressors_names, epochs_fname, filter_name, cle
     # - prepare the epochs (removing the ones that have nans for the fields of interest) and define the results path and suffix ---
     epochs, results_path, suffix = prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_names,
                                                                  filter_name, remap_grads, apply_baseline, suffix)
+
+    if save_evoked_for_regressor_level:
+        save_evoked_levels_regressors(epochs, subject, regressors_names, results_path, suffix)
+
     # --- run the regression with 4 folds ----
     betas, scores = run_regression_CV(epochs, regressors_names)
     #  save the outputs of the regression : score, betas and residuals
     save_regression_outputs(subject, epochs, suffix, results_path, regressors_names, betas, scores)
+
+# ----------------------------------------------------------------------------------------------------------------------
+def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path, suffix):
+    """
+    This function computes and saves the regression results when regressing on the epochs (or residuals if specified in epochs_fname)
+    :param epochs: subject's NIP
+    :param regressors_names: List of fieds that exist in the metadata of the epochs
+    """
+
+    for reg_name in regressors_names:
+        save_reg_levels_evoked_path = results_path+ subject+'/'+reg_name+'/'
+        utils.create_folder(save_reg_levels_evoked_path)
+        # --- these are the different values of the regressor ----
+        levels = np.unique(epochs.metadata[reg_name])
+        if len(levels)>10:
+            bins = np.linspace(np.min(levels),np.max(levels),11)
+            for ii in range(10):
+                epochs["%s >= %0.02f and %s < %0.02f"%(reg_name, bins[ii], reg_name,bins[ii+1])].average().save(
+                    save_reg_levels_evoked_path + str(ii) + '-' + suffix[:-1]+ '-ave.fif')
+        else:
+            for lev in levels:
+                epochs["%s == %0.02f"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+
+    save_reg_levels_evoked_path = results_path+ subject+'/SequenceID/'
+    utils.create_folder(save_reg_levels_evoked_path)
+    levels = np.unique(epochs.metadata['SequenceID'])
+    for lev in levels:
+        epochs["%s == %0.02f"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+
+    return True
