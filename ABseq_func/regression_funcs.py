@@ -80,7 +80,9 @@ def filter_string_for_metadata():
     filters['StandMultiStructure'] = 'ViolationInSequence == 0 and StimPosition > 1'
     filters['Hab'] = 'TrialNumber <= 10 and StimPosition > 1'
 
-    for keyname in filters.keys():
-        filters[keyname+'_excluseRA'] = filters[keyname] + + ' and SequenceID >= 3'
+    filters['Stand_excluseRA'] = 'TrialNumber > 10 and ViolationInSequence == 0 and StimPosition > 1 and SequenceID >= 3'
+    filters['Viol_excluseRA'] = 'ViolationOrNot == 1 and SequenceID >= 3'
+    filters['StandMultiStructure_excluseRA'] = 'ViolationInSequence == 0 and StimPosition > 1 and SequenceID >= 3'
+    filters['Hab_excluseRA'] = 'TrialNumber <= 10 and StimPosition > 1 and SequenceID >= 3'
 
     return filters

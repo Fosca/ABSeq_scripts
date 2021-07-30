@@ -1,7 +1,7 @@
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import initialization_paths
-from ABseq_func import epoching_funcs, regression_funcs
+from ABseq_func import epoching_funcs, regression_funcs,utils
 import os.path as op
 import os
 import config
@@ -23,19 +23,12 @@ lowpass_epochs = False
 apply_baseline = True
 suffix = ''
 
-regressors_names = ['Intercept','surprise_100','surprisenp1','RepeatAlter','RepeatAlternp1']
+regressors_names = ['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1']
 linear_reg_path = config.result_path+'/linear_models/'
 
 
-
-def suffix_regression(epochs_fname,regressors_names):
-    suffix = epochs_fname
-    for reg_name in regressors_names:
-        suffix += reg_name[:4]+'_'
-
-
 epo_fname = linear_reg_path + epochs_fname
-results_path = os.path.dirname(epo_fname)
+results_path = os.path.dirname(epo_fname)+'/'
 
 if epochs_fname == '':
     epochs = regression_funcs.filter_good_epochs_for_regression_analysis(subject, clean=cleaned,
@@ -47,6 +40,7 @@ else:
 # ====== normalization of regressors ====== #
 for name in regressors_names:
     epochs.metadata[name] = scale(epochs.metadata[name])
+    results_path += '_'+name
 
 # - - - - OPTIONNAL STEPS - - - -
 if remap_grads:
@@ -70,6 +64,7 @@ if cleaned:
 before = len(epochs)
 filters = regression_funcs.filter_string_for_metadata()
 if filter_name is not None:
+    suffix = filter_name +'-'+ suffix
     epochs = epochs[filters[filter_name]]
 print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
 
@@ -85,8 +80,6 @@ scores = []
 fold_number = 1
 
 for train_index, test_index in skf.split(np.zeros(len(y_balancing)), y_balancing):
-
-    res = linear_regression(epochs, epochs.metadata[regressors_names], names=regressors_names)
     print("======= running regression for fold %i =======" % fold_number)
     # predictor matrix
     preds_matrix_train = np.asarray(epochs[train_index].metadata[regressors_names].values)
@@ -116,14 +109,23 @@ scores = np.mean(scores, axis=0)
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 #          Now save the outputs of the regression : score, betas and residuals
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+# save score
 
-saving_path = op.join(results_path, '/linear_models')
-np.save(op.join(saving_path, 'scores'+suffix+'.npy'), scores)
-
+utils.create_folder(results_path)
+np.save(op.join(results_path, 'scores'+suffix+'.npy'), scores)
+# save betas
 for ii, name_reg in enumerate(regressors_names):
-    res[name_reg].beta._data = np.asarray(betas[ii, :, :])
-    res[name_reg].beta.save(op.join(saving_path, name_reg + suffix + '.fif'))
+    beta = epochs.average().copy()
+    beta._data = np.asarray(betas[ii, :, :])
+    beta.save(op.join(results_path,'beta_'+ name_reg +'--' +suffix[:-1] + '-ave.fif'))
 
+# save the residuals
+residuals = epochs.get_data()
+for nn in regressors_names:
+    residuals = residuals - np.asarray([epochs.metadata[nn].values[i] * lin_reg[nn].beta._data for i in range(len(epochs))])
 
-    
+residual_epochs = epochs.copy()
+residual_epochs._data = residuals
+residual_epochs.save(op.join(saving_path, 'residuals' + suffix + '-epo.fif'), overwrite=True)
+
 
