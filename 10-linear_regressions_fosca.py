@@ -23,6 +23,6 @@ epochs, results_path, suffix = regression_funcs.prepare_epochs_for_regression(su
 # --- run the regression with 4 folds ----
 betas, scores = regression_funcs.run_regression_CV(epochs,regressors_names)
 #  save the outputs of the regression : score, betas and residuals
-regression_funcs.save_regression_outputs(subject, results_path, regressors_names, betas, scores)
+regression_funcs.save_regression_outputs(subject,epochs,suffix, results_path, regressors_names, betas, scores)
 
 
