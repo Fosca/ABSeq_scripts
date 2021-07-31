@@ -271,15 +271,17 @@ def ord_code_16items(subject,load_residuals_regression=False):
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-def compute_evoked(subject):
-    evoked_funcs.create_evoked(subject, cleaned=False)
-    evoked_funcs.create_evoked(subject, cleaned=True)
-
-
 def linear_reg(subject):
-    from ABseq_func import linear_reg_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
-    linear_reg_funcs.run_linear_regression(subject, cleaned=True)
+    from ABseq_func import regression_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
+    filter_names = ['Hab', 'Stand', 'Viol']
+    regression_funcs.update_metadata_epochs_and_save_epochs(subject)
+
+    for filter_name in filter_names:
+        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name)
+        regression_funcs.compute_regression(subject,['Complexity'],"/Hab/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"-residuals-baselined_clean-epo.fif",filter_name)
+
+
+
 
 
 def surprise_omegas_analysis(subject):
@@ -299,15 +301,6 @@ def surprise_omegas_analysis(subject):
     # TP_funcs.compute_posterior_probability(subject)
     # TP_funcs.regress_out_optimal_omega_per_channel(subject)
 
-
-def simplified_linear_regression_latest(subject):
-    from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt_latest(subject)
-
-
-def simplified_with_complexity(subject):
-    from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject, with_complexity=True)
 
 
 def compute_correlation_stc_complexity(subject):

@@ -8,7 +8,7 @@ subject = config.subjects_list[0]
 filter_names = ['Hab','Stand','Viol']
 
 # --- update the metadata fields for the epochs (clean and dirty) and save them again ----
-# regression_funcs.update_metadata_epochs_and_save_epochs(subject)
+regression_funcs.update_metadata_epochs_and_save_epochs(subject)
 
 for filter_name in filter_names:
     regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name)
