@@ -554,7 +554,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         config.tmin = -0.200
         config.tmax = 0.25 * 17
         config.baseline = (config.tmin, 0)
-        if baseline is None:
+        if (baseline is None) or (baseline is False):
             config.baseline = None
         for k in range(len(events)):
             events[k, 2] = k % 16 + 1
@@ -567,7 +567,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
         config.tmin = -0.050
         config.tmax = 0.600
         config.baseline = (config.tmin, 0)
-        if baseline is None:
+        if (baseline is None) or (baseline is False):
             config.baseline = None
         epochs = mne.Epochs(raw, events, None, config.tmin, config.tmax,
                             proj=True, picks=picks, baseline=config.baseline,

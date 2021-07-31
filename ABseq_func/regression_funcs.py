@@ -114,14 +114,17 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     """
     linear_reg_path = config.result_path + '/linear_models/' +filter_name+'/'
     epo_fname = linear_reg_path + epochs_fname
-    results_path = os.path.dirname(epo_fname) + '/'
 
     if epochs_fname == '':
         epochs = regression_funcs.filter_good_epochs_for_regression_analysis(subject, clean=cleaned,
                                                                              fields_of_interest=regressors_names)
+        results_path = os.path.dirname(epo_fname) + '/'
     else:
         print("----- loading the data from %s ------" % epo_fname)
         epochs = mne.read_epochs(epo_fname)
+        results_path = os.path.dirname(epo_fname) + '/'
+        results_path = op.abspath(op.join(results_path, os.pardir, os.pardir, 'from_' + results_path.split(op.sep)[-3]))
+
     # ====== normalization of regressors ====== #
     to_append_to_results_path = ''
     for name in regressors_names:
@@ -251,7 +254,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
     """
 
     for reg_name in regressors_names:
-        save_reg_levels_evoked_path = results_path+ subject+'/'+reg_name+'/'
+        save_reg_levels_evoked_path = results_path+ subject+'/'+reg_name+'_evo/'
         utils.create_folder(save_reg_levels_evoked_path)
         # --- these are the different values of the regressor ----
         levels = np.unique(epochs.metadata[reg_name])
@@ -262,12 +265,12 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
                     save_reg_levels_evoked_path + str(ii) + '-' + suffix[:-1]+ '-ave.fif')
         else:
             for lev in levels:
-                epochs["%s == %0.02f"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+                epochs["%s == %s"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
 
     save_reg_levels_evoked_path = results_path+ subject+'/SequenceID/'
     utils.create_folder(save_reg_levels_evoked_path)
     levels = np.unique(epochs.metadata['SequenceID'])
     for lev in levels:
-        epochs["%s == %0.02f"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+        epochs["%s == %s"%('SequenceID',lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
 
     return True
