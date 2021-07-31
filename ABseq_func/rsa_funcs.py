@@ -1,12 +1,14 @@
 import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
+
 from initialization_paths import initialization_paths
 
 from ABseq_func import epoching_funcs, utils, SVM_funcs
 import config
 import pandas as pd
 import numpy as np
-import umne
+from src import umne
 import glob
 import os.path as op
 
