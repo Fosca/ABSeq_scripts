@@ -177,6 +177,7 @@ def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
 
 def SVM_full_sequences_16items1(subject):
+    # subject = config.subjects_list[0]
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.130, 0.210], window=True, sliding_window=True,cleaned=True)
 def SVM_full_sequences_16items2(subject):
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.210, 0.410], window=True, sliding_window=True,cleaned=True)
@@ -274,11 +275,10 @@ def ord_code_16items(subject,load_residuals_regression=False):
 def linear_reg(subject):
     from ABseq_func import regression_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
     filter_names = ['Hab', 'Stand', 'Viol']
-    regression_funcs.update_metadata_epochs_and_save_epochs(subject)
-
+    # regression_funcs.update_metadata_epochs_and_save_epochs(subject)
     for filter_name in filter_names:
-        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name)
-        regression_funcs.compute_regression(subject,['Complexity'],"/Hab/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"-residuals-baselined_clean-epo.fif",filter_name)
+        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=False)
+        regression_funcs.compute_regression(subject,['Complexity'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"-residuals-epo.fif",filter_name,remap_grads=False)
 
 
 

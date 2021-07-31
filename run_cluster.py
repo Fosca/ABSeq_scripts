@@ -27,10 +27,10 @@ print('jaime les tomates')
 
 
 cluster_funcs.create_qsub('linear_reg', 'lr', 'lr', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_full_sequences_16items2', '216its', '216its', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_full_sequences_16items3', '316its', '316its', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_full_sequences_16items4', '416its', '416its', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_full_sequences_16items2', '216its', '216its', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_full_sequences_16items3', '316its', '316its', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_full_sequences_16items4', '416its', '416its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_stimID_eeg', 'stimID_eeg', 'stimID_eeg', queue='Nspin_bigM')
 
 #cluster_funcs.create_qsub('SVM_full_sequences_16items', '16its', '16its', queue='Nspin_bigM')# ok
