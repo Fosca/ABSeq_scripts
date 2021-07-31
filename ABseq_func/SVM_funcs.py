@@ -1,6 +1,5 @@
 # This module contains all the functions related to the decoding analysis
 import sys
-
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 from initialization_paths import initialization_paths
 import os.path as op

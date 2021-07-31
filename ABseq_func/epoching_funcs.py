@@ -300,6 +300,8 @@ def convert_csv_info_to_metadata(csv_path):
         ClosedChunks.append(-closedChunk_seq)
     ClosedChunks = np.concatenate(ClosedChunks)
 
+    # things to add : starts with A or B
+
     metadata = {'SequenceID': np.asarray(seqID),
                 'Complexity': np.asarray(complexity),
                 'GlobalEntropy': np.asarray(seq_entropy),
