@@ -2,18 +2,25 @@ import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
 from initialization_paths import initialization_paths
-
-from ABseq_func import rsa_funcs
+from ABseq_func import rsa_funcs, epoching_funcs
 import config
 import numpy as np
 from src import umne
-
+import pickle
 # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
 for subject in config.subjects_list:
     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
+
+path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr_sub01-pa_190002.dmat"
+
+with open(path,'rb') as fid:
+    cc = pickle.load(fid)
+
+cc = np.load(path,allow_pickle=True)
+
 dissim_pearson = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr*")
 
 

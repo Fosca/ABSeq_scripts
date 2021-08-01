@@ -94,7 +94,7 @@ def _compute_and_save_dissimilarity(epochs1, epochs2, subdir, subj_id, metric):
 
     print('\n\nComputing {:} dissimilarity (metric={:})...'.format(subdir, metric))
 
-    dissim = umne.rsa.gen_observed_dissimilarity(epochs1, epochs2, metric=metric, sliding_window_size=100, sliding_window_step=10)
+    dissim = umne.rsa.gen_observed_dissimilarity(epochs1, epochs2, metric=metric, sliding_window_size=25, sliding_window_step=4)
 
     filename = fn_template.dissim.format(subdir, metric, subj_id)
     utils.create_folder(op.split(filename)[0]+'/')
@@ -315,10 +315,16 @@ def load_and_avg_dissimilarity_matrices(analysis_type_path):
     print(files)
     diss_all = []
 
+    count = 0
     for file in files:
+        count+=1
+        print(count)
         dissimilarity_matrix = np.load(file,allow_pickle=True)
         diss_all.append(dissimilarity_matrix.data)
 
+    DISS = np.zeros((count,dissimilarity_matrix.data.shape[]))
+
+    diss_all_mean = np.mean(diss_all,axis=0)
     diss_all = np.asarray(diss_all)
     dissimilarity_matrix.data = diss_all
     return dissimilarity_matrix
