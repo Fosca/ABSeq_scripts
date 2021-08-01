@@ -9,24 +9,15 @@ from src import umne
 import pickle
 # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
-for subject in config.subjects_list:
-    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
-                                                   which_analysis='')
+# for subject in config.subjects_list:
+#     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
+#                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
-
-path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr_sub01-pa_190002.dmat"
-
-with open(path,'rb') as fid:
-    cc = pickle.load(fid)
-
-cc = np.load(path,allow_pickle=True)
 
 dissim_pearson = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr*")
 
-
-
-umne.rsaplot.video_dissim(cc, reordering='block_type_primitive_pair', which_labels='primitive', tmin=-0.4, tmax=1,
-                          save_name='/Users/fosca/Desktop/videos/11prim_seq_prim')
+umne.rsaplot.video_dissim(dissim_pearson,  which_labels='primitive', tmin=-0.05, tmax=0.6,
+                          save_name=config.result_path + "rsa/dissim/SequenceID_StimPosition_no_baseline/video_spearmanr")
 
 
 # ====== now run the RSA regression analysis ==========

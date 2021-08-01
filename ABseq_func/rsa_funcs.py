@@ -320,6 +320,8 @@ def load_and_avg_dissimilarity_matrices(analysis_type_path):
         count+=1
         print(count)
         diss_m = np.load(file,allow_pickle=True)
+        diss_m = reshape_matrix_2(diss_m)
+        print(diss_m.data.shape)
         diss_all.append(diss_m.data)
 
     DISS = np.zeros((count,diss_m.data.shape[0],diss_m.data.shape[1],diss_m.data.shape[2]))
