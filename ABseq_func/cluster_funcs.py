@@ -2,8 +2,10 @@
 from __future__ import division
 import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
+
 from initialization_paths import initialization_paths
-from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs
+from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs, rsa_funcs
 import config
 import mne
 import numpy as np
@@ -270,10 +272,11 @@ def ord_code_16items(subject,load_residuals_regression=False):
     SVM_funcs.SVM_ordinal_code_train_test_quads(subject)
 
 # ----------------------------------------------------------------------------------------------------------------------
+#                            LINEAR REGRESSIONS
 # ----------------------------------------------------------------------------------------------------------------------
 
 def linear_reg(subject):
-    from ABseq_func import regression_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
+    from ABseq_func import regression_funcs
     filter_names = ['Hab', 'Stand', 'Viol']
     # regression_funcs.update_metadata_epochs_and_save_epochs(subject)
     for filter_name in filter_names:
@@ -281,25 +284,17 @@ def linear_reg(subject):
         regression_funcs.compute_regression(subject,['Complexity'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--clean-epo.fif",filter_name,remap_grads=False)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+#                                   RSA
+# ----------------------------------------------------------------------------------------------------------------------
 
-
-
-def surprise_omegas_analysis(subject):
-    import numpy as np
-    from ABseq_func import TP_funcs
-    list_omegas = np.logspace(-1,2,50)
-
-    TP_funcs.from_epochs_to_surprise(subject, list_omegas)
-    TP_funcs.append_surprise_to_metadata_clean(subject)
-    from importlib import reload
-    reload(TP_funcs)
-    # TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=50,hfilter=None)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None, hfilter=10)
-
-    # ----------- then we have to compute the optimal omega for each time and channel -------------
-    # TP_funcs.regress_out_optimal_omega(subject, clean=True)
-    # TP_funcs.compute_posterior_probability(subject)
-    # TP_funcs.regress_out_optimal_omega_per_channel(subject)
+def compute_rsa_dissim_matrix(subject):
+    """
+    We compute the dissimilarity matrix by grouping the epochs by sequence and position (for standard sequences only)
+    """
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None, which_analysis='')
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'pearson', baseline=None, which_analysis='')
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'mahalanobis', baseline=None, which_analysis='')
 
 
 

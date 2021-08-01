@@ -78,6 +78,7 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean):
     """
 
     epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
+    epochs.pick_types(meg=True)
     epochs.crop(tmin,tmax)
     if decim is not None:
         epochs.decimate(decim)
