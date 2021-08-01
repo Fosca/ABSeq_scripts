@@ -319,12 +319,13 @@ def load_and_avg_dissimilarity_matrices(analysis_type_path):
     for file in files:
         count+=1
         print(count)
-        dissimilarity_matrix = np.load(file,allow_pickle=True)
-        diss_all.append(dissimilarity_matrix.data)
+        diss_m = np.load(file,allow_pickle=True)
+        diss_all.append(diss_m.data)
 
-    DISS = np.zeros((count,dissimilarity_matrix.data.shape[]))
+    DISS = np.zeros((count,diss_m.data.shape[0],diss_m.data.shape[1],diss_m.data.shape[2]))
+    for i in range(count):
+        DISS[i,:,:,:] = diss_all[i]
 
-    diss_all_mean = np.mean(diss_all,axis=0)
-    diss_all = np.asarray(diss_all)
-    dissimilarity_matrix.data = diss_all
-    return dissimilarity_matrix
+    diss_all_mean = np.mean(DISS,axis=0)
+    diss_m.data = diss_all_mean
+    return diss_m
