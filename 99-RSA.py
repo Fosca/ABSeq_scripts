@@ -14,6 +14,13 @@ for subject in config.subjects_list:
     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
+dissim_pearson = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr*")
+
+
+
+umne.rsaplot.video_dissim(cc, reordering='block_type_primitive_pair', which_labels='primitive', tmin=-0.4, tmax=1,
+                          save_name='/Users/fosca/Desktop/videos/11prim_seq_prim')
+
 
 # ====== now run the RSA regression analysis ==========
 

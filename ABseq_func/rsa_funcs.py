@@ -309,9 +309,9 @@ def reshape_matrix_2(dissimilarity_matrix,fields =('SequenceID','StimPosition'))
 
 
 #-----------------------------------------------------------------------------------------------------------------------
-def load_and_avg_dissimilarity_matrices(analysis_type_path,keep_initial_shape=False,fields=None):
+def load_and_avg_dissimilarity_matrices(analysis_type_path):
 
-    files = glob.glob(analysis_type_path+'/*')
+    files = glob.glob(analysis_type_path)
     print(files)
     diss_all = []
 
