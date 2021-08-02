@@ -11,6 +11,8 @@ import numpy as np
 from src import umne
 import glob
 import os.path as op
+import matplotlib.pyplot as plt
+cm = plt.get_cmap('viridis')
 
 class fn_template:
     dissim = config.result_path + "rsa/dissim/{:}/{:}_{:}.dmat"
@@ -19,7 +21,7 @@ class fn_template:
 def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,decim=1,
                                          baseline=(None, 0), clean=True,
                                          which_analysis='SequenceID_StimPosition',
-                                         factors_or_interest = ('SequenceID', 'StimPosition')):
+                                         factors_or_interest = ('SequenceID', 'StimPosition','Complexity','RepeatAlter','StimID','ChunkBeginning','ChunkEnd','OpenedChunks','ChunkDepth','ChunkNumber','WithinChunkPosition','ClosedChunks')):
 
     """
     We compute the empirical dissimilarity for the data averaging the epochs across the factors of interest
@@ -188,7 +190,7 @@ class dissimilarity:
         return 0 if np.abs(nchunks2-nchunks1) else 1
     # ---------------------------------------------------------
     @staticmethod
-    def WithinChunkPos(stim1, stim2):
+    def ChunkNumber(stim1, stim2):
         """
         This matrix is the primitive dissimilarity if we consider all the 12 primitives as dissimilar
         """
@@ -331,3 +333,43 @@ def load_and_avg_dissimilarity_matrices(analysis_type_path):
     diss_all_mean = np.mean(DISS,axis=0)
     diss_m.data = diss_all_mean
     return diss_m
+
+
+
+
+def plot_dissimilarity(dissim,vmin=None,vmax = None):
+
+    matrix = dissim.data
+
+    min_val = 0
+    if vmax is None:
+        max_val = np.mean(matrix) + np.std(matrix)
+    else:
+        max_val = vmax
+
+    if vmin is None:
+        min_val = np.mean(matrix) - np.std(matrix)
+    else:
+        min_val = vmin
+
+    plt.imshow(matrix, interpolation='none', cmap=cm, origin='upper', vmin=min_val, vmax=max_val)
+    plt.colorbar()
+    x_ticks = extract_ticks_labels_from_md(dissim.md0)
+    y_ticks = extract_ticks_labels_from_md(dissim.md1)
+    y = range(matrix.shape[0])
+    x = range(matrix.shape[1])
+    plt.xticks(x,x_ticks,rotation='vertical')
+    plt.yticks(y,y_ticks)
+
+
+def extract_ticks_labels_from_md(metadata):
+
+    xticks_labels = []
+    for m in range(len(metadata)):
+        string_fields = ''
+        for field in metadata.keys():
+            string_fields += '%s_%s_'%(field[:3],str(metadata[field][m]))
+
+        xticks_labels.append(string_fields)
+
+    return xticks_labels
