@@ -9,6 +9,8 @@ from src import umne
 from src.umne import rsaplot
 import pickle
 import matplotlib.pyplot as plt
+cm = plt.get_cmap('viridis')
+
 # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
 # for subject in config.subjects_list:
@@ -40,40 +42,43 @@ reg_dis = umne.rsa.load_and_regress_dissimilarity(
     [dis.stim_ID,dis.Complexity],
     included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
 
+
 # ====== Determine which regressors are too correlated =====
-md = dissim_metric.md1
-diss_matrix = []
-
-dissim_block_type = rsa_funcs.gen_predicted_dissimilarity(dis.stim_ID,md = md)
-dissim_prim = rsa_funcs.gen_predicted_dissimilarity(dis.Complexity,md = md)
-dissim_prim_diff_blocks = rsa_funcs.gen_predicted_dissimilarity(dis.SequenceID,md = md)
-dissim_samesecond = rsa_funcs.gen_predicted_dissimilarity(dis.OrdinalPos,md = md)
-dissim_samesecond = rsa_funcs.gen_predicted_dissimilarity(dis.repeatalter,md = md)
-dissim_rotorsym = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkBeg,md = md)
-dissim_rotorsym_diff_blocks = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkEnd,md = md)
-dissim_distance = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkNumber,md = md)
-dissim_samefirst = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkDepth,md = md)
-dissim_samesecond = rsa_funcs.gen_predicted_dissimilarity(dis.NOpenChunks,md = md)
-dissim_samesecond = rsa_funcs.gen_predicted_dissimilarity(dis.NClosedChunks,md = md)
 
 
+dis = rsa_funcs.dissimilarity
+dissim_mat = np.load("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/SequenceID_StimPosition_no_baseline/spearmanr_sub01-pa_190002.dmat",allow_pickle=True)
+md = dissim_mat.md1
+diss_matrix = dict()
 
-dissim_matrix = [dissim_block_type,dissim_prim,dissim_prim_diff_blocks,dissim_rotorsym,dissim_rotorsym_diff_blocks,dissim_distance,dissim_samefirst,dissim_samesecond]
-correlation_matrix = np.zeros((8,8))
 
-for k in range(8):
-    for l in range(8):
-        r = np.corrcoef([np.reshape(dissim_matrix[k].data, dissim_matrix[k].data.size),
-                         np.reshape(dissim_matrix[l].data, dissim_matrix[l].data.size)])
+diss_matrix['stim_ID'] = rsa_funcs.gen_predicted_dissimilarity(dis.stim_ID,md = md)
+diss_matrix['Complexity'] = rsa_funcs.gen_predicted_dissimilarity(dis.Complexity,md = md)
+diss_matrix['SequenceID'] = rsa_funcs.gen_predicted_dissimilarity(dis.SequenceID,md = md)
+diss_matrix['OrdinalPos'] = rsa_funcs.gen_predicted_dissimilarity(dis.OrdinalPos,md = md)
+diss_matrix['repeatalter'] = rsa_funcs.gen_predicted_dissimilarity(dis.repeatalter,md = md)
+diss_matrix['ChunkBeg'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkBeg,md = md)
+diss_matrix['ChunkEnd'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkEnd,md = md)
+diss_matrix['ChunkNumber'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkNumber,md = md)
+diss_matrix['ChunkDepth'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkDepth,md = md)
+diss_matrix['NOpenChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NOpenChunks,md = md)
+diss_matrix['NClosedChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NClosedChunks,md = md)
+
+correlation_matrix = np.zeros((len(diss_matrix.keys()),len(diss_matrix.keys())))
+
+for k, key1 in enumerate(diss_matrix.keys()):
+    for l, key2 in enumerate(diss_matrix.keys()):
+        r = np.corrcoef([np.reshape(diss_matrix[key1].data, diss_matrix[key1].data.size),
+                         np.reshape(diss_matrix[key2].data, diss_matrix[key2].data.size)])
         correlation_matrix[k,l]=r[0,1]
 
 plt.imshow(correlation_matrix, cmap=cm.viridis)
 plt.colorbar()
 plt.title('Correlation across predictors')
-plt.xticks(range(8),names,rotation=30)
-plt.yticks(range(8),names,rotation=30)
+plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
+plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
 
 fig = plt.gcf()
-fig.savefig('correlation_regressors.png')
+fig.savefig(config.result_path+'/rsa/dissim/correlation_regressors.png')
 
 
