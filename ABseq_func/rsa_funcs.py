@@ -86,7 +86,7 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean):
         epochs.decimate(decim)
     if baseline is not None:
         epochs.apply_baseline(True)
-    epochs = epochs["TrialNumber > 10 and ViolationInSequence == 0"]
+    epochs = epochs["TrialNumber > 10 and ViolationInSequence == 0 and StimPosition > 1"]
 
     return epochs
 
