@@ -4,6 +4,7 @@ import numpy as np
 
 print('jaime les tomates')
 
+cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_long')
 cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
 
 
