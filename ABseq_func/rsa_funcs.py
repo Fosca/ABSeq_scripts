@@ -158,7 +158,7 @@ class dissimilarity:
         comp1 = stim1['Complexity']
         comp2 = stim2['Complexity']
 
-        return 0 if np.abs(comp2-comp1) else 1
+        return np.abs(comp2-comp1)
     #---------------------------------------------------------
     @staticmethod
     def ChunkBeg(stim1, stim2):
@@ -188,7 +188,7 @@ class dissimilarity:
         nclosedchunks1 = stim1['OpenedChunks']
         nclosedchunks2 = stim2['OpenedChunks']
 
-        return 0 if np.abs(nclosedchunks2-nclosedchunks1) else 1
+        return np.abs(nclosedchunks2-nclosedchunks1)
     # ---------------------------------------------------------
     @staticmethod
     def ChunkDepth(stim1, stim2):
@@ -198,7 +198,7 @@ class dissimilarity:
         nchunks1 = stim1['ChunkDepth']
         nchunks2 = stim2['ChunkDepth']
 
-        return 0 if np.abs(nchunks2-nchunks1) else 1
+        return np.abs(nchunks2-nchunks1)
     # ---------------------------------------------------------
     @staticmethod
     def ChunkNumber(stim1, stim2):
@@ -238,7 +238,7 @@ class dissimilarity:
         nopenchunks1 = stim1['ClosedChunks']
         nopenchunks2 = stim2['ClosedChunks']
 
-        return 0 if np.abs(nopenchunks2-nopenchunks1) else 1
+        return np.abs(nopenchunks2-nopenchunks1)
 
 # ================================================================================================================
 
