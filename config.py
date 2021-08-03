@@ -105,7 +105,7 @@ subjects_list = ['sub01-pa_190002', 'sub02-ch_180036', 'sub03-mr_190273', 'sub04
 # a participant (e.g. too many movements, missing blocks, aborted experiment,
 # did not understand the instructions, etc, ...)
 
-exclude_subjects = ['sub04-rf_190499']
+exclude_subjects = []
 # exclude_subjects = ['sub04-rf_190499', 'sub08-cc_150418']
 # sub04 & sub08: very bad EEG data
 
