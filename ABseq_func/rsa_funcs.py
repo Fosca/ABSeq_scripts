@@ -409,4 +409,4 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md)
     diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md)
 
-    return diss_matrix, md, dis
+    return diss_matrix, md, dis, dissim_mat.times

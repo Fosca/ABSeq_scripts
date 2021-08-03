@@ -17,6 +17,47 @@ cm = plt.get_cmap('viridis')
 # ______________________________________________________________________________________________________________________
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 
+
+# ========= WHICH PREDICTORS TO CHOOSE FOR THE REGRESSION ======
+diss_matrix, md, dis = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+
+#  --- Visualize the predictor matrices ---
+def viz_predictor_mats(dis_pred,md, max_val=None):
+    dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md)
+    if max_val is None:
+        max_val = np.max(dis_pred_field.data)
+    umne.rsa.plot_dissimilarity(dis_pred_field,max_value=max_val,
+                                get_label=lambda md: md['SequenceID'])
+    # tick_filter=lambda md: md['StimPosition'] == 1
+save_regressors_path = config.result_path+"/rsa/dissim/"+analysis_name+'/regressors_matrix/'
+utils.create_folder(save_regressors_path)
+
+for key in diss_matrix.keys():
+    viz_predictor_mats(eval('dis.'+key), md)
+    plt.gcf().savefig(save_regressors_path+key+'.png')
+    plt.close('all')
+
+# --- Determine which regressors are too correlated ---
+
+correlation_matrix = np.zeros((len(diss_matrix.keys()),len(diss_matrix.keys())))
+
+for k, key1 in enumerate(diss_matrix.keys()):
+    for l, key2 in enumerate(diss_matrix.keys()):
+        r = np.corrcoef([np.reshape(diss_matrix[key1].data, diss_matrix[key1].data.size),
+                         np.reshape(diss_matrix[key2].data, diss_matrix[key2].data.size)])
+        correlation_matrix[k,l]=r[0,1]
+
+cm = plt.get_cmap('viridis')
+plt.imshow(correlation_matrix)
+plt.colorbar()
+plt.title('Correlation across predictors')
+plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
+plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
+fig = plt.gcf()
+fig.savefig(config.result_path+'/rsa/dissim/'+analysis_name+'/correlations/correlation_regressors.png')
+
+# ______________________________________________________________________________________________________________________
+
 for metric_type in ["spearmanr","euclidean","mahalanobis"]:
     print("==== Running the analysis for the metric %s ===="%metric_type)
     dissim_metric = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"*.dmat")
@@ -36,68 +77,23 @@ for metric_type in ["spearmanr","euclidean","mahalanobis"]:
 # ====== now run the RSA regression analysis ==========
 for metric_type in ["spearmanr", "euclidean", "mahalanobis"]:
 
-    dis = rsa_funcs.dissimilarity
-    reg_dis = umne.rsa.load_and_regress_dissimilarity(
-        config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
-        [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth,dis.NOpenChunks,dis.NClosedChunks],
-        included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
+    diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+    # dis = rsa_funcs.dissimilarity
+    # reg_dis = umne.rsa.load_and_regress_dissimilarity(
+    #     config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
+    #     [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth,dis.NOpenChunks,dis.NClosedChunks],
+    #     included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
 
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
-    utils.create_folder(path_save_reg)
-    np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
-    # reg_dis = np.load(path_save_reg+'spearman_reg.npy',allow_pickle=True)
+    # utils.create_folder(path_save_reg)
+    # np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
+    reg_dis = np.load(path_save_reg+metric_type+'_reg.npy',allow_pickle=True)
     # ---- plot the regression coefficients separately ------
     names = ('Complexity','SequenceID','OrdinalPos','repeatalter','ChunkBeg', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','NOpenChunks','NClosedChunks')
     for ii, name in enumerate(names):
+        plot_path = path_save_reg + '/plots/'
+        utils.create_folder(plot_path)
         fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times)
-        fig.savefig(path_save_reg+name + '.png')
+        fig.savefig(plot_path+metric_type+'_'+name + '.png')
         plt.close('all')
-
-
-# ========= WHICH PREDICTORS TO CHOOSE FOR THE REGRESSION ======
-diss_matrix, md, dis = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
-
-#  --- Visualize the predictor matrices ---
-def viz_predictor_mats(dis_pred,md, max_val=None):
-    dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md)
-    if max_val is None:
-        max_val = np.max(dis_pred_field.data)
-    umne.rsa.plot_dissimilarity(dis_pred_field,max_value=max_val,tick_filter=lambda md: md['StimPosition'] == 2,
-                                get_label=lambda md: md['SequenceID'])
-
-save_regressors_path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/"+analysis_name+'/regressors_matrix/'
-utils.create_folder(save_regressors_path)
-
-viz_predictor_mats(dis.Complexity,md)
-plt.show()
-
-# --- Determine which regressors are too correlated ---
-
-correlation_matrix = np.zeros((len(diss_matrix.keys()),len(diss_matrix.keys())))
-
-for k, key1 in enumerate(diss_matrix.keys()):
-    for l, key2 in enumerate(diss_matrix.keys()):
-        r = np.corrcoef([np.reshape(diss_matrix[key1].data, diss_matrix[key1].data.size),
-                         np.reshape(diss_matrix[key2].data, diss_matrix[key2].data.size)])
-        correlation_matrix[k,l]=r[0,1]
-
-cm = plt.get_cmap('viridis')
-plt.imshow(correlation_matrix)
-plt.colorbar()
-plt.title('Correlation across predictors')
-plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-
-fig = plt.gcf()
-fig.savefig(config.result_path+'/rsa/dissim/correlation/correlation_regressors.png')
-
-plt.close('all')
-plt.imshow(1*(correlation_matrix<-0.5))
-plt.colorbar()
-plt.title('Correlation across predictors')
-plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-
-fig = plt.gcf()
-fig.savefig(config.result_path+'/rsa/dissim/correlation_regressors_below_-05.png')
 
