@@ -5,7 +5,7 @@ sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scr
 import initialization_paths
 import config
 import numpy as np
-from ABseq_func import epoching_funcs, regression_funcs, utils, TP_funcs, epoching_funcs
+from ABseq_func import epoching_funcs, regression_funcs, utils, TP_funcs, evoked_funcs, linear_reg_funcs, stats_funcs
 import os.path as op
 import os
 from sklearn.preprocessing import scale
@@ -15,6 +15,7 @@ from sklearn.metrics import r2_score
 from sklearn import linear_model
 import numpy as np
 import mne
+import copy
 
 # ----------------------------------------------------------------------------------------------------------------------
 def update_metadata_epochs_and_save_epochs(subject):
@@ -128,7 +129,8 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     # ====== normalization of regressors ====== #
     to_append_to_results_path = ''
     for name in regressors_names:
-        epochs.metadata[name] = scale(epochs.metadata[name])
+        if name != 'Intercept':
+            epochs.metadata[name] = scale(epochs.metadata[name])
         to_append_to_results_path += '_' + name
     results_path = results_path + to_append_to_results_path[1:]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
@@ -254,7 +256,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
     """
 
     for reg_name in regressors_names:
-        save_reg_levels_evoked_path = results_path+ subject+'/'+reg_name+'_evo/'
+        save_reg_levels_evoked_path = results_path+ subject+op.sep+reg_name+'_evo/'
         utils.create_folder(save_reg_levels_evoked_path)
         # --- these are the different values of the regressor ----
         levels = np.unique(epochs.metadata[reg_name])
@@ -264,13 +266,223 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
                 epochs["%s >= %0.02f and %s < %0.02f"%(reg_name, bins[ii], reg_name,bins[ii+1])].average().save(
                     save_reg_levels_evoked_path + str(ii) + '-' + suffix[:-1]+ '-ave.fif')
         else:
-            for lev in levels:
-                epochs["%s == %s"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+            for k, lev in enumerate(levels):
+                # epochs["%s == %s"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+op.sep+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+                epochs["%s == %s"%(reg_name,lev)].average().save(save_reg_levels_evoked_path+op.sep+str(k)+'-'+suffix[:-1]+'-ave.fif')
 
-    save_reg_levels_evoked_path = results_path+ subject+'/SequenceID/'
+    save_reg_levels_evoked_path = results_path+ subject+'/SequenceID_evo/'
     utils.create_folder(save_reg_levels_evoked_path)
     levels = np.unique(epochs.metadata['SequenceID'])
     for lev in levels:
-        epochs["%s == %s"%('SequenceID',lev)].average().save(save_reg_levels_evoked_path+'/'+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
+        epochs["%s == %s"%('SequenceID',lev)].average().save(save_reg_levels_evoked_path+op.sep+str(np.round(lev,2))+'-'+suffix[:-1]+'-ave.fif')
 
     return True
+
+# ----------------------------------------------------------------------------------------------------------------------
+def merge_individual_regression_results(regressors_names, epochs_fname, filter_name):
+
+    """
+    This function loads individual regression results (betas, computed by 'compute_regression' function)
+     and saves them as an epochs object, with Nsubjects betas, per regressor
+    :param regressors_names: regressors used in the regression (required to find path and files)
+    :epochs_fname: '' empty unless regresssions was conducted with the residuals of a previous regression
+    :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
+    """
+
+    # Results path
+    results_path = op.join(config.result_path, 'linear_models', filter_name)
+    to_append_to_results_path = ''
+    for name in regressors_names:
+        to_append_to_results_path += '_' + name
+    results_path = op.join(results_path, to_append_to_results_path[1:])
+    if epochs_fname != '':
+        results_path = op.abspath(op.join(results_path, os.pardir, 'from_' + results_path.split(op.sep)[-1]))
+
+    # Load data from all subjects
+    tmpdat = dict()
+    for name in regressors_names:
+        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name='beta_' + name, root_path=results_path)
+
+    # Store as epo objects
+    for name in regressors_names:
+        dat = tmpdat[name][next(iter(tmpdat[name]))]
+        exec(name + "_epo = mne.EpochsArray(np.asarray([dat[i][0].data for i in range(len(dat))]), dat[0][0].info, tmin="+str(np.round(dat[0][0].times[0],3))+")", locals(), globals())
+
+    # Save group fif files
+    out_path = op.join(results_path, 'group')
+    utils.create_folder(out_path)
+    for name in regressors_names:
+        exec(name + "_epo.save(op.join(out_path, '" + name + "_epo.fif'), overwrite=True)")
+
+# ----------------------------------------------------------------------------------------------------------------------
+def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads=True, Do3Dplot=True):
+
+    """
+    This function loads individual regression results merged as epochs arrays (with 'merge_individual_regression_results' function)
+     and compute group level statistics (with various figures)
+    :param regressors_names: regressors used in the regression (required to find path and files)
+    :epochs_fname: '' empty unless regresssions was conducted with the residuals of a previous regression
+    :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
+    :param remap_grads: True if regression was computed with 102 virtual mags
+    :param Do3Dplot: create the sources figures (may not work, depending of the computer config)
+    """
+
+    # ===================== LOAD GROUP REGRESSION RESULTS & SET PATHS ==================== #
+
+    # Results (data) path
+    results_path = op.join(config.result_path, 'linear_models', filter_name)
+    to_append_to_results_path = ''
+    for name in regressors_names:
+        to_append_to_results_path += '_' + name
+    results_path = op.join(results_path, to_append_to_results_path[1:])
+    if epochs_fname != '':
+        results_path = op.abspath(op.join(results_path, os.pardir, 'from_' + results_path.split(op.sep)[-1]))
+    results_path = op.join(results_path, 'group')
+
+    # Load data
+    betas = dict()
+    for name in regressors_names:
+        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name + "_epo.fif'))")
+        # betas[name] = globals()[name + '_epo']
+        betas[name] = locals()[name + '_epo']
+        print('There is ' + str(len(betas[name])) + ' betas for ' + name)
+
+    # Results figures path
+    fig_path = op.join(results_path, 'figures')
+    utils.create_folder(fig_path)
+
+    # Analysis name
+    analysis_name = ''
+    for name in regressors_names:
+        analysis_name += '_' + name
+    analysis_name = analysis_name[1:]
+
+    # Ch_types
+    if remap_grads:
+        ch_types = ['mag']
+    else:
+        ch_types = config.ch_types
+
+    # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
+    if Do3Dplot:
+        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=remap_grads)
+
+    # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
+    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path)
+
+    # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
+    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path)
+
+    # =========================================================== #
+    # Group stats
+    # =========================================================== #
+    import matplotlib.pyplot as plt
+    savepath = op.join(fig_path, 'Stats')
+    utils.create_folder(savepath)
+    nperm = 5000  # number of permutations
+    threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
+    p_threshold = 0.05
+    tmin = 0.000  # timewindow to test (crop data)
+    tmax = 0.350  # timewindow to test (crop data)
+    for ch_type in ch_types:
+        for x, regressor_name in enumerate(betas.keys()):
+            data_stat = copy.deepcopy(betas[regressor_name])
+            data_stat.crop(tmin=tmin, tmax=tmax)  # crop
+
+            print('\n\n' + regressor_name + ', ch_type ' + ch_type)
+            cluster_stats = []
+            data_array_chtype = []
+            cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
+            cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
+
+            # Significant clusters
+            T_obs, clusters, p_values, _ = cluster_stats
+            good_cluster_inds = np.where(p_values < p_threshold)[0]
+            print("Good clusters: %s" % good_cluster_inds)
+
+            # PLOT CLUSTERS
+            if len(good_cluster_inds) > 0:
+                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type)
+                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False)
+
+            if Do3Dplot:
+                # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
+                if len(good_cluster_inds) > 0:
+                    # Group mean stc (all_stcs loaded before)
+                    n_subjects = len(all_stcs[regressor_name])
+                    mean_stc = all_stcs[regressor_name][0].copy()  # get copy of first instance
+                    for sub in range(1, n_subjects):
+                        mean_stc._data += all_stcs[regressor_name][sub].data
+                    mean_stc._data /= n_subjects
+
+                    for i_clu in range(cluster_info['ncluster']):
+                        cinfo = cluster_info[i_clu]
+                        twin_min = cinfo['sig_times'][0] / 1000
+                        twin_max = cinfo['sig_times'][-1] / 1000
+                        stc_timewin = mean_stc.copy()
+                        stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+                        stc_timewin = stc_timewin.mean()
+                        # max_t_val = mean_stc.get_peak()[1]
+                        brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
+                                                   subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
+                        screenshot = brain.screenshot()
+                        brain.close()
+                        nonwhite_pix = (screenshot != 255).any(-1)
+                        nonwhite_row = nonwhite_pix.any(1)
+                        nonwhite_col = nonwhite_pix.any(0)
+                        cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+                        plt.close('all')
+                        fig = plt.imshow(cropped_screenshot)
+                        plt.axis('off')
+                        info = analysis_name + '_' + regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
+                        # figname_initial = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
+                        plt.title(info)
+                        plt.savefig(op.join(savepath, info + '_sources.png'), bbox_inches='tight', dpi=600)
+                        plt.close('all')
+
+            # =========================================================== #
+            # ==========  cluster evoked data plot --> per regressor level
+            # =========================================================== #
+
+            if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
+                # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
+                path = op.abspath(op.join(results_path, os.pardir))
+                subpath = regressor_name + '_evo'
+                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+
+               # ----------------- PLOTS ----------------- #
+                for i_clu, clu_idx in enumerate(good_cluster_inds):
+                    cinfo = cluster_info[i_clu]
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=False, legend=True, blackfig=False)
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
+                    print('Saving ' + fig_name)
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    plt.close('all')
+
+            # =========================================================== #
+            # ==========  cluster evoked data plot --> per sequence
+            # =========================================================== #
+            if len(good_cluster_inds) > 0:
+                # ------------------ LOAD THE EVOKED FOR EACH SEQUENCE ------------ #
+                path = op.abspath(op.join(results_path, os.pardir))
+                subpath = 'SequenceID' + '_evo'
+                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+
+                # ----------------- PLOTS ----------------- #
+                for i_clu, clu_idx in enumerate(good_cluster_inds):
+                    cinfo = cluster_info[i_clu]
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo.jpg'
+                    print('Saving ' + fig_name)
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo_bars.jpg'
+                    print('Saving ' + fig_name)
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    plt.close('all')
+
+            # =========================================================== #
+            # ==========  heatmap betas plot
+            # =========================================================== #
+            if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
+                linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath)
