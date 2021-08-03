@@ -62,8 +62,8 @@ for subject in subjects_list:
 
     # Source space, forward & inverse
     source_estimation_funcs.create_source_space(subject, fsMRI_dir)
-    source_estimation_funcs.forward_solution(subject, fsMRI_dir)
-    source_estimation_funcs.inverse_operator(subject)
+    source_estimation_funcs.forward_solution(subject, fsMRI_dir, remap_grads=True)
+    source_estimation_funcs.inverse_operator(subject, remap_grads=True)
 
 
 # ========================================================================================================================== #

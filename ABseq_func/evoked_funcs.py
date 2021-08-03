@@ -12,10 +12,7 @@ import matplotlib.ticker as ticker
 import copy
 
 
-
-
-
-def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
+def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=1, apply_baseline=False, ch_types=['eeg', 'grad', 'mag'], list_sequences=range(1, 8)):
     # Figures folder
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_Items', subject)
@@ -30,10 +27,10 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
         os.makedirs(fig_path)
 
     # Make evoked - deviants OR standards for each sequence
-    evokeds_per_seq = {'%i'%i:[] for i in list_sequences}
+    evokeds_per_seq = {'%i' % i: [] for i in list_sequences}
     for x in list_sequences:
         if apply_baseline:
-            evokeds_per_seq[x]= (epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == "%i"' % violation_or_not].apply_baseline().average())
+            evokeds_per_seq[x] = (epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == "%i"' % violation_or_not].apply_baseline().average())
         else:
             evokeds_per_seq[x] = (epochs_items['SequenceID == "' + str(x) + '" and ViolationOrNot == "%i"' % violation_or_not].average())
 
@@ -44,7 +41,7 @@ def plot_butterfly_items(epochs_items, subject, ylim_eeg=10, ylim_mag=300, ylim_
 
     for x in list_sequences:
         # EEG
-        if ch_types==['eeg']:
+        if ch_types == ['eeg']:
             fig = evokeds_per_seq[x].plot_joint(ts_args=ts_args, title='SequenceID_' + str(x),
                                                 topomap_args=topomap_args, picks='eeg', times=times, show=False)
             fig_name = fig_path + op.sep + ('EEG_SequenceID_' + str(x) + '.png')
@@ -97,7 +94,6 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
     topomap_args = dict(time_unit='ms', ylim=ylim)
     topotimes = np.arange(0.070, 0.501, 0.050)
     topo_avg = 0.020
-
 
     for x, seq in enumerate(evoked.keys()):
         # Sequence info
@@ -182,7 +178,6 @@ def plot_butterfly_items_allsubj(evoked, times="peaks", violation_or_not=1, resi
 
 
 def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=1, residevoked=False):
-
     # Grand average
     tmp = list(evoked.keys())
     evoked_seq = evoked[tmp[0]]
@@ -242,7 +237,6 @@ def plot_butterfly_items_allsubj_allseq(evoked, times="peaks", violation_or_not=
 
 
 def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", violation_or_not=0):
-
     # Figures folder & lims
     if violation_or_not:
         fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyViolation_FullSequence', 'GROUP')
@@ -321,7 +315,7 @@ def plot_butterfly_fullseq_allsubj(evoked, ylim_eeg=10, ylim_mag=300, ylim_grad=
         plt.close(fig)
 
 
-def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", apply_baseline=False,ch_types = ['eeg', 'grad', 'mag'],list_sequences=range(1,8)):
+def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=300, ylim_grad=100, times="peaks", apply_baseline=False, ch_types=['eeg', 'grad', 'mag'], list_sequences=range(1, 8)):
     # Figures folder
     fig_path = op.join(config.fig_path, 'Evoked_and_GFP_plots', 'ButterflyStandard_FullSequence', subject)
     if not os.path.exists(fig_path):
@@ -329,7 +323,7 @@ def plot_butterfly_first_item(epochs_first_item, subject, ylim_eeg=10, ylim_mag=
 
     # Make evoked - not-violated - for each sequence
 
-    evokeds_per_seq = {'%i'%i:[] for i in list_sequences}
+    evokeds_per_seq = {'%i' % i: [] for i in list_sequences}
 
     for x in list_sequences:
         if apply_baseline:
@@ -522,7 +516,6 @@ def create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOme
 
 
 def create_evoked_for_regression_factors(regressor_names, subject, cleaned=True):
-
     # This will create one evoked fif for each (unique) level of each regressor
     # of regressor_names, e.g., one evoked for ChunkSize=1, one for ChunkSize=2, etc.
 
@@ -644,7 +637,7 @@ def load_evoked(subject='all', filter_name='', filter_not=None, root_path=None, 
     return evoked_dict, path_evo
 
 
-def load_evoked_resid(subject='all', filter_name='', filter_not=None,root_path=None):
+def load_evoked_resid(subject='all', filter_name='', filter_not=None, root_path=None):
     """
     IDENTICAL TO load_evoked BUT TAKES EVOKED FROM RESIDUALS OF A REGRESSION INSTEAD OF ORIGINAL EVOKED
 
@@ -706,6 +699,36 @@ def load_evoked_resid(subject='all', filter_name='', filter_not=None,root_path=N
     return evoked_dict
 
 
+def load_regression_evoked(subject='all', path='', subpath=''):
+    """
+    Load evoked for several subjects when paths are in the format "path + subject + subpath"
+    /!\ all files in the folder are loaded (alphabetical order (?))
+    """
+
+    import glob
+    evoked_dict = {}
+    if subject == 'all':
+        for subj in config.subjects_list:
+            subject_path = op.join(path, subj, subpath)
+            evoked_names = sorted(glob.glob(subject_path + op.sep + '*.fif'))
+            # evoked_dict = {'evo'+str(k): mne.read_evokeds(evoked_names[k]) for k in range(len(evoked_names))}
+
+            file_names = []
+            full_names = []
+            for names in evoked_names:
+                tmppath, file = op.split(names)
+                file_names.append(file)
+                full_names.append(names)
+            print(file_names)
+            for k in range(len(file_names)):
+                if file_names[k][:-8] in evoked_dict.keys():
+                    evoked_dict[file_names[k][:-8]].append(mne.read_evokeds(full_names[k]))
+                else:
+                    evoked_dict[file_names[k][:-8]] = [mne.read_evokeds(full_names[k])]
+
+    return evoked_dict
+
+
 def plot_GFP_compare_evoked(evoked):
     """
     Fonction pour explorer les evoques de chaque participant individuellement
@@ -737,7 +760,6 @@ def average_evoked(evoked_dict):
 
 
 def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -795,7 +817,6 @@ def plot_evoked_with_sem_7seq(evoked_dict, ch_inds, ch_type='eeg', label=None, f
 
 
 def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label=None, filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     NUM_COLORS = 7
@@ -853,7 +874,6 @@ def plot_evoked_with_sem_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', label
 
 
 def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_style='bilateral', filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -930,7 +950,6 @@ def plot_evoked_heatmap_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', cmap_s
 
 
 def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', filter=True):
-
     evoked_dict_copy = copy.deepcopy(evoked_dict)
 
     # Additional parameters
@@ -1012,7 +1031,6 @@ def plot_evoked_timecourse_7seq_fullseq(evoked_dict, ch_inds, ch_type='eeg', fil
 
 
 def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=True, axis=None):
-
     times = data[0][0].times * 1000
 
     group_data_seq = []
@@ -1046,8 +1064,7 @@ def plot_evoked_with_sem_1cond(data, cond, ch_type, ch_inds, color=None, filter=
         plt.plot(times, mean, color=color, linewidth=1.5, label=cond)
 
 
-def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None,seq_list=range(1,8),cmap_rescale_ratio = 0.2,vmin=None,vmax=None ):
-
+def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig_title='', file_name=None, seq_list=range(1, 8), cmap_rescale_ratio=0.2, vmin=None, vmax=None):
     """
     :param data_to_plot: dictionary with keys: 'hab', 'teststand', 'violpos1', 'violpos2', 'violpos3', 'violpos4'
                          each contains keys 'seq1', 'seq2', 'seq3', 'seq4', 'seq5', 'seq6', 'seq7'
@@ -1059,7 +1076,7 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
     :return: figure
     """
     # Additional parameters
-     # 'saturate' the colormap, min/max will be reduced with this ratio
+    # 'saturate' the colormap, min/max will be reduced with this ratio
 
     # Create figure
     fig, axes = plt.subplots(7, 1, figsize=(12, 12), sharex=True, sharey=False, constrained_layout=True)
@@ -1081,13 +1098,12 @@ def allsequences_heatmap_figure(data_to_plot, times, cmap_style='bilateral', fig
         cmap = 'viridis'
         vmin = min(minlist)
         vmax = max(maxlist) - max(maxlist) * cmap_rescale_ratio
-    elif cmap_style=='bilateral':
+    elif cmap_style == 'bilateral':
         cmap = 'RdBu_r'
         vmin = -max(maxabslist) + max(maxabslist) * cmap_rescale_ratio
         vmax = max(maxabslist) - max(maxabslist) * cmap_rescale_ratio
     else:
         cmap = 'RdBu_r'
-
 
     n = 0
     for ii, seqID in enumerate(seq_list):
@@ -1155,29 +1171,29 @@ def average_habituation_7sequences(subject_list):
     the 7 sequences.
     """
 
-    evoked_hab = {'seqID_%i'%i:[] for i in range(1,8)}
-    evoked_avg_hab = {'seqID_%i'%i:[] for i in range(1,8)}
-    gfp_hab_mag =  {'seqID_%i'%i:[] for i in range(1,8)}
-    gfp_hab_grad =  {'seqID_%i'%i:[] for i in range(1,8)}
-    gfp_hab_eeg =  {'seqID_%i'%i:[] for i in range(1,8)}
+    evoked_hab = {'seqID_%i' % i: [] for i in range(1, 8)}
+    evoked_avg_hab = {'seqID_%i' % i: [] for i in range(1, 8)}
+    gfp_hab_mag = {'seqID_%i' % i: [] for i in range(1, 8)}
+    gfp_hab_grad = {'seqID_%i' % i: [] for i in range(1, 8)}
+    gfp_hab_eeg = {'seqID_%i' % i: [] for i in range(1, 8)}
 
     for subject in subject_list:
-        print("---- loop for participant %s -----"%subject)
-        epochs = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
-        epochs._data = epochs._data*10**14
-        for seqID in range(1,8):
+        print("---- loop for participant %s -----" % subject)
+        epochs = epoching_funcs.load_epochs_full_sequence(subject, cleaned=False)
+        epochs._data = epochs._data * 10 ** 14
+        for seqID in range(1, 8):
             data_hab_subj_seq = []
-            for nhab in range(1,11):
-                epo_nhab = epochs["TrialNumber == %i and SequenceID == %i"%(nhab,seqID)]
-                data_hab_subj_seq.append(np.mean(np.mean(epo_nhab.get_data(),axis=0),axis=-1))
+            for nhab in range(1, 11):
+                epo_nhab = epochs["TrialNumber == %i and SequenceID == %i" % (nhab, seqID)]
+                data_hab_subj_seq.append(np.mean(np.mean(epo_nhab.get_data(), axis=0), axis=-1))
             data_hab_subj_seq = (np.asarray(data_hab_subj_seq))
-            evoked_hab["seqID_%i"%seqID].append(data_hab_subj_seq)
+            evoked_hab["seqID_%i" % seqID].append(data_hab_subj_seq)
 
     # np.save(,evoked_hab)
 
     for seq in evoked_hab.keys():
-        data = np.transpose(evoked_hab[seq],(0,2,1))
-        evoked_avg_hab[seq] = mne.EpochsArray(data,info=epochs.info,tmin=0)
+        data = np.transpose(evoked_hab[seq], (0, 2, 1))
+        evoked_avg_hab[seq] = mne.EpochsArray(data, info=epochs.info, tmin=0)
         gfp_hab_mag[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=False, meg='mag').get_data() ** 2, axis=1)
         gfp_hab_grad[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=False, meg='grad').get_data() ** 2, axis=1)
         gfp_hab_eeg[seq] = np.sum(evoked_avg_hab[seq].copy().pick_types(eeg=True, meg=False).get_data() ** 2, axis=1)
@@ -1186,5 +1202,5 @@ def average_habituation_7sequences(subject_list):
     cm = plt.get_cmap('viridis')
 
     for nn, seq in enumerate(evoked_hab.keys()):
-        GFP_funcs.plot_GFP_with_sem(gfp_hab_mag[seq], times = [i for i in range(10)], color_mean=cm.colors[int((nn/7)*len(cm.colors))], label=None, filter=False)
+        GFP_funcs.plot_GFP_with_sem(gfp_hab_mag[seq], times=[i for i in range(10)], color_mean=cm.colors[int((nn / 7) * len(cm.colors))], label=None, filter=False)
         plt.show()
