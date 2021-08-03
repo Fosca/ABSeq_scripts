@@ -284,8 +284,8 @@ def reshape_matrix_2(dissimilarity_matrix,fields =('SequenceID','StimPosition'))
     """
     meta_original = dissimilarity_matrix.md0
     mapping = {key:[] for key in fields}
-    indices = {'initial_index':[],'final_index':[]}
-
+    # indices = {'initial_index':[],'final_index':[]}
+    initial_index = []
     meta_filter = meta_original.copy()
 
     counter = 0
@@ -296,23 +296,24 @@ def reshape_matrix_2(dissimilarity_matrix,fields =('SequenceID','StimPosition'))
         for val2 in key_values2:
             meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
             idx = meta_filter2.index[0]
-            indices['initial_index'].append(idx)
-            indices['final_index'].append(counter)
-            mapping[fields[0]].append(val1)
-            mapping[fields[1]].append(val2)
+            initial_index.append(idx)
+            # indices['initial_index'].append(idx)
+            # indices['final_index'].append(counter)
+            # mapping[fields[0]].append(val1)
+            # mapping[fields[1]].append(val2)
             counter += 1
 
     dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
 
     for m in range(counter):
-        ind_m = indices['initial_index'][m]
+        ind_m = initial_index[m]
         if ind_m is not None:
             for n in range(counter):
-                ind_n = indices['initial_index'][n]
+                ind_n = initial_index[n]
                 if ind_n is not None:
-                            dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
+                    dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
 
-    meta_final = pd.DataFrame.from_dict(mapping)
+    meta_final = meta_original.reindex(initial_index)
 
     dissimilarity_matrix.data = dissim_final
     dissimilarity_matrix.md0 = meta_final
