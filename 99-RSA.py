@@ -18,7 +18,7 @@ cm = plt.get_cmap('viridis')
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 
 for metric_type in ["spearmanr","euclidean","mahalanobis"]:
-
+    print("==== Running the analysis for the metric %s ===="%metric_type)
     dissim_metric = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"*.dmat")
     data = dissim_metric.data
 
@@ -34,6 +34,7 @@ for metric_type in ["spearmanr","euclidean","mahalanobis"]:
          plt.close("all")
 
 # ====== now run the RSA regression analysis ==========
+for metric_type in ["spearmanr", "euclidean", "mahalanobis"]:
 
     dis = rsa_funcs.dissimilarity
     reg_dis = umne.rsa.load_and_regress_dissimilarity(
@@ -54,47 +55,23 @@ for metric_type in ["spearmanr","euclidean","mahalanobis"]:
 
 
 # ========= WHICH PREDICTORS TO CHOOSE FOR THE REGRESSION ======
-
-dis = rsa_funcs.dissimilarity
-dissim_mat = np.load("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/"+analysis_name+"/spearmanr_sub01-pa_190002.dmat",allow_pickle=True)
-dissim_mat = rsa_funcs.reshape_matrix_2(dissim_mat,fields=('SequenceID', 'StimPosition','Complexity','RepeatAlter','ChunkBeginning','ChunkEnd','OpenedChunks','ChunkDepth','ChunkNumber','WithinChunkPosition','ClosedChunks'))
-md = dissim_mat.md1
-diss_matrix = dict()
-
-diss_matrix['Complexity'] = rsa_funcs.gen_predicted_dissimilarity(dis.Complexity,md = md)
-diss_matrix['SequenceID'] = rsa_funcs.gen_predicted_dissimilarity(dis.SequenceID,md = md)
-diss_matrix['OrdinalPos'] = rsa_funcs.gen_predicted_dissimilarity(dis.OrdinalPos,md = md)
-diss_matrix['repeatalter'] = rsa_funcs.gen_predicted_dissimilarity(dis.repeatalter,md = md)
-diss_matrix['ChunkBeg'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkBeg,md = md)
-diss_matrix['ChunkEnd'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkEnd,md = md)
-diss_matrix['ChunkNumber'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkNumber,md = md)
-diss_matrix['ChunkDepth'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkDepth,md = md)
-diss_matrix['NOpenChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NOpenChunks,md = md)
-diss_matrix['NClosedChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NClosedChunks,md = md)
+diss_matrix, md, dis = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
 
 #  --- Visualize the predictor matrices ---
 def viz_predictor_mats(dis_pred,md, max_val=None):
     dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md)
     if max_val is None:
         max_val = np.max(dis_pred_field.data)
-    umne.rsa.plot_dissimilarity(dis_pred_field,
-                                get_label=lambda md: md['SequenceID'],max_value=max_val)
+    umne.rsa.plot_dissimilarity(dis_pred_field,max_value=max_val,tick_filter=lambda md: md['StimPosition'] == 2,
+                                get_label=lambda md: md['SequenceID'])
 
 save_regressors_path = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/"+analysis_name+'/regressors_matrix/'
 utils.create_folder(save_regressors_path)
-
-
 
 viz_predictor_mats(dis.Complexity,md)
 plt.show()
 
 # --- Determine which regressors are too correlated ---
-
-
-
-
-
-
 
 correlation_matrix = np.zeros((len(diss_matrix.keys()),len(diss_matrix.keys())))
 

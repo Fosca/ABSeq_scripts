@@ -274,7 +274,7 @@ def gen_predicted_dissimilarity(dissimilarity_func,md=None):
     return umne.rsa.DissimilarityMatrix([result], md, md)
 
 #-----------------------------------------------------------------------------------------------------------------------
-def reshape_matrix_2(dissimilarity_matrix,fields =('SequenceID','StimPosition')):
+def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition')):
     """
     The goal of this function is to reshape the dissimilarity matrix. The goal is ultimately to average all the dissimilarity matrices.
     For this function, all the participants should have the same metadata of interest.
@@ -334,7 +334,7 @@ def load_and_avg_dissimilarity_matrices(analysis_type_path):
         count+=1
         print(count)
         diss_m = np.load(file,allow_pickle=True)
-        diss_m = reshape_matrix_2(diss_m)
+        diss_m = reorder_matrix(diss_m)
         print(diss_m.data.shape)
         diss_all.append(diss_m.data)
 
@@ -385,3 +385,28 @@ def extract_ticks_labels_from_md(metadata):
         xticks_labels.append(string_fields)
 
     return xticks_labels
+
+
+def Predictor_dissimilarity_matrix_and_md(analysis_name):
+    dis = dissimilarity
+    dissim_mat = np.load(
+        "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/" + analysis_name + "/spearmanr_sub01-pa_190002.dmat",
+        allow_pickle=True)
+    dissim_mat = reorder_matrix(dissim_mat, fields=(
+    'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
+    'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
+    md = dissim_mat.md1
+    diss_matrix = dict()
+
+    diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md)
+    diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md)
+    diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md)
+    diss_matrix['repeatalter'] = gen_predicted_dissimilarity(dis.repeatalter, md=md)
+    diss_matrix['ChunkBeg'] = gen_predicted_dissimilarity(dis.ChunkBeg, md=md)
+    diss_matrix['ChunkEnd'] = gen_predicted_dissimilarity(dis.ChunkEnd, md=md)
+    diss_matrix['ChunkNumber'] = gen_predicted_dissimilarity(dis.ChunkNumber, md=md)
+    diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md)
+    diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md)
+    diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md)
+
+    return diss_matrix, md, dis
