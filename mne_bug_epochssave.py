@@ -9,14 +9,12 @@ picks = mne.pick_types(raw.info, meg=True, eeg=False, stim=True, eog=True, exclu
 
 info_anonymous = mne.io.anonymize_info(raw.info)
 
-raw._data[-3,:] = 0
-
-events = mne.find_events(raw, stim_channel="STI101",
+events = mne.find_events(raw, stim_channel="STI008",
                          consecutive=True,
                          min_duration=0.002,
                          shortest_event=2)
 
-epochs = mne.Epochs(raw, events, None, tmin, tmax,
+epochs = mne.Epochs(raw, events, None, tmin=0, tmax=0.6,
                     proj=True, picks=picks, baseline=None,
                     preload=False, decim=1,
                     reject=None)
