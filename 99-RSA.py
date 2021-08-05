@@ -17,74 +17,27 @@ cm = plt.get_cmap('viridis')
 # ______________________________________________________________________________________________________________________
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 
-for metric_type in ["spearmanr","euclidean","mahalanobis"]:
-
-    dissim_metric = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"*.dmat")
-    data = dissim_metric.data
-
-    utils.create_folder(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"/")
-    times = dissim_metric.times
-    for tt in range(dissim_metric.n_timepoints):
-         print(tt)
-         diss = dissim_metric.copy()
-         diss.data = diss.data[tt]
-         rsa_funcs.plot_dissimilarity(diss,vmin = np.mean(dissim_metric.data)-2*np.std(dissim_metric.data),vmax = np.mean(dissim_metric.data)+2*np.std(dissim_metric.data))
-         plt.suptitle('Time %s'%str(times[tt]))
-         plt.gcf().savefig(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"/"+str(times[tt])+".png")
-         plt.close("all")
-
-# ====== now run the RSA regression analysis ==========
-
-    dis = rsa_funcs.dissimilarity
-    reg_dis = umne.rsa.load_and_regress_dissimilarity(
-        config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
-        [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth,dis.NOpenChunks,dis.NClosedChunks],
-        included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
-
-    path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
-    utils.create_folder(path_save_reg)
-    np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
-    # reg_dis = np.load(path_save_reg+'spearman_reg.npy',allow_pickle=True)
-    # ---- plot the regression coefficients separately ------
-    names = ('Complexity','SequenceID','OrdinalPos','repeatalter','ChunkBeg', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','NOpenChunks','NClosedChunks')
-    for ii, name in enumerate(names):
-        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times)
-        fig.savefig(path_save_reg+name + '.png')
-        plt.close('all')
-
 
 # ========= WHICH PREDICTORS TO CHOOSE FOR THE REGRESSION ======
-
-dis = rsa_funcs.dissimilarity
-dissim_mat = np.load("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/"+analysis_name+"/spearmanr_sub01-pa_190002.dmat",allow_pickle=True)
-md = dissim_mat.md1
-diss_matrix = dict()
-
-diss_matrix['Complexity'] = rsa_funcs.gen_predicted_dissimilarity(dis.Complexity,md = md)
-diss_matrix['SequenceID'] = rsa_funcs.gen_predicted_dissimilarity(dis.SequenceID,md = md)
-diss_matrix['OrdinalPos'] = rsa_funcs.gen_predicted_dissimilarity(dis.OrdinalPos,md = md)
-diss_matrix['repeatalter'] = rsa_funcs.gen_predicted_dissimilarity(dis.repeatalter,md = md)
-diss_matrix['ChunkBeg'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkBeg,md = md)
-diss_matrix['ChunkEnd'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkEnd,md = md)
-diss_matrix['ChunkNumber'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkNumber,md = md)
-diss_matrix['ChunkDepth'] = rsa_funcs.gen_predicted_dissimilarity(dis.ChunkDepth,md = md)
-diss_matrix['NOpenChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NOpenChunks,md = md)
-diss_matrix['NClosedChunks'] = rsa_funcs.gen_predicted_dissimilarity(dis.NClosedChunks,md = md)
+diss_matrix, md, dis = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
 
 #  --- Visualize the predictor matrices ---
-def viz_predictor_mats(dis_pred,md, max_val=1):
-    umne.rsa.plot_dissimilarity(rsa_funcs.gen_predicted_dissimilarity(dis_pred, md),
-                                get_label=lambda md: md['SequenceID'],max_value=max_val)
+def viz_predictor_mats(dis_pred,md, max_val=None):
+    dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md)
+    if max_val is None:
+        max_val = np.max(dis_pred_field.data)
+    umne.rsa.plot_dissimilarity(dis_pred_field,max_value=max_val,
+                                get_label=lambda md: md['SequenceID'])
+    # tick_filter=lambda md: md['StimPosition'] == 1
+save_regressors_path = config.result_path+"/rsa/dissim/"+analysis_name+'/regressors_matrix/'
+utils.create_folder(save_regressors_path)
 
-viz_predictor_mats(dis.Complexity,md,max_val=1)
+for key in diss_matrix.keys():
+    viz_predictor_mats(eval('dis.'+key), md)
+    plt.gcf().savefig(save_regressors_path+key+'.png')
+    plt.close('all')
 
 # --- Determine which regressors are too correlated ---
-
-
-
-
-
-
 
 correlation_matrix = np.zeros((len(diss_matrix.keys()),len(diss_matrix.keys())))
 
@@ -100,17 +53,98 @@ plt.colorbar()
 plt.title('Correlation across predictors')
 plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
 plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-
 fig = plt.gcf()
-fig.savefig(config.result_path+'/rsa/dissim/correlation/correlation_regressors.png')
+fig.savefig(config.result_path+'/rsa/dissim/'+analysis_name+'/correlations/correlation_regressors.png')
 
-plt.close('all')
-plt.imshow(1*(correlation_matrix<-0.5))
-plt.colorbar()
-plt.title('Correlation across predictors')
-plt.xticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
-plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
+# ______________________________________________________________________________________________________________________
 
-fig = plt.gcf()
-fig.savefig(config.result_path+'/rsa/dissim/correlation_regressors_below_-05.png')
+for metric_type in ["spearmanr","euclidean"]:
+    print("==== Running the analysis for the metric %s ===="%metric_type)
+    dissim_metric = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"*.dmat")
+    dissim_metric = rsa_funcs.reorder_matrix(dissim_metric, fields=(
+    'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
+    'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
 
+    data = dissim_metric.data
+
+    utils.create_folder(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"/")
+    times = dissim_metric.times
+    for tt in range(dissim_metric.n_timepoints):
+         print(tt)
+         diss = dissim_metric.copy()
+         diss.data = diss.data[tt]
+         rsa_funcs.plot_dissimilarity(diss,vmin = np.mean(dissim_metric.data)-2*np.std(dissim_metric.data),vmax = np.mean(dissim_metric.data)+2*np.std(dissim_metric.data))
+         plt.suptitle('Time %s'%str(int(times[tt]*1000)))
+         plt.gcf().savefig(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"/"+str(int(times[tt]*1000))+".png")
+         plt.close("all")
+
+# ====== now run the RSA regression analysis ==========
+for metric_type in [ "euclidean"]:#"spearmanr",
+
+    diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+    dis = rsa_funcs.dissimilarity
+    reg_dis = umne.rsa.load_and_regress_dissimilarity(
+        config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
+        [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth,dis.NOpenChunks],#,dis.NClosedChunks
+        included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
+
+    path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
+    plot_path = path_save_reg + '/plots/'
+    utils.create_folder(plot_path)
+    utils.create_folder(path_save_reg)
+    np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
+    reg_dis = np.load(path_save_reg+metric_type+'_reg.npy',allow_pickle=True)
+    # ---- plot the regression coefficients separately ------
+    names = ('Complexity','SequenceID','OrdinalPos','repeatalter','ChunkBeg', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','NOpenChunks')#,'NClosedChunks'
+
+    fig = plot_regression_results(reg_dis[0], times,legend=names)
+    fig.savefig(plot_path+metric_type+'_all.png')
+    for ii, name in enumerate(names):
+        plt.close('all')
+        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times)
+        fig.savefig(plot_path+metric_type+'_'+name + '.png')
+
+
+
+
+
+def plot_regression_results(regression_results, times,figure_id=1, alpha=0.15, legend=None, reset=True, save_as=None):
+    """
+    Plot the RSA regression results
+    :param regression_results: #Subjects x #TimePoints x #Predictors matrix
+    :param times: x axis values
+    :param figure_id:
+    :param colors: Array, one color for each predictor
+    :param alpha: For the shaded part that represents 1 standard error
+    :param pred_mult_factor: Multiple each predictor by this factor (array, size = # of predictors)
+    :param subject_x_factor: The x values of each subject are stretched by this factor.
+    :param legend: Legend names (array, size = # of predcitors)
+    :param reset: If True (default), the figure is cleared before plotting
+    """
+    import math
+    color_map = plt.get_cmap('twilight')
+
+    n_subj, n_tp, n_pred = regression_results.shape
+    inds = np.linspace(0,color_map.N,n_pred+1)
+    colors = [color_map.colors[int(i)-1] for i in inds]
+
+    if legend is not None:
+        assert len(legend) == n_pred, "There are {} legend entries but {} predictors".format(len(legend), n_pred)
+    if reset:
+        plt.close(figure_id)
+    fig = plt.figure(figure_id,figsize=(20,12))
+    ax = plt.gca()
+    plt.plot(times, [0] * len(times), color='black', label='_nolegend_')
+    for ipred in range(n_pred):
+        curr_predictor_rr = regression_results[:, :, ipred]
+        coeffs = np.mean(curr_predictor_rr, axis=0)
+        coeffs_se = np.std(curr_predictor_rr, axis=0) / math.sqrt(n_subj)
+        #-- plot
+        plt.fill_between(times, coeffs - coeffs_se, coeffs + coeffs_se, color=colors[ipred], alpha=alpha, label='_nolegend_')
+        plt.plot(times, coeffs, color=colors[ipred])
+    if legend is not None:
+        plt.legend(legend, loc="upper left")
+    if save_as is not None:
+        fig = plt.gcf()
+        fig.savefig(save_as)
+    return fig
