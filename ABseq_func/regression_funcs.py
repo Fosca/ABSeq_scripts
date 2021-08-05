@@ -124,7 +124,7 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
         print("----- loading the data from %s ------" % epo_fname)
         epochs = mne.read_epochs(epo_fname)
         results_path = os.path.dirname(epo_fname) + '/'
-        results_path = op.abspath(op.join(results_path, os.pardir, os.pardir, 'from_' + results_path.split(op.sep)[-3]))
+        results_path = op.abspath(op.join(results_path, os.pardir, os.pardir, 'from_' + results_path.split(op.sep)[-3] + '--'))
 
     # ====== normalization of regressors ====== #
     to_append_to_results_path = ''
@@ -134,7 +134,7 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
         to_append_to_results_path += '_' + name
     results_path = results_path + to_append_to_results_path[1:]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
-    if remap_grads:
+    if remap_grads and epochs_fname == '':
         print('Remapping grads to mags')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
@@ -261,7 +261,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
         # --- these are the different values of the regressor ----
         levels = np.unique(epochs.metadata[reg_name])
         if len(levels)>10:
-            bins = np.linspace(np.min(levels),np.max(levels),11)
+            bins = np.linspace(np.min(levels),np.max(levels),6)  ## changed from 11 to 6 --> to recompute
             for ii in range(10):
                 epochs["%s >= %0.02f and %s < %0.02f"%(reg_name, bins[ii], reg_name,bins[ii+1])].average().save(
                     save_reg_levels_evoked_path + str(ii) + '-' + suffix[:-1]+ '-ave.fif')
@@ -291,12 +291,17 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
 
     # Results path
     results_path = op.join(config.result_path, 'linear_models', filter_name)
-    to_append_to_results_path = ''
-    for name in regressors_names:
-        to_append_to_results_path += '_' + name
-    results_path = op.join(results_path, to_append_to_results_path[1:])
     if epochs_fname != '':
-        results_path = op.abspath(op.join(results_path, os.pardir, 'from_' + results_path.split(op.sep)[-1]))
+        results_path = op.abspath(op.join(results_path, 'from_' + epochs_fname + '--'))
+        to_append_to_results_path = ''
+        for name in regressors_names:
+            to_append_to_results_path += '_' + name
+        results_path = results_path + to_append_to_results_path[1:]
+    else:
+        to_append_to_results_path = ''
+        for name in regressors_names:
+            to_append_to_results_path += '_' + name
+        results_path = op.join(results_path, to_append_to_results_path[1:])
 
     # Load data from all subjects
     tmpdat = dict()
@@ -331,12 +336,17 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
 
     # Results (data) path
     results_path = op.join(config.result_path, 'linear_models', filter_name)
-    to_append_to_results_path = ''
-    for name in regressors_names:
-        to_append_to_results_path += '_' + name
-    results_path = op.join(results_path, to_append_to_results_path[1:])
     if epochs_fname != '':
-        results_path = op.abspath(op.join(results_path, os.pardir, 'from_' + results_path.split(op.sep)[-1]))
+        results_path = op.abspath(op.join(results_path, 'from_' + epochs_fname + '--'))
+        to_append_to_results_path = ''
+        for name in regressors_names:
+            to_append_to_results_path += '_' + name
+        results_path = results_path + to_append_to_results_path[1:]
+    else:
+        to_append_to_results_path = ''
+        for name in regressors_names:
+            to_append_to_results_path += '_' + name
+        results_path = op.join(results_path, to_append_to_results_path[1:])
     results_path = op.join(results_path, 'group')
 
     # Load data
