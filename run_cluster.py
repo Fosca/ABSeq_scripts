@@ -8,7 +8,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
 
 
-cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
 # cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
 
@@ -26,7 +26,7 @@ cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlo
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-# cluster_funcs.create_qsub('linear_reg', 'lr', 'lr', queue='Nspin_bigM')
+cluster_funcs.create_qsub('linear_reg', 'lr', 'lr', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items2', '216its', '216its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items3', '316its', '316its', queue='Nspin_bigM')

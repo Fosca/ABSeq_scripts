@@ -1,5 +1,5 @@
 import sys
-# sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import initialization_paths
 from ABseq_func import regression_funcs
 import config
