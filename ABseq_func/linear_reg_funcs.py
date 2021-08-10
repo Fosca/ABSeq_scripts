@@ -500,7 +500,8 @@ def plot_betas_heatmaps(betas, ch_types, fig_path):
     for ch_type in ch_types:
         fig, axes = plt.subplots(1, len(betas.keys()), figsize=(len(betas.keys()) * 4, 6), sharex=False, sharey=False, constrained_layout=True)
         fig.suptitle(ch_type, fontsize=12, weight='bold')
-        ax = axes.ravel()[::1]
+        # ax = axes.ravel()[::1]
+
         # Loop over the different betas
         for x, regressor_name in enumerate(betas.keys()):
             # ---- Data
@@ -515,14 +516,18 @@ def plot_betas_heatmaps(betas, ch_types, fig_path):
             minT = -0.050 * 1000
             maxT = max(evokeds.times) * 1000
             # ---- Plot
-            im = ax[x].imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
-            ax[x].axvline(0, linestyle='-', color='black', linewidth=1)
+            if len(betas.keys()) == 1:
+                subplots_ax = axes
+            else:
+                subplots_ax = axes[x]
+            im = subplots_ax.imshow(betadata, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='viridis')  # cmap='RdBu_r'
+            subplots_ax.axvline(0, linestyle='-', color='black', linewidth=1)
             for xx in range(3):
-                ax[x].axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-            ax[x].set_xlabel('Time (ms)')
-            ax[x].set_ylabel('Channels')
-            ax[x].set_title(regressor_name, loc='center', weight='normal')
-            fig.colorbar(im, ax=ax[x], shrink=1, location='bottom')
+                subplots_ax.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+            subplots_ax.set_xlabel('Time (ms)')
+            subplots_ax.set_ylabel('Channels')
+            subplots_ax.set_title(regressor_name, loc='center', weight='normal')
+            fig.colorbar(im, ax=subplots_ax, shrink=1, location='bottom')
         fig_name = op.join(savepath, 'betas_' + ch_type + '.png')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
