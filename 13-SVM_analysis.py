@@ -41,7 +41,7 @@ config.subjects_list = ['sub01-pa_190002',
  'sub13-lq_180242',
  'sub14-js_180232',
  'sub15-ev_070110',
- # 'sub16-ma_190185',
+ 'sub16-ma_190185',
  'sub17-mt_170249',
  'sub18-eo_190576',
  'sub19-mg_190180']
