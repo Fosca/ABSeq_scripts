@@ -5,114 +5,38 @@ import os.path as op
 import config
 import numpy as np
 import matplotlib.pyplot as plt
-import ABseq_func.SVM_funcs
 from ABseq_func import *
 from ABseq_func import SVM_funcs, autoreject_funcs
 import mne
-import os.path as op
-from importlib import reload
-from mne.parallel import parallel_func
-import pandas as pd
 from scipy.signal import savgol_filter
 from jr.plot import pretty_gat
-import logging
-
-# epo = epoching_funcs.load_epochs_items(config.subjects_list[0],cleaned=False)
-#
-# np.unique(epo.metadata["ChunkDepth"].values)
-# np.unique(epo.metadata["ClosedChunks"].values)
-
-
-
-# ________________The list of participants (4,8 previously excluded and 16 has a problem)_______________________________
-#
-config.subjects_list = ['sub01-pa_190002',
- 'sub02-ch_180036',
- 'sub03-mr_190273',
- 'sub04-rf_190499',
- 'sub05-cr_170417',
- 'sub06-kc_160388',
- 'sub07-jm_100109',
- 'sub08-cc_150418',
- 'sub09-ag_170045',
- 'sub10-gp_190568',
- 'sub11-fr_190151',
- 'sub12-lg_170436',
- 'sub13-lq_180242',
- 'sub14-js_180232',
- 'sub15-ev_070110',
- 'sub16-ma_190185',
- 'sub17-mt_170249',
- 'sub18-eo_190576',
- 'sub19-mg_190180']
-
-#importing the module
-
-
-
 
 # ___________________________________________________________________________
 # ============== GAT decoding Standard // Deviant ===========================
 # ___________________________________________________________________________
 
-
-# now we will Create and configure logger
-logging.basicConfig(filename=config.result_path + '/SVM/' + "number_epochs_forSVM.log",
-                    format='%(asctime)s %(message)s',
-                    filemode='w')
-# Let us Create an object
-logger = logging.getLogger()
-# Now we are going to Set the threshold of logger to DEBUG
-# logger.setLevel()
-for subject in config.subjects_list:
-    fname = "SW_train_different_blocksSVM_results.npy"
-    load_path = config.result_path+'/SVM/'+subject+'/'+fname
-    data = np.load(load_path, allow_pickle=True).item()
-    # some messages to test
-    logger.info("There are %i epochs that are in the training + testing sets for subject %s"%(len(data['mag']['epochs']),subject) )
-
-
-
-
 def results_SVM_standard_deviant(fname,subjects_list):
+    """
+    Function to load the results from the decoding of standard VS deviant
+    """
 
     results = {sens: [] for sens in config.ch_types}
-
+    times = []
     for sens in config.ch_types:
         results[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
         results[sens]["average_all_sequences"] = []
         for subject in subjects_list:
-
+            print("running the loop for subject %s \n"%subject)
             load_path = config.result_path+'/SVM/'+subject+'/'+fname
             data = np.load(load_path, allow_pickle=True).item()
             # Load the results
             data_GAT_sens = data['GAT'][sens]
             times = data['times']
-
             for seqID in range(1,8):
                 results[sens]["SeqID_"+str(seqID)].append(data_GAT_sens["SeqID_"+str(seqID)])
-
             results[sens]["average_all_sequences"].append(data_GAT_sens["average_all_sequences"])
 
     return results, times
-
-def plot_GAT(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None,tail=1):
-    if compute_significance is not None:
-        tmin_sig = compute_significance[0]
-        tmax_sig = compute_significance[1]
-        times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
-        sig_all = np.ones(results[0].shape)
-        GAT_all_for_sig = results[:, times_sig, :]
-        GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
-        sig = stats_funcs.stats(GAT_all_for_sig-chance, tail=tail)
-        sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
-
-        # -------- plot the gat --------
-    pretty_gat(np.mean(results,axis=0),times=times,sig=sig_all<0.05,chance = chance,clim=clim)
-    plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.png')
-    plt.gcf().savefig(config.fig_path+save_folder+'/'+suffix+'.svg')
-    plt.close('all')
-
 
 def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None):
 
@@ -138,36 +62,24 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
             plt.close('all')
 
-# load reject log for subj01 on epochs items
-# epo = epoching_funcs.load_epochs_items(config.subjects_list[11],cleaned=True)
-# epo_balance = epoching_funcs.balance_epochs_violation_positions(epo)
-#
-# epo_not_clean = epoching_funcs.load_epochs_items(config.subjects_list[0],cleaned=False)
-# epo_balance_not_clean = epoching_funcs.balance_epochs_violation_positions(epo_not_clean)
-
-
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',config.subjects_list)
-
-res_mag = results['mag']
-res_all = res_mag['average_all_sequences']
-plot_GAT(np.asarray(res_all),times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='SW_train_different_blocks_cleaned',chance = 0.5,clim=None,tail=1)
-
 plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
 
 for subject in config.subjects_list:
     results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',[subject])
     plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/subjects/',compute_significance=[0,0.6],suffix=subject+'_cleaned_SW',clim=[0.37,0.63])
 
+# ___________________________________________________________________________
+# ============== GAT decoding structure ===========================
+# ___________________________________________________________________________
 
-# full_data_OpenedChunks_score_dic
-# full_data_ClosedChunks_score_dict
-# full_data_ChunkDepth_score_dict
+
 
 
 for name in ['full_data_OpenedChunks_score_dict','full_data_ClosedChunks_score_dict','full_data_ChunkDepth_score_dict']:
     anal_name = 'feature_decoding/' + name
-    coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_','').replace('_score_dict','')+'/r_', chance=0, score_field='regression',
+    coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_clean_','').replace('_score_dict','')+'/r_', chance=0, score_field='regression',
                     compute_significance=None,plot_per_subjects=True,vmin=-0.1,vmax=0.1)
 
 

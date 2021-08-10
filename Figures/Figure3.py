@@ -201,9 +201,7 @@ plt.gca().set_yticks([])
 plt.colorbar()
 plt.show()
 
-
-
-sig = stats_funcs.stats(correlation_complexity_pearson['grad'])
+sig = stats_funcs.stats(corr_comp_pearson['grad'])
 
 # ----------- Temporal cluster based permutation test pour les différentes courbes
 #  ---------------------------------------------------  (afficher en plus épais les parties significatives)

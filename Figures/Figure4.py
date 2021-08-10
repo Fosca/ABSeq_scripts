@@ -21,25 +21,27 @@ import os.path as op
 from scipy import stats
 import mne
 import matplotlib.ticker as ticker
-
+from jr.plot import pretty_gat
 
 # ---------- plot the gats for all the sequences ------------
 # compute the average and find a time window of maximal decoding in order to apply it on the 16 item sequences
 
 
+results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',config.subjects_list)
+plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
 
-# --------------
+# -------------- plot the average output of the projection -------
 
 
-suf = 'SW_train_test_different_blocks'
-sensors = ['all_chans','mag', 'grad']
+suf = 'SW_train_different_blocks_cleaned_130_210ms'
+# suf = 'SW_train_test_different_blocks'
+sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 
 for subject in config.subjects_list:
-    if op.exists(op.join(config.meg_dir, subject, 'mag_SVM_on_16_items_test_window-epo.fif')):
-        for sens in sensors:
-            epochs_16[sens]['test'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_test_window-epo.fif')))
-            epochs_16[sens]['hab'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
+    for sens in sensors:
+        epochs_16[sens]['test'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_test_window-epo.fif')))
+        epochs_16[sens]['hab'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
 
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')
@@ -60,7 +62,56 @@ for sens in sensors:
 
 
 
+# ______________________________________________________________________________________________________________________
+#  SVM PLOTTING FUNCTIONS - SVM PLOTTING FUNCTIONS - SVM PLOTTING FUNCTIONS - SVM PLOTTING FUNCTIONS - SVM PLOTTING FUNCTIONS
+# ______________________________________________________________________________________________________________________
+def results_SVM_standard_deviant(fname,subjects_list):
+    """
+    Function to load the results from the decoding of standard VS deviant
+    """
 
+    results = {sens: [] for sens in config.ch_types}
+    times = []
+    for sens in config.ch_types:
+        results[sens] = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        results[sens]["average_all_sequences"] = []
+        for subject in subjects_list:
+            print("running the loop for subject %s \n"%subject)
+            load_path = config.result_path+'/SVM/'+subject+'/'+fname
+            data = np.load(load_path, allow_pickle=True).item()
+            # Load the results
+            data_GAT_sens = data['GAT'][sens]
+            times = data['times']
+            for seqID in range(1,8):
+                results[sens]["SeqID_"+str(seqID)].append(data_GAT_sens["SeqID_"+str(seqID)])
+            results[sens]["average_all_sequences"].append(data_GAT_sens["average_all_sequences"])
+
+    return results, times
+
+# ______________________________________________________________________________________________________________________
+def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=None,suffix='SW_train_different_blocks',chance = 0.5,clim=None):
+
+    for chans in results.keys():
+        res_chan = results[chans]
+        for seqID in res_chan.keys():
+            res_chan_seq = np.asarray(res_chan[seqID])
+            sig_all = None
+            # ---- compute significance ----
+            if compute_significance is not None:
+                tmin_sig = compute_significance[0]
+                tmax_sig = compute_significance[1]
+                times_sig = np.where(np.logical_and(times <= tmax_sig, times > tmin_sig))[0]
+                sig_all = np.ones(res_chan_seq[0].shape)
+                GAT_all_for_sig = res_chan_seq[:, times_sig, :]
+                GAT_all_for_sig = GAT_all_for_sig[:, :, times_sig]
+                sig = stats_funcs.stats(GAT_all_for_sig-chance, tail=1)
+                sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
+
+            # -------- plot the gat --------
+            pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5,clim=clim)
+            plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.png')
+            plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
+            plt.close('all')
 
 # ______________________________________________________________________________________________________________________
 def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None,plot_betas=True):
