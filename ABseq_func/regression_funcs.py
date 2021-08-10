@@ -262,7 +262,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
         levels = np.unique(epochs.metadata[reg_name])
         if len(levels)>10:
             bins = np.linspace(np.min(levels),np.max(levels),6)  ## changed from 11 to 6 --> to recompute
-            for ii in range(10):
+            for ii in range(6):
                 epochs["%s >= %0.02f and %s < %0.02f"%(reg_name, bins[ii], reg_name,bins[ii+1])].average().save(
                     save_reg_levels_evoked_path + str(ii) + '-' + suffix[:-1]+ '-ave.fif')
         else:
