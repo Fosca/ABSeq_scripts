@@ -10,7 +10,7 @@ print('jaime les tomates')
 
 # cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
-cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM', sublist_subjects=['sub16-ma_190185'])
+cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_generate_different_sequences', 'sepq', 'sepq', queue='Nspin_bigM')
