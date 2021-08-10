@@ -12,7 +12,7 @@ cm = plt.get_cmap('viridis')
 # # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
 # for subject in config.subjects_list:
-#     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
+     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
 #                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
