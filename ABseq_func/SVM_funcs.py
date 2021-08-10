@@ -2199,7 +2199,7 @@ def compute_regression_complexity_epochs(epochs_name):
 
 def SVM_feature_decoding_wrapper(subject,feature_name,load_residuals_regression=False,list_sequences=[1, 2, 3, 4, 5, 6, 7]
                                  , cross_val_func = None,decim=1,filter_from_metadata=None,
-                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2,clean=False):
+                                 SVM_dec =SVM_decoder(),balance_features=True,distance=True,nvalues_feature=2,clean=True):
 
     """
     subject = config.subjects_list[0]

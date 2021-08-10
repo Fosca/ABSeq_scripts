@@ -208,21 +208,14 @@ def epoching_ARglobal(subject):
 # ======================================================================================================================
 # =====================================  FEATURES DECODING =============================================================
 # ======================================================================================================================
-
-
-
-
 # ---- stimulus ID ------
 def SVM_features_stimID(subject,load_residuals_regression=True,cross_validation = None):
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'StimID', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
-
 # ---- repetition or alternation ------
 def SVM_features_repeatalter(subject,load_residuals_regression=False,cross_validation = None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
-
 # ---- ordinal position ------
 def SVM_features_withinchunk(subject, load_residuals_regression=False, cross_validation=None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
@@ -243,7 +236,6 @@ def SVM_quad_ordpos(subject,cleaned=True):
 
 # ----- quelles séquences ? ----
 def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=False,cleaned=True):
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',SVM_dec =SVM_funcs.regression_decoder(),balance_features=False,distance=False,  load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 
