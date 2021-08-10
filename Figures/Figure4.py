@@ -12,13 +12,14 @@ Testing the Standard vs Deviant decoder on the full 16 item sequences
 """
 
 # ---- import the packages -------
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
 from ABseq_func import *
 import matplotlib.pyplot as plt
 import config
 import numpy as np
-from scipy.signal import savgol_filter
 import os.path as op
-from scipy import stats
 import mne
 import matplotlib.ticker as ticker
 from jr.plot import pretty_gat
@@ -32,9 +33,15 @@ plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0
 
 # -------------- plot the average output of the projection -------
 
+config.exclude_subjects.append('sub04-rf_190499')
+config.exclude_subjects.append('sub08-cc_150418')
+config.exclude_subjects.append('sub16-ma_190185')
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
+
 
 suf = 'SW_train_different_blocks_cleaned_130_210ms'
-# suf = 'SW_train_test_different_blocks'
+suf = 'SW_train_test_different_blocks'
 sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 
@@ -162,6 +169,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     epochs_data_test_allseq = []
 
     for seqID in range(1, 8):
+        print("=== running for sequence %i ==="%seqID)
         #  this provides us with the position of the violations and the times
         epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
         times = epochs_seq_subset.times
@@ -173,7 +181,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         epochs_data_hab_seq = []
         y_list_epochs_hab = []
         data_mean = []
-        mean_alpha = []
+        where_sig = []
         for epochs in epochs_list['hab']:
             epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
             avg_epo = np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
@@ -182,14 +190,14 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         epochs_data_hab_allseq.append(epochs_data_hab_seq)
         mean_hab = np.mean(y_list_epochs_hab, axis=0)
         data_mean.append(mean_hab)
-        mean_alpha.append(np.zeros(mean_hab.shape))
+        where_sig.append(np.zeros(mean_hab.shape))
+        where_sig.append(np.zeros(mean_hab.shape))
 
         #  ----------- test trials -----------
         epochs_data_test_seq = []
 
         for viol_pos in violpos_list:
             y_list = []
-            y_list_alpha = []
             contrast_viol_pos = []
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
@@ -199,7 +207,6 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 if viol_pos==0:
                     avg_epo_standard = np.mean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
                     epochs_data_test_seq.append(avg_epo_standard)
-                    y_list_alpha.append(np.zeros(avg_epo_standard.shape))
                 if viol_pos !=0 and window_CBPT_violation is not None:
                     epochs_standard = epochs[
                         'SequenceID == "' + str(seqID) + '" and ViolationInSequence == 0']
@@ -216,13 +223,13 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
                 p_values = stats_funcs.stats(contrast_viol_pos[:,inds_stats[0]],tail=1)
                 p_vals[inds_stats[0]] = p_values
                 violation_significance[seqID][int(viol_pos)] = p_vals
-                y_list_alpha.append(1*(p_vals<0.05))
+                y_list_alpha = 1*(p_vals<0.05)
+                where_sig.append(y_list_alpha)
 
-            mean = np.mean(y_list, axis=0)
-            mean_alpha_seq = np.mean(y_list_alpha, axis=0)
-            data_mean.append(mean)
-            mean_alpha.append(mean_alpha_seq)
+            mean_y = np.mean(y_list, axis=0)
+            data_mean.append(mean_y)
         epochs_data_test_allseq.append(epochs_data_test_seq)
+        where_sig = np.asarray(where_sig)
 
         width = 75
         # Add vertical lines, and "xY"
@@ -241,7 +248,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         cb.ax.yaxis.set_offset_position('left')
         cb.set_label('a. u.')
         if window_CBPT_violation:
-            masked = np.ma.masked_where(mean_alpha == 0, mean_alpha)
+            masked = np.ma.masked_where(where_sig == 0, where_sig)
             im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
                               vmin=vmin, vmax=vmax,alpha=0.7)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
@@ -258,6 +265,10 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             y2 = (4 - 1 - k) * width
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
+
+            find_where_sig = np.where(where_sig[k+2,:])[0]
+            if len(find_where_sig)!=0:
+                ax[n].axhline(y = - (k+1)*(width / 3), xmin=find_where_sig[0],xmax = find_where_sig[-1] , linestyle='-', color='black', linewidth=1)
 
         n += 1
 

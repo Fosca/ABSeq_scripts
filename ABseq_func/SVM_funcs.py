@@ -470,7 +470,7 @@ def generate_SVM_all_sequences(subject, load_residuals_regression=False, train_d
         suf = 'resid_'
     else:
         epochs = epoching_funcs.load_epochs_items(subject, cleaned=cleaned)
-        epochs.pick_types(stim=False)
+        epochs.pick_types(meg=True)
 
     # ----------- balance the position of the standard and the deviants -------
     # 'local' - Just make sure we have the same amount of standards and deviants for a given position. This may end up with
