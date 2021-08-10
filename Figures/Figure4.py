@@ -61,7 +61,7 @@ for sens in sensors:
     win_tmin = epochs_16[sens]['test'][0][0].metadata.SVM_filter_tmin_window[0]*1000
     win_tmax = epochs_16[sens]['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
 
-    plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_16[sens], compute_reg_complexity = True,
+    plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_16[sens], compute_reg_complexity = False,
                                                                   window_CBPT_violation = 0.7,sensor_type=sens,
                                                                   save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims_tvals.png' % ( sens, win_tmin, win_tmax)),
                                                                   vmin=-vminvmax[sens],vmax=vminvmax[sens],plot_betas=False)
@@ -122,6 +122,10 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
 
 # ______________________________________________________________________________________________________________________
 def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type, save_path=None, vmin=-1, vmax=1,compute_reg_complexity = False, window_CBPT_violation = None,plot_betas=True):
+
+    color_viol = ['lightgreen','mediumseagreen','mediumslateblue','darkviolet']
+
+
     import matplotlib.colors as mcolors
 
     colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
@@ -234,11 +238,16 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         width = 75
         # Add vertical lines, and "xY"
         for xx in range(16):
-            ax[n].axvline(250 * xx, linestyle='--', color='black', linewidth=1)
+            ax[n].axvline(250 * xx,ymin=0,ymax= width, linestyle='--', color='black', linewidth=0.8)
             txt = seqtxtXY[n][xx]
             ax[n].text(250 * (xx + 1) - 125, width * 6 + (width / 3), txt, horizontalalignment='center', fontsize=16)
 
         # return data_mean
+        ax[n].spines["top"].set_visible(False)
+        ax[n].spines["right"].set_visible(False)
+        ax[n].spines["bottom"].set_visible(False)
+        ax[n].spines["left"].set_visible(False)
+
         im = ax[n].imshow(data_mean, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap='RdBu_r',
                           vmin=vmin, vmax=vmax)
         # add colorbar
@@ -247,10 +256,10 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         cb = fig.colorbar(im, ax=ax[n], location='right', format=fmt, shrink=.50, aspect=10, pad=.005)
         cb.ax.yaxis.set_offset_position('left')
         cb.set_label('a. u.')
-        if window_CBPT_violation:
-            masked = np.ma.masked_where(where_sig == 0, where_sig)
-            im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
-                              vmin=vmin, vmax=vmax,alpha=0.7)
+        # if window_CBPT_violation:
+        #     masked = np.ma.masked_where(where_sig == 0, where_sig)
+        #     im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
+        #                       vmin=vmin, vmax=vmax,alpha=0.7)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
         ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3],
                                'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1],
@@ -264,12 +273,11 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             y1 = (4 - k) * width
             y2 = (4 - 1 - k) * width
             ax[n].plot([x, x], [y1, y2], linestyle='-', color='black', linewidth=6)
-            ax[n].plot([x, x], [y1, y2], linestyle='-', color='yellow', linewidth=3)
+            ax[n].plot([x, x], [y1, y2], linestyle='-', color=color_viol[k], linewidth=3)
 
-            find_where_sig = np.where(where_sig[k+2,:])[0]
+            find_where_sig = np.where(where_sig[k+2,:]==1)[0]
             if len(find_where_sig)!=0:
-                ax[n].axhline(y = - (k+1)*(width / 3), xmin=find_where_sig[0],xmax = find_where_sig[-1] , linestyle='-', color='black', linewidth=1)
-
+                ax[n].plot([1000 * times[find_where_sig[0]], 1000 * times[find_where_sig[-1]]], [-(k+1)*width/3, -(k+1)*width/3], linestyle='-', color=color_viol[k], linewidth=3)
         n += 1
 
     if compute_reg_complexity:

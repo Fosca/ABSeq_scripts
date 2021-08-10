@@ -983,17 +983,8 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
-    fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
-    extension = subject + '_1st_element_epo'
-    if cleaned:
-        extension = subject + '_1st_element_ARglob_epo'
-
-    fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
-    print("Input: ", fname_in)
-
     # ====== loading the 16 items sequences epoched on the first element ===================
-    epochs_1st_element = mne.read_epochs(fname_in, preload=True)
-
+    epochs_1st_element = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
     if sliding_window:
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
 
@@ -1162,23 +1153,15 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         suf += 'train_different_blocks'
     if cleaned:
         suf += '_cleaned'
-
-
     SVM_results = np.load(op.join(SVM_results_path, suf + 'SVM_results.npy'), allow_pickle=True).item()
 
     # ==== define the paths ==============
     meg_subject_dir = op.join(config.meg_dir, subject)
-    fig_path = op.join(config.study_path, 'Figures', 'SVM') + op.sep
-    extension = subject + '_1st_element_epo'
-    if cleaned:
-        extension = subject + '_1st_element_ARglob_epo'
-    fname_in = op.join(meg_subject_dir, config.base_fname.format(**locals()))
-    print("Input: ", fname_in)
-
-    # ====== loading the 16 items sequences epoched on the first element ===================
-    epochs_1st_element = mne.read_epochs(fname_in, preload=True)
+    epochs_1st_element = epoching_funcs.load_epochs_full_sequence(subject,cleaned=False)
     if sliding_window:
         epochs_1st_element = epoching_funcs.sliding_window(epochs_1st_element)
+    # ====== loading the 16 items sequences epoched on the first element ===================
+
     epochs_1st_element = epochs_1st_element["TrialNumber < 11"]
 
     if config.noEEG:

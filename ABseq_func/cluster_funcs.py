@@ -164,8 +164,8 @@ def SVM_generate_different_sequences(subject):
 
 def SVM_generate_all_sequences(subject):
     # ---- I modified the following functions so they run on the cleaned epochs ------
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
-    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
     # apply to the 16 items sequences
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.130, 0.210], window=True, sliding_window=True,cleaned=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.210, 0.410], window=True, sliding_window=True,cleaned=True)
