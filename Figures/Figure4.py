@@ -33,15 +33,15 @@ plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0
 
 # -------------- plot the average output of the projection -------
 
-config.exclude_subjects.append('sub04-rf_190499')
-config.exclude_subjects.append('sub08-cc_150418')
-config.exclude_subjects.append('sub16-ma_190185')
-config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-config.subjects_list.sort()
+# config.exclude_subjects.append('sub04-rf_190499')
+# config.exclude_subjects.append('sub08-cc_150418')
+# config.exclude_subjects.append('sub16-ma_190185')
+# config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+# config.subjects_list.sort()
 
 
 suf = 'SW_train_different_blocks_cleaned_130_210ms'
-suf = 'SW_train_test_different_blocks'
+# suf = 'SW_train_test_different_blocks'
 sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 

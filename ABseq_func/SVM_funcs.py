@@ -948,7 +948,7 @@ def plot_single_trials(X_transform, y_violornot, times, fig_path=None, figname='
 
 
 # ______________________________________________________________________________________________________________________
-def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
+def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 750, 50)],
                                      train_test_different_blocks=True, sliding_window=False, cleaned = True):
     """
     Function to apply the SVM filters built on all the sequences the 16 item sequences
@@ -959,7 +959,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
     :return:
 
     subject = config.subjects_list[0]
-    times=[0.140, 0.180]
+    times=[0.130, 0.210]
     window=True
     sliding_window=True
     cleaned = True
@@ -1001,8 +1001,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
     # ====== compute the projections for each of the 3 types of sensors ===================
     for sens in config.ch_types:
-
-        print(sens)
+        print("---Now performing the analysis for sensor type %s -----"%sens)
         SVM_sens = SVM_results[sens]['SVM']
         epochs_sens = SVM_results[sens]['epochs']
         epochs_1st_sens = epochs_1st[sens]
@@ -1010,14 +1009,7 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
         # = we initialize the metadata
         data_frame_meta = pd.DataFrame([])
         elapsed = 0
-        data_for_epoch_object = np.zeros(
-            (epochs_sens.get_data().shape[0] * len(times), epochs_1st_sens.get_data().shape[2]))
-        if window:
-            data_for_epoch_object = np.zeros(
-                (SVM_results[sens]['epochs'].get_data().shape[0], epochs_1st_sens.get_data().shape[2]))
-
-        print("The shape of data_for_epoch_object is ")
-        print(data_for_epoch_object.shape)
+        data_for_epoch_object = []
         # ===============================
         counter = 0
         for fold_number in range(n_folds):
@@ -1029,79 +1021,32 @@ def apply_SVM_filter_16_items_epochs(subject, times=[x / 1000 for x in range(0, 
 
             # ---- extract one unique 16 item sequence that may correspond to various test_indices ---
             epochs_1st_item_unique = unique_test_16(epochs_1st_sens, epochs_sens, test_indices)
-
             for m, epochs_1st_sens_m in enumerate(epochs_1st_item_unique):
-
-                # seqID_m = epochs_sens[m].metadata['SequenceID'].values[0]
-                # run_m = epochs_sens[m].metadata['RunNumber'].values[0]
-                # trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[
-                #     0]  # this is the number of the trial, that will allow to determine which sequence within the run of 46 is the one that was left apart
-                # epochs_1st_sens_m = epochs_1st_sens[
-                #     'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (seqID_m, run_m, trial_number_m)]
-
-                if len(epochs_1st_sens_m.events) != 0:
-                    data_1st_el_m = epochs_1st_sens_m.get_data()
-                    SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
-                    print("The shape of SVM_to_data is ")
-                    print(SVM_to_data.shape)
-                    if not window:
-                        for mm, point_of_interest in enumerate(points):
-                            print(" The point of interest has index %i" % point_of_interest)
-                            print(
-                                " === MAKE SURE THAT WHEN SELECTING SVM_to_data[point_of_interest,:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-                            epochs_1st_sens_m_filtered_data = SVM_to_data[point_of_interest, :]
-                            print('epochs_1st_sens_m_filtered_data has shape')
-                            print(epochs_1st_sens_m_filtered_data.shape)
-                            print("data_for_epoch_object has shape")
-                            print(data_for_epoch_object.shape)
-                            data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
-
-                            metadata_m = epochs_1st_sens_m.metadata
-                            metadata_m['SVM_filter_datapoint'] = int(point_of_interest)
-                            metadata_m['SVM_filter_time'] = times[mm]
-                            data_frame_meta = data_frame_meta.append(metadata_m)
-                            counter += 1
-                    else:
-                        print(
-                            " === MAKE SURE THAT WHEN SELECTING SVM_to_data[np.min(points):np.max(points),:] WE ARE INDEED CHOOSING THE TRAINING TIMES ===")
-                        print(SVM_to_data.shape)
-                        epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0)
-                        print(epochs_1st_sens_m_filtered_data.shape)
-                        print('This was the shape of epochs_1st_sens_m_filtered_data')
-
-                        data_for_epoch_object[counter, :] = np.squeeze(epochs_1st_sens_m_filtered_data)
-                        metadata_m = epochs_1st_sens_m.metadata
-                        metadata_m['SVM_filter_min_datapoint'] = np.min(points)
-                        metadata_m['SVM_filter_max_datapoint'] = np.max(points)
-                        metadata_m['SVM_filter_tmin_window'] = times[0]
-                        metadata_m['SVM_filter_tmax_window'] = times[-1]
-                        data_frame_meta = data_frame_meta.append(metadata_m)
-                        counter += 1
-                else:
-                    print(
-                        '========================================================================================================================================')
-                    print(
-                        'len(epochs_1st_sens_m.events) was equal to 0')
-                    print(
-                        '========================================================================================================================================')
+                data_1st_el_m = epochs_1st_sens_m.get_data()
+                SVM_to_data = np.squeeze(SVM_sens[fold_number].decision_function(data_1st_el_m))
+                epochs_1st_sens_m_filtered_data = np.mean(SVM_to_data[np.min(points):np.max(points), :], axis=0)
+                data_for_epoch_object.append(np.squeeze(epochs_1st_sens_m_filtered_data))
+                metadata_m = epochs_1st_sens_m.metadata
+                metadata_m['SVM_filter_min_datapoint'] = np.min(points)
+                metadata_m['SVM_filter_max_datapoint'] = np.max(points)
+                metadata_m['SVM_filter_tmin_window'] = times[0]
+                metadata_m['SVM_filter_tmax_window'] = times[-1]
+                data_frame_meta = data_frame_meta.append(metadata_m)
+                counter += 1
+                print("Performing the projection for trial number %i from fold number %i \n"%(counter+1,fold_number+1))
             end = time.time()
             elapsed = end - start
             print('... lasted: ' + str(elapsed) + ' s')
 
-        dat = np.expand_dims(data_for_epoch_object, axis=1)
+        dat = np.expand_dims(np.asarray(data_for_epoch_object), axis=1)
         info = mne.create_info(['SVM'], epochs_1st_sens.info['sfreq'])
         epochs_proj_sens = mne.EpochsArray(dat, info, tmin=-0.5)
         epochs_proj_sens.metadata = data_frame_meta
 
-        if window:
-            suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
+        suf += "_%i_%ims" % (int(np.min(times) * 1000), int(np.max(times) * 1000))
 
-        if window:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',
-                                  overwrite=True)
-        else:
-            epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test-epo.fif',
-                                  overwrite=True)
+        epochs_proj_sens.save(meg_subject_dir + op.sep + sens + suf + '_SVM_on_16_items_test_window-epo.fif',
+                              overwrite=True)
 
     return True
 
@@ -1117,12 +1062,10 @@ def unique_test_16(epochs_1st_sens, epochs_sens, test_indices):
         run_m = epochs_sens[m].metadata['RunNumber'].values[0]
         trial_number_m = epochs_sens[m].metadata['TrialNumber'].values[0]
         truple = (int(seqID_m), int(run_m), int(trial_number_m))
-        print(truple)
         all_fields.append(truple)
     unique_fields = list(set(all_fields))
     epochs_1st_item = []
     for seqID, run_number, trial_number in unique_fields:
-        print(seqID)
         epochs_1st_item.append(epochs_1st_sens[
                                    'SequenceID == "%i" and RunNumber == %i and TrialNumber == %i ' % (
                                    seqID, run_number, trial_number)])
