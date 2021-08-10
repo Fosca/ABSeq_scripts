@@ -8,7 +8,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
 
 
-# cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
+cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
 # cluster_funcs.create_qsub('SVM_features_sequence_structure', 'stru', 'stru', queue='Nspin_bigM')
 
@@ -67,7 +67,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('SVM_3', 'svm3', 'svm3', queue='Global_long')
 
 # cluster_funcs.create_qsub('EMS', 'ems', 'ems', queue='Nspin_bigM', sublist_subjects=['sub16-ma_190185'])
-cluster_funcs.create_qsub('linear_reg', 'lreg', 'lreg', queue='Nspin_long')
+# cluster_funcs.create_qsub('linear_reg', 'lreg', 'lreg', queue='Nspin_long')
 # cluster_funcs.create_qsub('surprise_omegas_analysis', 'surp_Omega', 'surp_Omega', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('compute_posterior_probability', 'pstprob', 'pstprob', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('surprise_omegas_analysis', 'coucou', 'coucou', queue='Nspin_bigM')

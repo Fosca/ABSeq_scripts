@@ -41,7 +41,7 @@ filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
 
     # Regression of structure regressors on surprise-regression residuals - group analysis
-    reg_names = ['Complexity']
+    reg_names = ['Complexity','SequenceID','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth']
     regression_funcs.merge_individual_regression_results(reg_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name)
     regression_funcs.regression_group_analysis(reg_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, remap_grads=True, Do3Dplot=True)
 
