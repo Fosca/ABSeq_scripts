@@ -53,7 +53,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
 
         # Write jobs in a dedicated folder
         path_jobs = wkdir + '/generated_jobs/' + folder_name + '/'
-        utils.create_folder(path_jobs,overwrite=True)
+        utils.create_folder(path_jobs)
         name_file = path_jobs + jobname + '.py'
         Listfile.append(name_file)
 
@@ -64,7 +64,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
 
     jobs_path = config.cluster_path + "/generated_jobs/"
     results_path = config.cluster_path + "/results_qsub/"
-    utils.create_folder(results_path + folder_name,overwrite=True)
+    utils.create_folder(results_path + folder_name)
     list_scripts = sorted(glob.glob(jobs_path + folder_name + "/*.py"))
 
     # Loop over your jobs
