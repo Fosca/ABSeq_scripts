@@ -284,7 +284,7 @@ def linear_reg(subject):
     # regression_funcs.update_metadata_epochs_and_save_epochs(subject)
     for filter_name in filter_names:
         # regressors_names = ['Complexity','SequenceID','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth']
-        # epochs_fname =
+        # epochs_fname = "/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--clean-epo.fif"
         # remap_grads=True
         # filter = ''
         # subject = config.subjects_list[2]
@@ -293,7 +293,7 @@ def linear_reg(subject):
         # apply_baseline=False
         # suffix = ''
         # filter_name = 'Hab'
-        # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
+        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
         regression_funcs.compute_regression(subject,['Complexity','SequenceID','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_clean-epo.fif",filter_name,remap_grads=True)
 
 
