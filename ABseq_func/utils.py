@@ -10,26 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os.path as op
 
-tree_subject_names = config.subjects_list
-basepath = "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/"
-file_name = "resid_GAT_results_4pos_score.npy"
-# file_name = "resid_GAT_results_4pos_score.npy"
-
-file_names = ["gradSW_train_test_different_blocks_SVM_on_16_items_habituation_window-epo.fif",
-              "magSW_train_different_blocks_cleaned_120_190ms_SVM_on_16_items_habituation_window-epo.fif",
-              "eegSW_train_test_different_blocks_SVM_on_16_items_habituation_window-epo.fif",
-              "gradSW_train_different_blocks_120_190ms_120_190ms_SVM_on_16_items_habituation_window-epo.fif",
-              "magSW_train_different_blocks_120_190ms_SVM_on_16_items_habituation_window-epo.fif",
-              "magSW_train_test_different_blocks_SVM_on_16_items_habituation_window-epo.fif",
-              "all_chanstrain_test_different_blocks_SVM_on_16_items_habituation_window-epo.fif",
-              "gradtrain_test_different_blocks_SVM_on_16_items_habituation_window-epo.fif",
-              "gradSW_train_different_blocks_cleaned_120_190ms_120_190ms_SVM_on_16_items_habituation_window-epo.fif"]
-for file in file_names:
-    delete_files(basepath,tree_subject_names,file,subj_in_filename=False)
-
-
-
-
 def delete_files(basepath,tree_subject_names,file_name,subj_in_filename=False):
 
     for sub in tree_subject_names:
