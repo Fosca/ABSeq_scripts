@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os.path as op
+import shutil
 
 def delete_files(basepath,tree_subject_names,file_name,subj_in_filename=False):
 
@@ -28,7 +29,7 @@ def create_folder(folder_name,overwrite=False):
         os.makedirs(folder_name)
     if overwrite:
         if os.path.exists(folder_name):
-            os.rmdir(folder_name)
+            shutil.rmtree(folder_name,ignore_errors=True)
 
 
 def load_info_subjects(subjects_list):
