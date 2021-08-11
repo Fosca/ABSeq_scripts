@@ -23,9 +23,13 @@ def delete_files(basepath,tree_subject_names,file_name,subj_in_filename=False):
         output
 
 
-def create_folder(folder_name):
+def create_folder(folder_name,overwrite=False):
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
+    if overwrite:
+        if os.path.exists(folder_name):
+            os.rmdir(folder_name)
+
 
 def load_info_subjects(subjects_list):
 

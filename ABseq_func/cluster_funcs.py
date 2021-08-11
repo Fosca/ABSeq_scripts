@@ -53,7 +53,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
 
         # Write jobs in a dedicated folder
         path_jobs = wkdir + '/generated_jobs/' + folder_name + '/'
-        utils.create_folder(path_jobs)
+        utils.create_folder(path_jobs,overwrite=True)
         name_file = path_jobs + jobname + '.py'
         Listfile.append(name_file)
 
@@ -64,7 +64,7 @@ def create_qsub(function_name, folder_name, suffix_name, sublist_subjects=None, 
 
     jobs_path = config.cluster_path + "/generated_jobs/"
     results_path = config.cluster_path + "/results_qsub/"
-    utils.create_folder(results_path + folder_name)
+    utils.create_folder(results_path + folder_name,overwrite=True)
     list_scripts = sorted(glob.glob(jobs_path + folder_name + "/*.py"))
 
     # Loop over your jobs
@@ -280,7 +280,7 @@ def linear_reg(subject):
     filter_names = ['Hab', 'Stand', 'Viol']
     # regression_funcs.update_metadata_epochs_and_save_epochs(subject)
     for filter_name in filter_names:
-        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=False)
+        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
         regression_funcs.compute_regression(subject,['Complexity','SequenceID','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_baselined_clean-epo.fif",filter_name,remap_grads=True)
 
 
