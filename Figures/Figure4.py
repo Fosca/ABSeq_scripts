@@ -33,22 +33,23 @@ plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0
 
 # -------------- plot the average output of the projection -------
 
-# config.exclude_subjects.append('sub04-rf_190499')
-# config.exclude_subjects.append('sub08-cc_150418')
+config.exclude_subjects.append('sub01-pa_190002')
+config.exclude_subjects.append('sub09-ag_170045')
 # config.exclude_subjects.append('sub16-ma_190185')
-# config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-# config.subjects_list.sort()
+config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
+config.subjects_list.sort()
 
 
-suf = 'SW_train_different_blocks_cleaned_130_210ms'
+suf = {'mag':'SW_train_different_blocks_cleaned_130_210ms','grad':'SW_train_different_blocks_cleaned_130_210ms_130_210ms'}
+suf = {'mag':'SW_train_different_blocks_cleaned_210_410ms','grad':'SW_train_different_blocks_cleaned_210_410ms_210_410ms'}
 # suf = 'SW_train_test_different_blocks'
 sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 
 for subject in config.subjects_list:
     for sens in sensors:
-        epochs_16[sens]['test'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_test_window-epo.fif')))
-        epochs_16[sens]['hab'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf+'_SVM_on_16_items_habituation_window-epo.fif')))
+        epochs_16[sens]['test'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf[sens]+'_SVM_on_16_items_test_window-epo.fif')))
+        epochs_16[sens]['hab'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf[sens]+'_SVM_on_16_items_habituation_window-epo.fif')))
 
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')
