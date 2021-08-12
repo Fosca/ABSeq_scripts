@@ -30,7 +30,7 @@ def update_metadata_epochs_and_save_epochs(subject):
 
     # load the metadata for the non-cleaned epochs, remove the bad ones, and this becomes the metadata for the cleaned epochs
     epochs_clean, fname_clean = epoching_funcs.load_epochs_items(subject, cleaned=True,return_fname=True)
-
+    epochs_clean.get_data()
     # ============ build the repeatAlter and the surprise 100 for n+1 ==================
     # 1 - update the full epochs (not_clean) metadata with the new fields
     RepeatAlternp1_notclean = metadata_notclean["RepeatAlter"].values[1:].tolist()
@@ -44,15 +44,19 @@ def update_metadata_epochs_and_save_epochs(subject):
     epochs_notclean.save(fname,overwrite = True)
 
     # 2 - subselect only the good epochs indices to filter the metadata
-    good_idx = [len(epochs_clean.drop_log[i]) == 0 for i in range(len(epochs_clean.drop_log))]
-    where_good = np.where(good_idx)[0]
-    RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[where_good]
-    Surprisenp1 = np.asarray(Surprisenp1_notclean)[where_good]
-    metadata_clean = metadata_notclean[good_idx]
+    if subject == 'sub16-ma_190185':
+        # in the case of sub16, no epochs are removed in the process of cleaning
+        metadata_clean = metadata_notclean
+    else:
+        good_idx = [len(epochs_clean.drop_log[i]) == 0 for i in range(len(epochs_clean.drop_log))]
+        where_good = np.where(good_idx)[0]
+        RepeatAlternp1 = np.asarray(RepeatAlternp1_notclean)[where_good]
+        Surprisenp1 = np.asarray(Surprisenp1_notclean)[where_good]
+        metadata_clean = metadata_notclean[good_idx]
 
-    metadata_clean = metadata_clean.assign(Intercept=1)  # Add an intercept for later
-    metadata_clean = metadata_clean.assign(RepeatAlternp1=RepeatAlternp1)
-    metadata_clean = metadata_clean.assign(Surprisenp1=Surprisenp1)  # Add an intercept for later
+        metadata_clean = metadata_clean.assign(Intercept=1)  # Add an intercept for later
+        metadata_clean = metadata_clean.assign(RepeatAlternp1=RepeatAlternp1)
+        metadata_clean = metadata_clean.assign(Surprisenp1=Surprisenp1)  # Add an intercept for later
 
     epochs_clean.metadata = metadata_clean
     epochs_clean.save(fname_clean,overwrite = True)
