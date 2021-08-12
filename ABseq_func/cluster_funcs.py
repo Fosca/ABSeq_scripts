@@ -278,7 +278,7 @@ def ord_code_16items(subject,load_residuals_regression=False):
 def linear_reg(subject):
     from ABseq_func import regression_funcs
     filter_names = ['Hab', 'Stand', 'Viol']
-    # regression_funcs.update_metadata_epochs_and_save_epochs(subject)
+    regression_funcs.update_metadata_epochs_and_save_epochs(subject)
     for filter_name in filter_names:
         # regressors_names = ['Complexity','SequenceID','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth']
         # epochs_fname = "/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_clean-epo.fif"
@@ -290,7 +290,7 @@ def linear_reg(subject):
         # apply_baseline=False
         # suffix = ''
         # filter_name = 'Hab'
-        # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
+        regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
         regression_funcs.compute_regression(subject,['Complexity','WithinChunkPosition','RepeatAlter','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_clean-epo.fif",filter_name,remap_grads=True)
 
 

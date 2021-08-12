@@ -51,8 +51,7 @@ def from_epochs_to_surprise(subject, list_omegas,order = 1):
 
     print("================== The surprise is computed on the non-cleaned epochs and metadata  !!!! ==========")
 
-    clean = False
-    metadata = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=None, new_field_values=None)
+    metadata = epoching_funcs.update_metadata(subject, clean=False, new_field_name=None, new_field_values=None)
     # extract the sequences from the metadata, add the pauses as code '2' and concatenate them
     runs = np.unique(metadata['RunNumber'])
 

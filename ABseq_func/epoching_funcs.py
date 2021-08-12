@@ -167,6 +167,9 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
             metadata = convert_csv_info_to_metadata(run_info_subject_dir)
             metadata = pd.DataFrame.from_dict(metadata, orient='index')
             metadata = pd.DataFrame.transpose(metadata)
+            if subject == 'sub16-ma_190185':
+                inds = metadata.index[metadata['RunNumber'] == 12].tolist()
+                metadata.drop(inds[-2:])
 
     if new_field_name is not None:
         metadata[new_field_name] = new_field_values
@@ -510,6 +513,11 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
 
         print('  Downsampling raw data')
         raw, events = raw.resample(config.resample_sfreq, npad='auto', events=events)
+
+        times_between_events_and_end = (raw.last_samp - events[:, 0]) / raw.info['sfreq']
+        if np.sum(times_between_events_and_end<0.6)>0:
+            print("=== some events are too close to the end ====")
+
         if len(events) != 46 * 16:
             raise Exception('We expected %i events but we got %i' % (46 * 16, len(events)))
 
