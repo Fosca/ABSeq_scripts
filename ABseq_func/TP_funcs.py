@@ -71,7 +71,7 @@ def from_epochs_to_surprise(subject, list_omegas,order = 1):
             surprise.append(post_omega_run['surprise'])
 
         surprise = np.concatenate(surprise)
-        metadata_updated = epoching_funcs.update_metadata(subject, clean=clean, new_field_name=field_name, new_field_values=surprise)
+        metadata_updated = epoching_funcs.update_metadata(subject, clean=False, new_field_name=field_name, new_field_values=surprise)
 
     return metadata_updated
 
