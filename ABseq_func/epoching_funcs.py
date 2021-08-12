@@ -169,7 +169,7 @@ def update_metadata(subject, clean=False, new_field_name=None, new_field_values=
             metadata = pd.DataFrame.transpose(metadata)
             if subject == 'sub16-ma_190185':
                 inds = metadata.index[metadata['RunNumber'] == 12].tolist()
-                metadata.drop(inds[-2:])
+                metadata = metadata.drop(inds[-2:])
 
     if new_field_name is not None:
         metadata[new_field_name] = new_field_values
