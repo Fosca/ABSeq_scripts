@@ -78,7 +78,6 @@ def count_bads():
 
 def plot_features_from_metadata(sequences = [3,4,5,6,7]):
 
-
     figures_path = config.fig_path+'/features_figs/'
 
     # load metadata subject 1

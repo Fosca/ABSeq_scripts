@@ -29,7 +29,7 @@ from jr.plot import pretty_gat
 
 
 results, times = results_SVM_standard_deviant('SW_train_different_blocks_cleanedGAT_results.npy',config.subjects_list)
-plot_results_GAT_chans_seqID(results,times,'/SVM/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
+plot_results_GAT_chans_seqID(results,times,'/SVM/standard_vs_deviant/GAT/',compute_significance=[0,0.6],suffix='_cleaned_SW',clim=[0.37,0.63])
 
 # -------------- plot the average output of the projection -------
 

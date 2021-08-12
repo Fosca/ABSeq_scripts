@@ -100,7 +100,7 @@ for sens in ['mag','grad']:
     plt.close('all')
     diago_score = np.asarray(avg_res[sens])
     diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
-    petit_plot(diago_score, times, filter=True, fig_name=config.fig_path+"/SVM/GAT/average_diagonal_cleaned"+sens+".svg")
+    petit_plot(diago_score, times, filter=True, fig_name=config.fig_path+"/SVM/standard_vs_deviant/average_diagonal_cleaned"+sens+".svg")
 
 # ------ PART 1 OF THE FIGURE -------
 # ----- plot the GAT diagonal for each of the 7 sequences -----------
@@ -126,7 +126,7 @@ for sens in sensors:
         petit_plot(diago_seq, times, filter=True, fig_name=None, color= colorslist[SeqID - 1],label='SeqID_' + str(SeqID))
     plt.show()
     plt.legend(loc='best', fontsize=9)
-    plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'All_sequences_standard_VS_deviant_cleaned_%s.png' % sens), dpi=300)
+    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s.png' % sens), dpi=300)
 
 # Commentaire : on dirait qu'il y a quelque chose d'étrange dans le calcul de ce qui est significatif. Pas grand chose ne sort alors qu'on aurait pu penser que oui ---
 
@@ -162,11 +162,11 @@ for sens in sensors:
 
 for sens in sensors:
     plt.close('all')
-    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_pearson_%s.png'%sens)
-    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_pearson_%s.svg'%sens)
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s.png'%sens)
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s.svg'%sens)
     plt.close('all')
-    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_spearman_%s.png'%sens)
-    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/corr_complexity_spearman_%s.svg'%sens)
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s.png'%sens)
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s.svg'%sens)
 
 # ----- Then we compute the t-test to determine the statistical significance across subjects ----
 # ----- on obtient la carte de à quel point c'est statistiquement significatif en fonction du temps ---
@@ -190,8 +190,8 @@ for name in t_values.keys():
         plt.gca().set_xlabel('Time [ms]')
         plt.gca().set_ylabel('T values')
         plt.gca().set_title('%s correlations - %s'%(name,sens))
-        plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.png'%(name,sens)))
-        plt.gcf().savefig(op.join(config.fig_path, 'SVM', 'tvalues_%s_correlation_%s.svg'%(name,sens)))
+        plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'tvalues_%s_correlation_%s.png'%(name,sens)))
+        plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'tvalues_%s_correlation_%s.svg'%(name,sens)))
         plt.close('all')
 
 extent=[0,100,0,1]
