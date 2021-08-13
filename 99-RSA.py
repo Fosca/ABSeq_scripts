@@ -12,7 +12,7 @@ cm = plt.get_cmap('viridis')
 # # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
 # for subject in config.subjects_list:
-     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
+#      rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
 #                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
@@ -79,7 +79,7 @@ for metric_type in ["spearmanr","euclidean"]:
          plt.close("all")
 
 # ====== now run the RSA regression analysis ==========
-for metric_type in [ "euclidean"]:#"spearmanr",
+for metric_type in ["euclidean"]:#"spearmanr",
 
     diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
     dis = rsa_funcs.dissimilarity
@@ -104,7 +104,8 @@ for metric_type in [ "euclidean"]:#"spearmanr",
         fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times)
         fig.savefig(plot_path+metric_type+'_'+name + '.png')
 
-
+# TODO: Plot each regressor separately and perform a CBPT
+# TODO : Recompute a regression for each regressor separately
 
 
 
