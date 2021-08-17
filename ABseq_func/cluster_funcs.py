@@ -275,6 +275,15 @@ def ord_code_16items(subject,load_residuals_regression=False):
 #                            LINEAR REGRESSIONS
 # ----------------------------------------------------------------------------------------------------------------------
 
+def linear_reg0(subject):
+    from ABseq_func import regression_funcs
+    filter_names = ['Hab','Stand','Viol']
+    for filter_name in filter_names:
+        # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
+        regression_funcs.compute_regression(subject,['RepeatAlter'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_clean-epo.fif",filter_name,remap_grads=True)
+
+
+
 def linear_reg1(subject):
     from ABseq_func import regression_funcs
     filter_names = ['Stand']
@@ -299,7 +308,7 @@ def compute_rsa_dissim_matrix(subject):
     """
     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None, which_analysis='')
     rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'euclidean', baseline=None, which_analysis='')
-    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'mahalanobis', baseline=None, which_analysis='')
+    # rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'mahalanobis', baseline=None, which_analysis='')
 
 
 

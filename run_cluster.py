@@ -25,8 +25,9 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-cluster_funcs.create_qsub('linear_reg1', 'lr1', 'lr1', queue='Nspin_bigM')
-cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
+cluster_funcs.create_qsub('linear_reg0', 'lr0', 'lr0', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('linear_reg1', 'lr1', 'lr1', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items2', '216its', '216its', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items3', '316its', '316its', queue='Nspin_bigM')
@@ -49,11 +50,8 @@ cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_features_withinchunk', 'chu', 'chu', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_number_ofOpenedChunks', 'op', 'op', queue='Nspin_long', sublist_subjects=['sub10-gp_190568'])
 
-
-
 # cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_bigM')
 #cluster_funcs.create_qsub('SVM_features_stimID', 'stID', 'stID', queue='Nspin_long')
-
 
 
 #cluster_funcs.create_qsub('SVM_1', 'svm1111', 'svm1111', queue='Nspin_long')

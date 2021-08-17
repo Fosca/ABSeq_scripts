@@ -19,7 +19,7 @@ analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_C
 
 
 # ========= WHICH PREDICTORS TO CHOOSE FOR THE REGRESSION ======
-diss_matrix, md, dis = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
 
 #  --- Visualize the predictor matrices ---
 def viz_predictor_mats(dis_pred,md, max_val=None):
@@ -57,6 +57,12 @@ fig = plt.gcf()
 fig.savefig(config.result_path+'/rsa/dissim/'+analysis_name+'/correlations/correlation_regressors.png')
 
 # ______________________________________________________________________________________________________________________
+reg_dict = {'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth}
+list_reg = [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth]
+names = ('Complexity',  'OrdinalPos', 'repeatalter', 'ChunkBeg', 'ChunkEnd', 'ChunkNumber','ChunkDepth')
+
+# --------
+
 
 for metric_type in ["spearmanr","euclidean"]:
     print("==== Running the analysis for the metric %s ===="%metric_type)
@@ -64,9 +70,7 @@ for metric_type in ["spearmanr","euclidean"]:
     dissim_metric = rsa_funcs.reorder_matrix(dissim_metric, fields=(
     'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
     'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
-
     data = dissim_metric.data
-
     utils.create_folder(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"/")
     times = dissim_metric.times
     for tt in range(dissim_metric.n_timepoints):
@@ -79,13 +83,12 @@ for metric_type in ["spearmanr","euclidean"]:
          plt.close("all")
 
 # ====== now run the RSA regression analysis ==========
-for metric_type in ["euclidean"]:#"spearmanr",
-
+for metric_type in ["euclidean","spearmanr"]:
     diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
     dis = rsa_funcs.dissimilarity
     reg_dis = umne.rsa.load_and_regress_dissimilarity(
         config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
-        [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth,dis.NOpenChunks],#,dis.NClosedChunks
+        [dis.Complexity,dis.OrdinalPos,dis.repeatalter,dis.ChunkBeg,dis.ChunkEnd,dis.ChunkNumber,dis.ChunkDepth],#,dis.NClosedChunks
         included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
 
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
@@ -93,15 +96,43 @@ for metric_type in ["euclidean"]:#"spearmanr",
     utils.create_folder(plot_path)
     utils.create_folder(path_save_reg)
     np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
+
+for metric_type in ["euclidean","spearmanr"]:
+    diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+    dis = rsa_funcs.dissimilarity
+    for ii , name in enumerate(reg_dict.keys()):
+        reg_dis = umne.rsa.load_and_regress_dissimilarity(
+            config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
+            [reg_dict[name]],
+            included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
+
+        path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
+        utils.create_folder(path_save_reg)
+        np.save(path_save_reg+metric_type+name+'_reg.npy',reg_dis)
+
+
+for metric_type in ["euclidean","spearmanr"]:
+    for ii , name in enumerate(reg_dict.keys()):
+        path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
+        reg_dis = np.load(path_save_reg + metric_type+name + '_reg.npy', allow_pickle=True)
+        plot_path = path_save_reg + '/plots/'
+        plt.close('all')
+        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :,0, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])
+        # plt.ylim([-0.06,0.07])
+        fig.savefig(plot_path+metric_type+'_'+name + '_alone.png')
+
+for metric_type in ["euclidean","spearmanr"]:
+    path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
+    plot_path = path_save_reg + '/plots/'
+
     reg_dis = np.load(path_save_reg+metric_type+'_reg.npy',allow_pickle=True)
     # ---- plot the regression coefficients separately ------
-    names = ('Complexity','SequenceID','OrdinalPos','repeatalter','ChunkBeg', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','NOpenChunks')#,'NClosedChunks'
-
-    fig = plot_regression_results(reg_dis[0], times,legend=names)
+    fig = plot_regression_results(reg_dis[0][:, :,:-1], times,legend=names)
     fig.savefig(plot_path+metric_type+'_all.png')
     for ii, name in enumerate(names):
         plt.close('all')
-        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times)
+        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])
+        plt.ylim([-0.06,0.07])
         fig.savefig(plot_path+metric_type+'_'+name + '.png')
 
 # TODO: Plot each regressor separately and perform a CBPT
