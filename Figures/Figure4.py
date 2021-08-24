@@ -21,6 +21,8 @@ import config
 import numpy as np
 import os.path as op
 import mne
+import matplotlib
+
 import matplotlib.ticker as ticker
 from jr.plot import pretty_gat
 
@@ -33,15 +35,8 @@ plot_results_GAT_chans_seqID(results,times,'/SVM/standard_vs_deviant/GAT/',compu
 
 # -------------- plot the average output of the projection -------
 
-# config.exclude_subjects.append('sub01-pa_190002')
-# config.exclude_subjects.append('sub09-ag_170045')
-# config.exclude_subjects.append('sub16-ma_190185')
-# config.subjects_list = list(set(config.subjects_list) - set(config.exclude_subjects))
-# config.subjects_list.sort()
-
-
 suf = {'mag':'SW_train_different_blocks_cleaned_130_210ms','grad':'SW_train_different_blocks_cleaned_130_210ms_130_210ms'}
-suf = {'mag':'SW_train_different_blocks_cleaned_210_410ms','grad':'SW_train_different_blocks_cleaned_210_410ms_210_410ms'}
+# suf = {'mag':'SW_train_different_blocks_cleaned_210_410ms','grad':'SW_train_different_blocks_cleaned_210_410ms_210_410ms'}
 sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 
@@ -63,7 +58,7 @@ for sens in sensors:
 
     plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_16[sens], compute_reg_complexity = False,
                                                                   window_CBPT_violation = 0.7,sensor_type=sens,
-                                                                  save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims_tvals.png' % ( sens, win_tmin, win_tmax)),
+                                                                  save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims_tvals.svg' % ( sens, win_tmin, win_tmax)),
                                                                   vmin=-vminvmax[sens],vmax=vminvmax[sens],plot_betas=False)
 
 
@@ -115,7 +110,7 @@ def plot_results_GAT_chans_seqID(results,times,save_folder,compute_significance=
                 sig_all = SVM_funcs.replace_submatrix(sig_all, times_sig, times_sig, sig)
 
             # -------- plot the gat --------
-            pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5,clim=clim)
+            ax = pretty_gat(np.mean(res_chan_seq,axis=0),times=times,sig=sig_all<0.05,chance = 0.5,clim=clim)
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.png')
             plt.gcf().savefig(config.fig_path+save_folder+'/'+chans+'_'+seqID+suffix+'.svg')
             plt.close('all')

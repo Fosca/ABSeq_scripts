@@ -1,3 +1,7 @@
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import initialization_paths
+
 from ABseq_func import *
 import mne
 import config
@@ -189,6 +193,7 @@ with open(op.join(results_path, 'gfp_each_seq_data.pickle'), 'wb') as f:
 # ============================================================================================== #
 # ======= Plot correlation results
 # ============================================================================================== #
+
 with open(op.join(results_path, 'correlation_data.pickle'), 'rb') as f:
     correlation_data = pickle.load(f)
 # subs_to_exclude_idx = []

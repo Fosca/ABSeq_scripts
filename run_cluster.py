@@ -25,7 +25,7 @@ print('jaime les tomates')
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-cluster_funcs.create_qsub('linear_reg0', 'lr0', 'lr0', queue='Nspin_bigM')
+cluster_funcs.create_qsub('linear_regXX', 'lrXX', 'lrXX', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg1', 'lr1', 'lr1', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
