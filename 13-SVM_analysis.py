@@ -83,7 +83,7 @@ chances = [0.5,0.5,0.5,0.25]
 
 for ii, name in enumerate(['full_data_clean_ChunkBeginning_score_dict','full_data_clean_ChunkEnd_score_dict','full_data_clean_RepeatAlter_score_dict','full_data_clean_WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/' + name
-    SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_clean_','').replace('_score_dict','')+'/perf_', chance=chances[ii],
+    SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_clean_','').replace('_score_dict','')+'/perf_', chance=chances[ii],score_field='score',
                     compute_significance=[0,0.6],plot_per_subjects=True,vmin=-0.1,vmax=0.1)
 
 
