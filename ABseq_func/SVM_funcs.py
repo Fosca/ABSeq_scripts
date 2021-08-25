@@ -2074,14 +2074,14 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         mean = np.mean(diago_score, axis=0)
         ub = (mean + np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
         lb = (mean - np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
-        plt.fill_between(times, ub, lb, alpha=.2)
-        plt.plot(times, mean, linewidth=1.5)
+        plt.fill_between(times, ub, lb, alpha=.2,color = 'k')
+        plt.plot(times, mean, linewidth=1.5,color = 'k')
         if compute_significance:
             p_diag = stats_funcs.stats(diago_score[:, times_for_sigtest] - chance,tail=1)
             mean_test = mean[times_for_sigtest]
             sig_times = times_for_sigtest[p_diag<0.05]
             sig_mean = mean_test[p_diag<0.05]
-            plt.plot(times[sig_times], sig_mean, linewidth=3)
+            plt.plot(times[sig_times], sig_mean, linewidth=3,color = 'k')
 
         plt.gcf().savefig(fig_path+'_diag.svg')
         plt.close('all')
