@@ -77,14 +77,14 @@ for subject in config.subjects_list:
 for name in ['full_data_clean_OpenedChunks_score_dict','full_data_clean_ClosedChunks_score_dict','full_data_clean_ChunkDepth_score_dict']:
     anal_name = 'feature_decoding/' + name
     coucou = SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_clean_','').replace('_score_dict','')+'/r_', chance=0, score_field='regression',
-                    compute_significance=None,plot_per_subjects=True,vmin=-0.1,vmax=0.1)
+                    compute_significance=[0,0.6],plot_per_subjects=True,vmin=-0.1,vmax=0.1)
 
 chances = [0.5,0.5,0.5,0.25]
 
 for ii, name in enumerate(['full_data_clean_ChunkBeginning_score_dict','full_data_clean_ChunkEnd_score_dict','full_data_clean_RepeatAlter_score_dict','full_data_clean_WithinChunkPosition_score_dict']):
     anal_name = 'feature_decoding/' + name
     SVM_funcs.plot_gat_simple(anal_name, config.subjects_list, '/feature_decoding/'+name.replace('full_data_clean_','').replace('_score_dict','')+'/perf_', chance=chances[ii],
-                    compute_significance=None,plot_per_subjects=True,vmin=-0.1,vmax=0.1)
+                    compute_significance=[0,0.6],plot_per_subjects=True,vmin=-0.1,vmax=0.1)
 
 
 

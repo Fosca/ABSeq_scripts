@@ -2078,8 +2078,9 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         plt.plot(times, mean, linewidth=1.5)
         if compute_significance:
             p_diag = stats_funcs.stats(diago_score[:, times_for_sigtest] - chance,tail=1)
-            sig_times = times[p_diag<0.05]
-            sig_mean = mean[p_diag<0.05]
+            mean_test = mean[times_for_sigtest]
+            sig_times = times_for_sigtest[p_diag<0.05]
+            sig_mean = mean_test[p_diag<0.05]
             plt.plot(sig_times, sig_mean, linewidth=3)
 
         plt.gcf().savefig(fig_path+'_diag.svg')
