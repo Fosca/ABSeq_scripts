@@ -2070,7 +2070,6 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
 
     if plot_diagonal:
         diago_score = np.diagonal(GAT_all_new,axis1=1,axis2=2)
-        if compute_significance is not None:
         n_subj = diago_score.shape[0]
         mean = np.mean(diago_score, axis=0)
         ub = (mean + np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
