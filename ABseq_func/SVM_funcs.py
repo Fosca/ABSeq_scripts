@@ -1977,7 +1977,7 @@ def SVM_GAT_linear_reg_sequence_complexity(subject,suffix = 'SW_train_test_diffe
     return coeff_complexity, coeff_constant, times
 
 
-def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True):
+def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='GAT', vmin=-0.1, vmax=.1,compute_significance=None,plot_per_subjects=True,plot_diagonal=True):
 
 
     """
@@ -2033,7 +2033,7 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
                     score[ti, tj] = np.corrcoef(y_test, y_preds[:, ti, tj])[0,1]
 
             pretty_gat(score, times)
-            plt.gcf().savefig(fig_path+subject+'.png')
+            plt.gcf().savefig(fig_path+subject+'.svg')
             plt.close('all')
             GAT_all.append(score)
 
@@ -2047,12 +2047,12 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
     if compute_significance is not None:
         tmin_sig = compute_significance[0]
         tmax_sig = compute_significance[1]
-        times_sig = np.where(np.logical_and(times<=tmax_sig,times>tmin_sig))[0]
+        times_for_sigtest = np.where(np.logical_and(times<=tmax_sig,times>tmin_sig))[0]
         sig_all = np.ones(GAT_all[0].shape)
-        GAT_all_for_sig = GAT_all[:,times_sig,:]
-        GAT_all_for_sig = GAT_all_for_sig[:,:,times_sig]
+        GAT_all_for_sig = GAT_all[:,times_for_sigtest,:]
+        GAT_all_for_sig = GAT_all_for_sig[:,:,times_for_sigtest]
         sig = stats_funcs.stats(GAT_all_for_sig-chance,tail=1)
-        sig_all= replace_submatrix(sig_all, times_sig, times_sig, sig)
+        sig_all= replace_submatrix(sig_all, times_for_sigtest, times_for_sigtest, sig)
 
     if vmin is not None:
         if compute_significance is not None:
@@ -2065,8 +2065,28 @@ def plot_gat_simple(analysis_name, subjects_list, fig_name,chance, score_field='
         else:
             pretty_gat(np.mean(GAT_all, axis=0), times, chance=chance)
 
-    plt.gcf().savefig(fig_path)
+    plt.gcf().savefig(fig_path+'.svg')
     plt.close('all')
+
+    if plot_diagonal:
+        diago_score = np.diagonal(GAT_all_new,axis1=1,axis2=2)
+        if compute_significance is not None:
+        n_subj = diago_score.shape[0]
+        mean = np.mean(diago_score, axis=0)
+        ub = (mean + np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
+        lb = (mean - np.std(diago_score, axis=0) / (np.sqrt(n_subj)))
+        plt.fill_between(times, ub, lb, alpha=.2)
+        plt.plot(times, mean, linewidth=1.5)
+        if compute_significance:
+            p_diag = stats_funcs.stats(diago_score[:, times_for_sigtest] - chance,tail=1)
+            sig_times = times[p_diag<0.05]
+            sig_mean = mean[p_diag<0.05]
+            plt.plot(sig_times, sig_mean, linewidth=3)
+
+        plt.gcf().savefig(fig_path+'_diag.svg')
+        plt.close('all')
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Performance')
 
     print("============ THE AVERAGE GAT WAS COMPUTED OVER %i PARTICIPANTS ========" % count)
 
