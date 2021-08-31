@@ -45,7 +45,7 @@ for subject in config.subjects_list:
         epochs_16[sens]['hab'].append(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf[sens]+'_SVM_on_16_items_habituation_window-epo.fif')))
 
 for subject in config.subjects_list:
-    print(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf[sens]+'_SVM_on_16_items_test_window-epo.fif')))
+    print(mne.read_epochs(op.join(config.meg_dir, subject, sens+suf[sens]+'_SVM_on_16_items_habituation_window-epo.fif')))
 
 # ===== FIGURES ===== #
 save_folder = op.join(config.fig_path, 'SVM', 'Full_sequence_projection')

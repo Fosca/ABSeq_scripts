@@ -25,7 +25,7 @@ cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlo
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-cluster_funcs.create_qsub('linear_reg', 'lrXX', 'lrXX', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('linear_reg', 'lrXX', 'lrXX', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg1', 'lr1', 'lr1', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
