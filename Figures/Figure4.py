@@ -34,9 +34,10 @@ plot_results_GAT_chans_seqID(results,times,'/SVM/standard_vs_deviant/GAT/',compu
 
 # -------------- plot the average output of the projection -------
 
-suf = {'mag':'SW_train_different_blocks_cleaned_130_210ms','grad':'SW_train_different_blocks_cleaned_130_210ms_130_210ms'}
+suf = {'mag':'SW_train_different_blocks_cleaned_131_210ms','grad':'SW_train_different_blocks_cleaned_131_210ms_131_210ms'}
 # suf = {'mag':'SW_train_different_blocks_cleaned_210_410ms','grad':'SW_train_different_blocks_cleaned_210_410ms_210_410ms'}
-sensors = ['mag', 'grad']
+sensors = ['mag','grad']
+# sensors = ['mag', 'grad']
 epochs_16 = {sens : {'hab':[],'test':[]} for sens in sensors}
 
 for subject in config.subjects_list:

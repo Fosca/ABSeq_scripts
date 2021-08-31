@@ -260,12 +260,25 @@ def SVM_features_sequence_structure(subject,load_residuals_regression=False,clea
     # epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned,baseline=False)
     # epo.metadata = metadata
     # epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
-    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
-    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
+                                           load_residuals_regression=load_residuals_regression,
+                                           list_sequences=[4, 5, 6], cross_val_func=cross_val_func,nvalues_feature=4)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
+                                 list_sequences=[3,4,5,6], cross_val_func=cross_val_func)
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
-                                           cross_val_func=None,list_sequences=[3,4,5,6,7],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
 
 
 def ord_code_16items(subject,load_residuals_regression=False):
