@@ -1096,8 +1096,8 @@ def unique_test_16(epochs_1st_sens, epochs_sens, test_indices):
     return epochs_1st_item
 
 
-def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)], window=False,
-                                                 train_test_different_blocks=True, sliding_window=False,cleaned=True):
+def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x in range(0, 750, 50)],
+                                                 train_test_different_blocks=True, sliding_window=True,cleaned=True):
     """
     Function to apply the SVM filters on the habituation trials. It is simpler than the previous function as we don't have to select the specific
     trials according to the folds.
@@ -1147,7 +1147,7 @@ def apply_SVM_filter_16_items_epochs_habituation(subject, times=[x / 1000 for x 
         # = we initialize the metadata
         data_frame_meta = pd.DataFrame([])
         n_habituation = epochs_1st_element.get_data().shape[0]
-
+        print('the number of habituation trials is %i'%n_habituation)
         # ========== les 4 filtres peuvent etre appliquees aux sequences d habituation sans souci, selection en fonction des indices ========
         data_1st_el_m = epochs_1st_sens.get_data()
         epochs_1st_sens_filtered_data_folds = []
