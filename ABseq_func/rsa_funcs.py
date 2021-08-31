@@ -185,10 +185,10 @@ class dissimilarity:
         """
         This matrix is the primitive dissimilarity if we consider all the 12 primitives as dissimilar
         """
-        nclosedchunks1 = stim1['OpenedChunks']
-        nclosedchunks2 = stim2['OpenedChunks']
+        nopenchunks1 = stim1['OpenedChunks']
+        nopenchunks2 = stim2['OpenedChunks']
 
-        return np.abs(nclosedchunks2-nclosedchunks1)
+        return np.abs(nopenchunks2-nopenchunks1)
     # ---------------------------------------------------------
     @staticmethod
     def ChunkDepth(stim1, stim2):

@@ -636,13 +636,24 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
 
     # ---------- load the data ------------
     SVM_results = np.load(op.join(saving_directory, suf + 'SVM_results.npy'), allow_pickle=True).item()
+    # ---------- load the habituation epochs -------
+    epo_hab = epoching_funcs.load_epochs_items(subject,cleaned=cleaned)
+    epo_hab = epo_hab["TrialNumber<11"]
+    if sliding_window:
+        epo_hab = epoching_funcs.sliding_window(epo_hab)
 
     # ----- initialize the results dictionnary ------
     GAT_sens_seq = {sens: [] for sens in config.ch_types}
+    GAT_sens_seq_hab = {sens: [] for sens in config.ch_types}
+    GAT_sens_seq_stand = {sens: [] for sens in config.ch_types}
+    GAT_sens_seq_viol = {sens: [] for sens in config.ch_types}
 
     for sens in config.ch_types:
         GAT_all = []
         GAT_per_sens_and_seq = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        GAT_per_sens_and_seq_hab = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        GAT_per_sens_and_seq_stand = {'SeqID_%i' % i: [] for i in range(1, 8)}
+        GAT_per_sens_and_seq_viol = {'SeqID_%i' % i: [] for i in range(1, 8)}
 
         epochs_sens = SVM_results[sens]['epochs']
         n_times = epochs_sens.get_data().shape[-1]
@@ -651,44 +662,57 @@ def GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False, trai
         for sequence_number in range(1, 8):
             seqID = 'SeqID_%i' % sequence_number
             GAT_seq = np.zeros((n_folds, n_times, n_times))
+            GAT_standard = np.zeros((n_folds, n_times, n_times))
+            GAT_viol = np.zeros((n_folds, n_times, n_times))
+            GAT_habituation = np.zeros((n_folds, n_times, n_times))
 
             for fold_number in range(n_folds):
-
+                print("---- fold number %i -----"%fold_number)
                 test_indices = SVM_results[sens]['test_ind'][fold_number]
                 epochs_sens_test = epochs_sens[test_indices]
                 epochs_sens_and_seq_test = epochs_sens_test["SequenceID == %i"%sequence_number]
                 y_sens_and_seq_test = epochs_sens_and_seq_test.metadata["ViolationOrNot"].values
+                data_seq_test = epochs_sens_and_seq_test.get_data()
+                data_seq_hab = epo_hab["SequenceID == %i"%sequence_number].copy().pick_types(meg=sens).get_data()
 
-                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(epochs_sens_and_seq_test.get_data(),y_sens_and_seq_test)
+                GAT_seq[fold_number,:,:] = SVM_sens[fold_number].score(data_seq_test,y_sens_and_seq_test)
+                # Here split in standard and violations. Write another function that tests on habituations.
+                inds_sens_and_seq_test_standard = np.where(epochs_sens_and_seq_test.metadata["ViolationOrNot"].values==0)[0]
+                inds_sens_and_seq_test_violation = np.where(epochs_sens_and_seq_test.metadata["ViolationOrNot"].values==1)[0]
 
-                # inds_seq_noviol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
-                #         epochs_sens_test.metadata['ViolationOrNot'].values == 0))[0]
-                # inds_seq_viol = np.where((epochs_sens_test.metadata['SequenceID'].values == sequence_number) & (
-                #         epochs_sens_test.metadata['ViolationOrNot'].values == 1))[0]
-                # X = epochs_sens_test.get_data()
-
-                # if score_or_decisionfunc == 'score':
-                #     GAT_each_epoch = SVM_sens[fold_number].predict(X)
-                # else:
-                #     GAT_each_epoch = SVM_sens[fold_number].decision_function(X)
-                #
-                # GAT_seq[fold_number, :, :] = np.mean(
-                #     GAT_each_epoch[inds_seq_noviol, :, :], axis=0) - np.mean(
-                #     GAT_each_epoch[inds_seq_viol, :, :], axis=0)
-                # print('The shape of GAT_seq[fold_number, :, :] is')
-                # print(GAT_seq[fold_number, :, :].shape)
-
+                GAT_standard[fold_number,:,:] = SVM_sens[fold_number].score(data_seq_test[inds_sens_and_seq_test_standard],y_sens_and_seq_test[inds_sens_and_seq_test_standard])
+                GAT_viol[fold_number,:,:] = SVM_sens[fold_number].score(data_seq_test[inds_sens_and_seq_test_violation],y_sens_and_seq_test[inds_sens_and_seq_test_violation])
+                GAT_habituation[fold_number,:,:] = SVM_sens[fold_number].score(data_seq_hab,[0]*data_seq_hab.shape[0])
             #  --------------- now average across the folds ---------------
             GAT_seq_avg = np.mean(GAT_seq, axis=0)
+            GAT_seq_habituation_avg = np.mean(GAT_habituation, axis=0)
+            GAT_seq_standard_avg = np.mean(GAT_standard, axis=0)
+            GAT_seq_viol_avg = np.mean(GAT_viol, axis=0)
+
             GAT_per_sens_and_seq[seqID] = GAT_seq_avg
+            GAT_per_sens_and_seq_hab[seqID] = GAT_seq_habituation_avg
+            GAT_per_sens_and_seq_stand[seqID] = GAT_seq_standard_avg
+            GAT_per_sens_and_seq_viol[seqID] = GAT_seq_viol_avg
+
             GAT_all.append(GAT_seq_avg)
 
         GAT_sens_seq[sens] = GAT_per_sens_and_seq
+        GAT_sens_seq_hab[sens] = GAT_per_sens_and_seq_hab
+        GAT_sens_seq_stand[sens] = GAT_per_sens_and_seq_stand
+        GAT_sens_seq_viol[sens] = GAT_per_sens_and_seq_viol
+
+
         GAT_sens_seq[sens]['average_all_sequences'] = np.mean(GAT_all, axis=0)
         times = epochs_sens_test.times
 
     GAT_results = {'GAT': GAT_sens_seq, 'times': times}
     np.save(op.join(saving_directory, suf + 'GAT_results.npy'), GAT_results)
+    GAT_results_hab = {'GAT': GAT_sens_seq_hab, 'times': times}
+    np.save(op.join(saving_directory, suf + 'GAT_results_hab.npy'), GAT_results_hab)
+    GAT_results_stand = {'GAT': GAT_sens_seq_stand, 'times': times}
+    np.save(op.join(saving_directory, suf + 'GAT_results_stand.npy'), GAT_results_stand)
+    GAT_results_viol = {'GAT': GAT_sens_seq_viol, 'times': times}
+    np.save(op.join(saving_directory, suf + 'GAT_results_viol.npy'), GAT_results_viol)
 
 
 
