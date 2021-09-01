@@ -117,6 +117,20 @@ class dissimilarity:
 
     # ---------------------------------------------------------
     @staticmethod
+    def SameSeqAndPosition(stim1, stim2):
+        """
+        How many digits do not appear in the same locations (the digit itself doensn't matter)
+        """
+        #-- Array indicating to which run the trial belongs
+        seq1 = stim1['SequenceID']
+        seq2 = stim2['SequenceID']
+        pos1 = stim1['StimPosition']
+        pos2 = stim2['StimPosition']
+
+        return 0 if stim1 == stim2 and pos1 == pos2 else 1
+
+    # ---------------------------------------------------------
+    @staticmethod
     def stim_ID(stim1, stim2):
         """
         How many digits do not appear in the same locations (the digit itself doensn't matter)

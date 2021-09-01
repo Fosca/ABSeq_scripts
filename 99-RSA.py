@@ -82,7 +82,6 @@ diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(an
 
 #  --- Visualize the predictor matrices ---
 
-
     # tick_filter=lambda md: md['StimPosition'] == 1
 save_regressors_path = config.result_path+"/rsa/dissim/"+analysis_name+'/regressors_matrix/'
 utils.create_folder(save_regressors_path)
@@ -139,10 +138,16 @@ for metric_type in ["spearmanr","euclidean"]:
 #                             RUNNING THE REGRESSION ON THE DISSIMILARITY MATRICES FROM THE DATA
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 # %%% the regressors we consider %%%%
-reg_dict = {'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,'NOpenChunks':dis.NOpenChunks}
+# reg_dict = {'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,
+#             'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
+#             'NOpenChunks':dis.NOpenChunks}
 
+reg_dict = {'SameSeqAndPosition':dis.SameSeqAndPosition}
+suffix = '_SameSeqAndPos'
+# metrics = ["euclidean","spearmanr"]
+metrics = ["spearmanr"]
 # 1 - 1 - 1 -  PERFORM THE REGRESSION WITH ALL THE REGRESSORS TOGETHER
-for metric_type in ["euclidean","spearmanr"]:
+for metric_type in metrics:
     diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
     dis = rsa_funcs.dissimilarity
     reg_dis = umne.rsa.load_and_regress_dissimilarity(
@@ -152,15 +157,12 @@ for metric_type in ["euclidean","spearmanr"]:
 
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
-    utils.create_folder(plot_path)
-    utils.create_folder(path_save_reg)
-    np.save(path_save_reg+metric_type+'_reg.npy',reg_dis)
+    np.save(path_save_reg+metric_type+suffix+'_reg.npy',reg_dis)
 
 # AND PLOT
-for metric_type in ["euclidean","spearmanr"]:
+for metric_type in metrics:
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
-
     reg_dis = np.load(path_save_reg+metric_type+'_reg.npy',allow_pickle=True)
     # ---- plot the regression coefficients separately ------
     fig = plot_regression_results(reg_dis[0][:, :,:-1], times,legend=reg_dict.keys())
