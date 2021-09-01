@@ -138,14 +138,12 @@ for metric_type in ["spearmanr","euclidean"]:
 #                             RUNNING THE REGRESSION ON THE DISSIMILARITY MATRICES FROM THE DATA
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 # %%% the regressors we consider %%%%
-# reg_dict = {'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,
-#             'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
-#             'NOpenChunks':dis.NOpenChunks}
+reg_dict = {'InfoType':dis.InfoType ,'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,
+            'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
+            'NOpenChunks':dis.NOpenChunks}
 
-
-reg_dict = {'StimID':dis.stim_ID,'SeqID':dis.SequenceID}
-
-suffix = '_sameStim_sameSeq'
+# reg_dict = {'StimID':dis.stim_ID,'SeqID':dis.SequenceID}
+suffix = '_withStimInfo'
 # metrics = ["euclidean","spearmanr"]
 metrics = ["spearmanr"]
 # 1 - 1 - 1 -  PERFORM THE REGRESSION WITH ALL THE REGRESSORS TOGETHER
