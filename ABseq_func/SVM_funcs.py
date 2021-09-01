@@ -356,7 +356,11 @@ def SVM_decode_feature(subject, feature_name, load_residuals_regression=True, SV
     dec = []
     y_tests = []
     y_preds = []
+
+    print("here is the print of cross val func\n")
+    print(cross_val_func)
     if cross_val_func is not None:
+        print("---- we cross validate using cross_val_func that is not None -----")
         X_train, y_train, X_test, y_test = cross_val_func(epochs, list_sequences)
         n_folds = len(list_sequences)
         for k in range(n_folds):
