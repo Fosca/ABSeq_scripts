@@ -413,7 +413,7 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     diss_matrix = dict()
 
     diss_matrix['SameSeqAndPosition'] = gen_predicted_dissimilarity(dis.SameSeqAndPosition, md=md)
-    diss_matrix['StimID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md)
+    diss_matrix['stim_ID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md)
     diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md)
     diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md)
     diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md)

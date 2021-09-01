@@ -73,6 +73,7 @@ def plot_regression_results(regression_results, times, figure_id=1, alpha=0.15, 
 # _____________________________________________________________________________________________________________________
 
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
+analysis_name = "StimID_SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 #                                            LOOKING AT PREDICTORS

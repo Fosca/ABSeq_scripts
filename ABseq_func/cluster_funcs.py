@@ -255,11 +255,8 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=False,cleaned=True):
 
 # ----- quelles séquences pour chunk closing ? ----
 def SVM_features_sequence_structure(subject,load_residuals_regression=False,cleaned=True):
-
-    # metadata = epoching_funcs.update_metadata(subject,clean=cleaned)
-    # epo = epoching_funcs.load_epochs_items(subject, cleaned=cleaned,baseline=False)
-    # epo.metadata = metadata
-    # epo.save('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/data/MEG/sub16-ma_190185/noEEG/sub16-ma_190185_epo.fif')
+    # subject = config.subjects_list[10]
+    # load_residuals_regression=False
 
     cross_val_func = SVM_funcs.leave_one_sequence_out
 
