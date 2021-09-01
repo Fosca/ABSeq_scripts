@@ -21,7 +21,7 @@ class fn_template:
 def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,decim=1,
                                          baseline=(None, 0), clean=True,
                                          which_analysis='SequenceID_StimPosition',
-                                         factors_or_interest = ('SequenceID', 'StimPosition','Complexity','RepeatAlter','ChunkBeginning','ChunkEnd','OpenedChunks','ChunkDepth','ChunkNumber','WithinChunkPosition','ClosedChunks')):
+                                         factors_or_interest = ('StimID','SequenceID', 'StimPosition','Complexity','RepeatAlter','ChunkBeginning','ChunkEnd','OpenedChunks','ChunkDepth','ChunkNumber','WithinChunkPosition','ClosedChunks')):
 
     """
     We compute the empirical dissimilarity for the data averaging the epochs across the factors of interest
