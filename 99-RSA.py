@@ -8,7 +8,8 @@ import numpy as np
 from src import umne
 import matplotlib.pyplot as plt
 cm = plt.get_cmap('viridis')
-
+from ABseq_func import rsa_funcs
+dis = rsa_funcs.dissimilarity
 # # ______________________________________________________________________________________________________________________
 # compute the dissimilarity matrix from the behavioral data
 # for subject in config.subjects_list:
@@ -141,11 +142,10 @@ for metric_type in ["spearmanr","euclidean"]:
 #             'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
 #             'NOpenChunks':dis.NOpenChunks}
 
-from ABseq_func import rsa_funcs
-dis = rsa_funcs.dissimilarity
-reg_dict = {'SameSeqAndPosition':dis.SameSeqAndPosition}
 
-suffix = '_SameSeqAndPos'
+reg_dict = {'StimID':dis.stim_ID,'SeqID':dis.SequenceID}
+
+suffix = '_sameStim_sameSeq'
 # metrics = ["euclidean","spearmanr"]
 metrics = ["spearmanr"]
 # 1 - 1 - 1 -  PERFORM THE REGRESSION WITH ALL THE REGRESSORS TOGETHER
@@ -164,10 +164,10 @@ for metric_type in metrics:
 for metric_type in metrics:
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
-    reg_dis = np.load(path_save_reg+metric_type+'_reg.npy',allow_pickle=True)
+    reg_dis = np.load(path_save_reg+metric_type+suffix+'_reg.npy',allow_pickle=True)
     # ---- plot the regression coefficients separately ------
     fig = plot_regression_results(reg_dis[0][:, :,:-1], times,legend=reg_dict.keys())
-    fig.savefig(plot_path+metric_type+'_all.png')
+    fig.savefig(plot_path+metric_type+suffix+'_all.png')
     for ii, name in enumerate(reg_dict.keys()):
         plt.close('all')
         fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])

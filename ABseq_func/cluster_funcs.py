@@ -254,25 +254,39 @@ def SVM_features_chunkEnd(subject,load_residuals_regression=False,cleaned=True):
 
 
 # ----- quelles séquences pour chunk closing ? ----
-def SVM_features_sequence_structure(subject,load_residuals_regression=False,cleaned=True):
-    # subject = config.subjects_list[10]
-    # load_residuals_regression=False
-
+def SVM_features_sequence_structure1(subject,load_residuals_regression=False,cleaned=True):
     cross_val_func = SVM_funcs.leave_one_sequence_out
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+
+def SVM_features_sequence_structure2(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+
+def SVM_features_sequence_structure3(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
                                            load_residuals_regression=load_residuals_regression,
                                            list_sequences=[4, 5, 6], cross_val_func=cross_val_func,nvalues_feature=4)
+
+def SVM_features_sequence_structure4(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6], cross_val_func=cross_val_func)
+
+def SVM_features_sequence_structure5(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
+def SVM_features_sequence_structure6(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
+def SVM_features_sequence_structure7(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
 
