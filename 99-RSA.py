@@ -110,8 +110,6 @@ plt.yticks(range(len(diss_matrix.keys())),diss_matrix.keys(),rotation=30)
 fig = plt.gcf()
 fig.savefig(config.result_path+'/rsa/dissim/'+analysis_name+'/correlations/correlation_regressors.png')
 
-
-
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 #                             VISUALIZING THE DISSIMILARITY MATRIX DATA
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
