@@ -140,7 +140,10 @@ for metric_type in ["spearmanr","euclidean"]:
 #             'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
 #             'NOpenChunks':dis.NOpenChunks}
 
+from ABseq_func import rsa_funcs
+dis = rsa_funcs.dissimilarity
 reg_dict = {'SameSeqAndPosition':dis.SameSeqAndPosition}
+
 suffix = '_SameSeqAndPos'
 # metrics = ["euclidean","spearmanr"]
 metrics = ["spearmanr"]
@@ -152,7 +155,6 @@ for metric_type in metrics:
         config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
         [reg_dict[key] for key in reg_dict.keys()],
         included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
-
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
     np.save(path_save_reg+metric_type+suffix+'_reg.npy',reg_dis)

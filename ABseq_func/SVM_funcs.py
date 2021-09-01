@@ -62,6 +62,7 @@ def leave_one_sequence_out(epochs, list_sequences):
     y_test = []
 
     for seqID in list_sequences:
+        print("We are cross validating across sequences")
         X_train.append(epochs["SequenceID != " + str(seqID)].get_data())
         y_train.append(epochs["SequenceID != " + str(seqID)].events[:, 2])
         X_test.append(epochs["SequenceID == " + str(seqID)].get_data())
