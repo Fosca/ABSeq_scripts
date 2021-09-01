@@ -127,7 +127,7 @@ class dissimilarity:
         pos1 = stim1['StimPosition']
         pos2 = stim2['StimPosition']
 
-        return 0 if stim1 == stim2 and pos1 == pos2 else 1
+        return 0 if (seq1 == seq2 and pos1 == pos2) else 1
 
     # ---------------------------------------------------------
     @staticmethod
