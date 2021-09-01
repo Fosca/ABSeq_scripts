@@ -143,7 +143,7 @@ reg_dict = {'InfoType':dis.InfoType ,'SequenceID':dis.SequenceID,'Complexity':di
             'NOpenChunks':dis.NOpenChunks}
 
 # reg_dict = {'StimID':dis.stim_ID,'SeqID':dis.SequenceID}
-suffix = '_withStimInfo'
+suffix = '_withInfoType'
 # metrics = ["euclidean","spearmanr"]
 metrics = ["spearmanr"]
 # 1 - 1 - 1 -  PERFORM THE REGRESSION WITH ALL THE REGRESSORS TOGETHER
