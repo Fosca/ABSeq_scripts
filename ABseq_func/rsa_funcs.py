@@ -114,7 +114,38 @@ class dissimilarity:
     Target dissimilarity functions
     Each function gets two dictionnaries containing several metadata fields and returns a dissimilarity score (high = dissimilar)
     """
+    @staticmethod
+    def InfoType(stim1, stim2):
+        """
+        Represents the global type of information encoded in each sequences : Transition probas, chunks, nested structures, pure memory
+        """
+        #-- Array indicating to which run the trial belongs
+        seq1 = stim1['SequenceID']
+        seq2 = stim2['SequenceID']
 
+        if (seq1 == 1 or seq1 == 2):
+            if (seq2 == 1 or seq1 == 2):
+                return 1
+            else:
+                return 0
+
+        if (seq1 == 3 or seq1 == 4):
+            if (seq2 == 3 or seq1 == 4):
+                return 1
+            else:
+                return 0
+
+        if (seq1 == 5 or seq1 == 6):
+            if (seq2 == 5 or seq1 == 6):
+                return 1
+            else:
+                return 0
+
+        if seq1 == 7:
+            if seq2 == 7:
+                return 1
+            else:
+                return 0
     # ---------------------------------------------------------
     @staticmethod
     def SameSeqAndPosition(stim1, stim2):
