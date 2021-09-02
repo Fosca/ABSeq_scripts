@@ -170,7 +170,7 @@ for metric_type in metrics:
         plt.close('all')
         fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])
         plt.ylim([-0.06,0.07])
-        fig.savefig(plot_path+metric_type+'_'+name + '.png')
+        fig.savefig(plot_path+metric_type+suffix+'_'+name + '.png')
 
 
 # 2 - 2 - 2 -  PERFORM THE REGRESSION FOR EACH REGRESSOR SEPARATELY

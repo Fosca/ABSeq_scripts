@@ -125,27 +125,27 @@ class dissimilarity:
 
         if (seq1 == 1 or seq1 == 2):
             if (seq2 == 1 or seq2 == 2):
-                return 1
-            else:
                 return 0
+            else:
+                return 1
 
         if (seq1 == 3 or seq1 == 4):
             if (seq2 == 3 or seq2 == 4):
-                return 1
-            else:
                 return 0
+            else:
+                return 1
 
         if (seq1 == 5 or seq1 == 6):
             if (seq2 == 5 or seq2 == 6):
-                return 1
-            else:
                 return 0
+            else:
+                return 1
 
         if seq1 == 7:
             if seq2 == 7:
-                return 1
-            else:
                 return 0
+            else:
+                return 1
     # ---------------------------------------------------------
     @staticmethod
     def SameSeqAndPosition(stim1, stim2):
