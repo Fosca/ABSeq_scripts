@@ -79,6 +79,8 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean):
     :return:
     """
 
+
+
     epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
     epochs.pick_types(meg=True)
     epochs.crop(tmin,tmax)

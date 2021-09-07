@@ -472,12 +472,11 @@ def metadata_balance_epochs_violation_positions(metadata):
     return metadata
 
 
-def run_epochs(subject, epoch_on_first_element, baseline=True):
+def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=None):
 
     # SEt this param to True if you want to run autoreject locally too when config.autorject = True
     from datetime import datetime
     now = datetime.now().time()
-
 
     ARlocal = False
 
@@ -561,25 +560,29 @@ def run_epochs(subject, epoch_on_first_element, baseline=True):
 
     if epoch_on_first_element:
         # fosca 06012020
-        config.tmin = -0.200
-        config.tmax = 0.25 * 17
-        config.baseline = (config.tmin, 0)
+        if tmin is None:
+            tmin = -0.200
+        if tmax is None:
+            tmax = 0.25 * 17
+        config.baseline = (tmin, 0)
         if (baseline is None) or (baseline is False):
             config.baseline = None
         for k in range(len(events)):
             events[k, 2] = k % 16 + 1
-        epochs = mne.Epochs(raw, events, {'sequence_starts': 1}, config.tmin, config.tmax,
+        epochs = mne.Epochs(raw, events, {'sequence_starts': 1}, tmin, tmax,
                             proj=True, picks=picks, baseline=config.baseline,
                             preload=False, decim=config.decim,
                             reject=None)
         epochs.metadata = metadata_pandas[metadata_pandas['StimPosition'] == 1.0]
     else:
-        config.tmin = -0.050
-        config.tmax = 0.600
+        if tmin is None:
+            tmin = -0.050
+        if tmax is None:
+            tmax = 0.600
         config.baseline = (config.tmin, 0)
         if (baseline is None) or (baseline is False):
             config.baseline = None
-        epochs = mne.Epochs(raw, events, None, config.tmin, config.tmax,
+        epochs = mne.Epochs(raw, events, None, tmin, tmax,
                             proj=True, picks=picks, baseline=config.baseline,
                             preload=False, decim=config.decim,
                             reject=None)

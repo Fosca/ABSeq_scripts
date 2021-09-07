@@ -28,6 +28,12 @@ from scipy import stats
 from jr.plot import pretty_decod
 import numpy as np
 
+
+filename = "SW_train_different_blocks_cleanedGAT_results"
+suffix = "_viol"
+filename = filename+suffix
+
+
 # ---- remind how the data was computed ---
 # SVM decoder on standard VS deviants where standards are the ones that happen at the same location
 # Training on one block testing on the other (nice because there is invertion of A and B). When there is only one block
@@ -55,7 +61,7 @@ def petit_plot_heatmap_mode(diago_score,times,filter=True,pos_heatmap = 0.38,fig
         plt.gcf().savefig(fig_name)
 
 
-def petit_plot(diago_score,times,filter=True,fig_name='',color='b',chance = 0.5, pos_sig = None,plot_shaded_vertical = False):
+def petit_plot(diago_score,times,filter=False,fig_name='',color='b',chance = 0.5, pos_sig = None,plot_shaded_vertical = False):
     """
     Petite fonction qui plot la diagonale du GAT et qui calcule les temps auquels c'est significatif.
     Si pos_sig = None, alors ça plotte en gras les moments où c'est significatif et si pos_sig = 0.5 - XX alors ça plot en une ligne en dessous des courbes
@@ -78,7 +84,7 @@ def petit_plot(diago_score,times,filter=True,fig_name='',color='b',chance = 0.5,
         ub = savgol_filter(ub, 11, 3)
         lb = savgol_filter(lb, 11, 3)
 
-    if plot_shaded_vertical:
+    if plot_shaded_vertical and len(times_sig)!=0:
         ylims = plt.gca().get_ylim()
         plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)
         return True
@@ -99,7 +105,7 @@ def petit_plot(diago_score,times,filter=True,fig_name='',color='b',chance = 0.5,
 
 
 #  ============== ============== ============== ============== ============== ============== ============== ============
-#                1 - PLOTTING THE DIAGONAL FOR THE DIFFERENT SEQUENCES
+#                1 - SET THE PLOTTING PARAMS
 #  ============== ============== ============== ============== ============== ============== ============== ============
 
 # ---- set figure parameters ----
@@ -110,12 +116,13 @@ cm = plt.get_cmap('viridis')
 colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
 plt.close('all')
 
-filename = "SW_train_different_blocks_cleanedGAT_results"
 subjects_list = config.subjects_list
 sensors = ['mag','grad']
 n_subjects = len(config.subjects_list)
 
-# ------ load the data ------
+#  ============== ============== ============== ============== ============== ============== ============== ============
+#                         2 -  LOAD THE DATA AND RESHAPE IT
+#  ============== ============== ============== ============== ============== ============== ============== ============
 
 results = {sens: {'SeqID_%i' % i: [] for i in range(1, 8)} for sens in sensors}
 significance = {sens: {'SeqID_%i' % i: [] for i in range(1, 8)} for sens in sensors}
@@ -129,50 +136,15 @@ for sens in sensors:
             GAT_results = np.load(GAT_path, allow_pickle=True).item()
             times = 1000*GAT_results['times']
             GAT_results = GAT_results['GAT']
-            print(np.mean(GAT_results[sens]["average_all_sequences"]))
+            # print(np.mean(GAT_results[sens]["average_all_sequences"]))
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 results[sens][key].append(GAT_results[sens][key])
-            avg_res[sens].append(GAT_results[sens]["average_all_sequences"])
+            # avg_res[sens].append(GAT_results[sens]["average_all_sequences"])
             n_subj +=1
         else:
             print("Missing data for %s "%GAT_path)
 
-# ----- plot the GAT diagonal for each of the 7 sequences -----------
-
 reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
-plt.close('all')
-for sens in sensors:
-    # ---- set figure's parameters, plot layout ----
-    fig, ax = plt.subplots(1, 1, figsize=(10*0.8, 7*0.8))
-    plt.axvline(0, linestyle='-', color='black', linewidth=2)
-    plt.axhline(0.5, linestyle='-', color='black', linewidth=1)
-    for xx in range(3):
-        plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-    ax.set_xlim(np.min(times),np.max(times))
-    perform_seq = results[sens]
-    for ii,SeqID in enumerate(range(1, 8)):
-        perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
-        diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
-        reshaped_data[sens][ii,:,:] = diago_seq
-        petit_plot(diago_seq, times, filter=True, color= colorslist[SeqID - 1],pos_sig=0.47-0.005*ii) #
-    petit_plot(pearson_r[sens],times,chance=0,plot_shaded_vertical=True)
-    plt.gca().set_xlabel('Time (ms)',fontsize=14)
-    plt.gca().set_ylabel('Performance',fontsize=14)
-    # plt.show()
-    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s.svg' % sens))
-    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s.png' % sens), dpi=300)
-    plt.close('all')
-
-#  ============== ============== ============== ============== ============== ============== ============== ============
-#                2 - plot the average diagonal over all sequences (and participants)
-#  ============== ============== ============== ============== ============== ============== ============== ============
-
-for sens in ['mag','grad']:
-    plt.close('all')
-    diago_score = np.asarray(avg_res[sens])
-    diago_score = np.diagonal(diago_score,axis1=1,axis2=2)
-    petit_plot(diago_score, times, filter=True, fig_name=config.fig_path+"/SVM/standard_vs_deviant/average_diagonal_cleaned"+sens+".svg")
-
 
 #  ============== ============== ============== ============== ============== ============== ============== ============
 #                3 - Correlating performance WITH COMPLEXITY
@@ -207,24 +179,19 @@ for sens in sensors:
     pearson_r[sens] = np.asarray(pearson_r[sens])
     spearman_rho[sens] = np.asarray(spearman_rho[sens])
 
-
-
 for sens in sensors:
     plt.close('all')
-    petit_plot_heatmap_mode(pearson_r[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_pearson_%s.png'%sens)
-    petit_plot_heatmap_mode(pearson_r[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_pearson_%s.svg'%sens)
+    petit_plot_heatmap_mode(pearson_r[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_pearson_%s'+suffix+'.png')
+    petit_plot_heatmap_mode(pearson_r[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_pearson_%s'+suffix+'.svg')
     plt.close('all')
-    petit_plot_heatmap_mode(spearman_rho[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_spearman_%s.png'%sens)
-    petit_plot_heatmap_mode(spearman_rho[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_spearman_%s.svg'%sens)
-
-
-for sens in sensors:
+    petit_plot_heatmap_mode(spearman_rho[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_spearman_%s'%sens+suffix+'.png')
+    petit_plot_heatmap_mode(spearman_rho[sens],times,fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_spearman_%s'%sens+suffix+'.svg')
     plt.close('all')
-    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s.png'%sens,plot_shaded_vertical=True)
-    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s.svg'%sens)
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s'%sens+suffix+'.png',plot_shaded_vertical=True)
+    petit_plot(pearson_r[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_pearson_%s'%sens+suffix+'.svg')
     plt.close('all')
-    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s.png'%sens)
-    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s.svg'%sens)
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s'%sens+suffix+'.png')
+    petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s'%sens+suffix+'.svg')
 
 # ----- Then we compute the t-test to determine the statistical significance across subjects ----
 # ----- on obtient la carte de à quel point c'est statistiquement significatif en fonction du temps ---
@@ -240,29 +207,31 @@ for sens in sensors:
         t_rho[sens].append(t_spear)
 
 
-t_values = {'Pearson':t_r,'Spearman':t_rho}
-for name in t_values.keys():
-    for sens in t_values[name].keys():
-        pretty_decod(t_values[name][sens],times,chance=0)
+#  ============== ============== ============== ============== ============== ============== ============== ============
+#                         4 - plot the GAT diagonal for each of the 7 sequences
+#  ============== ============== ============== ============== ============== ============== ============== ============
 
-        plt.gca().set_xlabel('Time [ms]')
-        plt.gca().set_ylabel('T values')
-        plt.gca().set_title('%s correlations - %s'%(name,sens))
-        plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'tvalues_%s_correlation_%s.png'%(name,sens)))
-        plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'tvalues_%s_correlation_%s.svg'%(name,sens)))
-        plt.close('all')
-
-extent=[0,100,0,1]
-toplot = np.mean(pearson_r['mag'],axis=0)
-plt.imshow(toplot[np.newaxis,:], aspect = "auto", cmap="viridis", extent=extent)
-plt.gca().set_yticks([])
-plt.colorbar()
-plt.show()
-
-sig = stats_funcs.stats(corr_comp_pearson['grad'])
-
-# ----------- Temporal cluster based permutation test pour les différentes courbes
-#  ---------------------------------------------------  (afficher en plus épais les parties significatives)
-
+plt.close('all')
+for sens in sensors:
+    # ---- set figure's parameters, plot layout ----
+    fig, ax = plt.subplots(1, 1, figsize=(10*0.8, 7*0.8))
+    plt.axvline(0, linestyle='-', color='black', linewidth=2)
+    plt.axhline(0.5, linestyle='-', color='black', linewidth=1)
+    for xx in range(3):
+        plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
+    ax.set_xlim(np.min(times),np.max(times))
+    perform_seq = results[sens]
+    for ii,SeqID in enumerate(range(1, 8)):
+        perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
+        diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
+        reshaped_data[sens][ii,:,:] = diago_seq
+        petit_plot(diago_seq, times, filter=True, color= colorslist[SeqID - 1],pos_sig=0.47-0.005*ii) #
+    petit_plot(pearson_r[sens],times,chance=0,plot_shaded_vertical=True)
+    plt.gca().set_xlabel('Time (ms)',fontsize=14)
+    plt.gca().set_ylabel('Performance',fontsize=14)
+    # plt.show()
+    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s' % sens+suffix+'.svg'))
+    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s' % sens+suffix+'.png'), dpi=300)
+    plt.close('all')
 
 
