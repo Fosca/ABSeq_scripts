@@ -98,13 +98,13 @@ def compute_corr_comp(data):
 
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= '',
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True):
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0):
+    # Samuel, n'oublie de mettre chance a None dans le cas du GFP
 
     """
     param data_7seq: data in the shape of 7 X n_subjects X n_times
     param times: the times for the plot
     """
-
     NUM_COLORS = 7
     cm = plt.get_cmap('viridis')
     colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
@@ -115,12 +115,14 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
     ax.set_xlim(np.min(times), np.max(times))
+
     for ii, SeqID in enumerate(range(1, 8)):
-        plot_timecourses(data_7seq[ii,:,:], times, filter=True, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii)  #
+        plot_timecourses(data_7seq[ii,:,:], times, filter=True, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii,chance=chance)  #
 
     if plot_pearson_corrComplexity:
         pearsonr = compute_corr_comp(data_7seq)
         plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True)
+
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
     plt.gcf().savefig(op.join(config.fig_path,save_fig_path,fig_name+ suffix + '.svg'))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path,fig_name + suffix + '.png'), dpi=300)
