@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 import numpy as np
 from ABseq_func.stats_funcs import stats
+from scipy import stats
 
 # ----------------------------------------------------------------------------------------------------------------------
 def heatmap_avg_subj(data_subjs, times, filter=True, fig_name='',figsize=(10*0.8, 1)):
@@ -79,7 +80,6 @@ def compute_corr_comp(data):
     Function that takes data in the shape of n_seq X n_subjects X n_times and returns n_subjects time courses of the pearson
     correlation with complexity
     """
-
     complexity = [4, 6, 6, 6, 12, 15, 28]
     n_seq, n_subj, n_times = data.shape
     pearson = []
