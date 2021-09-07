@@ -193,20 +193,6 @@ for sens in sensors:
     petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s'%sens+suffix+'.png')
     petit_plot(spearman_rho[sens],times,chance=0,fig_name=config.fig_path+'/SVM/standard_vs_deviant/corr_complexity_spearman_%s'%sens+suffix+'.svg')
 
-# ----- Then we compute the t-test to determine the statistical significance across subjects ----
-# ----- on obtient la carte de à quel point c'est statistiquement significatif en fonction du temps ---
-t_r = {sens : [] for sens in sensors}
-t_rho = {sens : [] for sens in sensors}
-for sens in sensors:
-    for t in range(len(times)):
-        corr_comp_pearson = pearson_r[sens]
-        corr_comp_spearman = spearman_rho[sens]
-        t_pearson, p_pearson = stats.ttest_1samp(corr_comp_pearson[:,t],popmean=0)
-        t_spear, p_spear = stats.ttest_1samp(corr_comp_spearman[:,t],popmean=0)
-        t_r[sens].append(t_pearson)
-        t_rho[sens].append(t_spear)
-
-
 #  ============== ============== ============== ============== ============== ============== ============== ============
 #                         4 - plot the GAT diagonal for each of the 7 sequences
 #  ============== ============== ============== ============== ============== ============== ============== ============
