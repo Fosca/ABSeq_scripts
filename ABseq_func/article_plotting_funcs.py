@@ -91,9 +91,7 @@ def compute_corr_comp(data):
         # Pearson correlation
         for t in range(n_times):
             r_t, _ = stats.pearsonr(dd[:, t], complexity)
-            rho_t, _ = stats.spearmanr(dd[:, t], complexity)
             r.append(r_t)
-            rho.append(rho_t)
         pearson.append(r)
     pearson = np.asarray(pearson)
 
