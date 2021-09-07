@@ -59,7 +59,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
 
     if plot_shaded_vertical and len(times_sig)!=0:
         ylims = plt.gca().get_ylim()
-        plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)
+        plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)  ## !!! DOES NOT TAKE INTO ACCOUNT MULTIPLE CLUSTERS !!
         return True
 
     if chance is not None:
@@ -99,7 +99,6 @@ def compute_corr_comp(data):
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= '',
                           pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0):
-    # Samuel, n'oublie de mettre chance a None dans le cas du GFP
 
     """
     param data_7seq: data in the shape of 7 X n_subjects X n_times
@@ -111,7 +110,7 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
 
     fig, ax = plt.subplots(1, 1, figsize=(10 * 0.8, 7 * 0.8))
     plt.axvline(0, linestyle='-', color='black', linewidth=2)
-    plt.axhline(0.5, linestyle='-', color='black', linewidth=1)
+    # plt.axhline(0.5, linestyle='-', color='black', linewidth=1)  # ligne horizontale à 0.5 pas applicable pour valeurs GFP à 1e-25!
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
     ax.set_xlim(np.min(times), np.max(times))
@@ -124,6 +123,7 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
         plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True)
 
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
+    utils.create_folder(op.join(config.fig_path,save_fig_path))
     plt.gcf().savefig(op.join(config.fig_path,save_fig_path,fig_name+ suffix + '.svg'))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path,fig_name + suffix + '.png'), dpi=300)
     plt.close('all')

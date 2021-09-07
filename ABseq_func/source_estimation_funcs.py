@@ -353,7 +353,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     """
     # Issue when the function is called when RUNNING a script: waits until figure is manually closed...
     # Turn interactive plotting off ?
-    plt.ioff()
+    # plt.ioff()
 
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     if timepoint == 'max':
