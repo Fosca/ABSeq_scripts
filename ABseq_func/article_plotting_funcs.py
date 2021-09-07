@@ -15,7 +15,8 @@ from ABseq_func.stats_funcs import stats
 # ----------------------------------------------------------------------------------------------------------------------
 def heatmap_avg_subj(data_subjs, times, filter=True, fig_name='',figsize=(10*0.8, 1)):
     """
-    Function to plot the diago_score as a heatmap.
+    Function to plot the data_subjs as a heatmap.
+    data_subjs is of the shape n_subjects X n_times
     """
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     # ---- determine the significant time-windows ----
@@ -38,14 +39,13 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
     param plot_shaded_vertical: True if you want to plot a grey zone where the temporal cluster test is significan
     """
     plt.gcf()
-
     # ---- determine the significant time-windows ----
-    sig = stats_funcs.stats(data_seq_subjs[:, times > 0] - chance)
-    # ---- determine the significant times ----
-    times_sig = times[times > 0]
-    times_sig = times_sig[sig<0.05]
+    if chance is not None:
+        sig = stats_funcs.stats(data_seq_subjs[:, times > 0] - chance)
+        # ---- determine the significant times ----
+        times_sig = times[times > 0]
+        times_sig = times_sig[sig<0.05]
     n_subj = data_seq_subjs.shape[0]
-
     # ----- average the data and determine the s.e.m -----
     mean_data = np.mean(data_seq_subjs, axis=0)
     ub = (mean_data + np.std(data_seq_subjs, axis=0) / (np.sqrt(n_subj)))
@@ -61,13 +61,14 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
         plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)
         return True
 
-    sig_mean = mean_data[times>0]
-    sig_mean = sig_mean[sig<0.05]
+    if chance is not None:
+        sig_mean = mean_data[times>0]
+        sig_mean = sig_mean[sig<0.05]
     plt.fill_between(times, ub, lb, alpha=.2,color=color)
     plt.plot(times, mean_data, linewidth=1.5,color=color)
-    if pos_sig is not None:
+    if (chance is not None) and (pos_sig is not None):
         plt.plot(times_sig,[pos_sig]*len(times_sig), linestyle='-', color=color, linewidth=2)
-    else:
+    elif (chance is not None):
         plt.plot(times_sig,sig_mean,linewidth=3,color=color)
     if fig_name is not None:
         plt.gcf().savefig(fig_name)
