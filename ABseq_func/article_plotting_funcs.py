@@ -87,7 +87,6 @@ def compute_corr_comp(data):
         # ---- for 1 subject, diagonal of the GAT for all the 7 sequences through time ---
         dd = data[:, nn, :]
         r = []
-        rho = []
         # Pearson correlation
         for t in range(n_times):
             r_t, _ = stats.pearsonr(dd[:, t], complexity)
