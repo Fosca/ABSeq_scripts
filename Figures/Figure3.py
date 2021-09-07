@@ -103,12 +103,10 @@ def petit_plot(diago_score,times,filter=False,fig_name='',color='b',chance = 0.5
     if fig_name is not None:
         plt.gcf().savefig(fig_name)
 
-
 #  ============== ============== ============== ============== ============== ============== ============== ============
 #                1 - SET THE PLOTTING PARAMS
 #  ============== ============== ============== ============== ============== ============== ============== ============
 
-# ---- set figure parameters ----
 
 filter = True
 NUM_COLORS = 7
@@ -153,8 +151,8 @@ reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
 # ------ PART 2 OF THE FIGURE: CORRELATION WITH COMPLEXITY -------
 # compute per subject the correlation with complexity
 
-C = [4,6,6,6,12,15,28]
-N = [1,2,4,8,8,16,16]
+# C = [4,6,6,6,12,15,28]
+# N = [1,2,4,8,8,16,16]
 
 complexity_dict = {1:4,2:6,3:6,4:6,5:12,6:15,7:28}
 complexity = list(complexity_dict.values())
