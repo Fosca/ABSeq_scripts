@@ -564,13 +564,13 @@ def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=N
             tmin = -0.200
         if tmax is None:
             tmax = 0.25 * 17
-        config.baseline = (tmin, 0)
+        baseline = (tmin, 0)
         if (baseline is None) or (baseline is False):
-            config.baseline = None
+            baseline = None
         for k in range(len(events)):
             events[k, 2] = k % 16 + 1
         epochs = mne.Epochs(raw, events, {'sequence_starts': 1}, tmin, tmax,
-                            proj=True, picks=picks, baseline=config.baseline,
+                            proj=True, picks=picks, baseline=baseline,
                             preload=False, decim=config.decim,
                             reject=None)
         epochs.metadata = metadata_pandas[metadata_pandas['StimPosition'] == 1.0]
@@ -579,11 +579,13 @@ def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=N
             tmin = -0.050
         if tmax is None:
             tmax = 0.600
-        config.baseline = (config.tmin, 0)
         if (baseline is None) or (baseline is False):
-            config.baseline = None
+            baseline = None
+        else:
+            baseline = (tmin, 0)
+
         epochs = mne.Epochs(raw, events, None, tmin, tmax,
-                            proj=True, picks=picks, baseline=config.baseline,
+                            proj=True, picks=picks, baseline=baseline,
                             preload=False, decim=config.decim,
                             reject=None)
 
