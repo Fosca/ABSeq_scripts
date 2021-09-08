@@ -144,16 +144,18 @@ pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_Habituation_heatmap_complexity_pearsonr.png'))
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_Habituation_heatmap_complexity_pearsonr.svg'))
 
+# plt.gca().fill_between([times_sig[0], times_sig[-1]], 99999, -99999, color='black', alpha=.1)
+
 #  ============== DEV minus STAND PLOTS ============== #
 data_7seq = np.dstack(gfp_data['viol_minus_stand']['mag'].values())
 data_7seq = np.transpose(data_7seq, (2, 0, 1))
 # Data line plot 7seq
 article_plotting_funcs.plot_7seq_timecourses(data_7seq,gfp_data['times']*1000, save_fig_path='GFP/',fig_name='GFPxComplexity_viol_minus_stand', suffix= '',
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=None, xlims=[-50, 650], ymin=0)
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=None, xlims=[-50, 600], ymin=0, ylabel='GFP')
 # Correlation with complexity heatmap
 pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
-article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 650], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.png'))
-article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 650], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.svg'))
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 600], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.png'))
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 600], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.svg'))
 
 
 
