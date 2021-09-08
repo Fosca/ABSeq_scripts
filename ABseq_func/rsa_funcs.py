@@ -80,7 +80,7 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute
     """
 
     if recompute:
-
+        print("=== put here the code for recomputing ===")
     else:
         epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
 
