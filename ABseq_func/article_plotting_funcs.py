@@ -60,10 +60,9 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
 
     # ---- determine the significant time-windows ----
     if chance is not None:
-        sig = stats_funcs.stats(data_seq_subjs[:, times > 0] - chance)
-        # ---- determine the significant times ----
-        times_sig = times[times > 0]
-        times_sig = times_sig[sig<0.05]
+        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0]- chance, n_permutations=2**8, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
+        good_cluster_inds = np.where(cluster_pv < 0.05)[0]
+
     n_subj = data_seq_subjs.shape[0]
     # ----- average the data and determine the s.e.m -----
     mean_data = np.mean(data_seq_subjs, axis=0)
@@ -75,20 +74,31 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
         ub = savgol_filter(ub, 11, 3)
         lb = savgol_filter(lb, 11, 3)
 
-    if plot_shaded_vertical and len(times_sig)!=0:
-        ylims = plt.gca().get_ylim()
-        plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)  ## !!! DOES NOT TAKE INTO ACCOUNT MULTIPLE CLUSTERS !!
+    ylims = plt.gca().get_ylim()
+    if plot_shaded_vertical:
+        if len(good_cluster_inds) > 0:
+            for i_clu, clu_idx in enumerate(good_cluster_inds):
+                clu_times = times[clusters[clu_idx]]
+                plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black',
+                                       alpha=.1)
+                print("The p-value of the cluster number %i"%(i_clu)+" is {:.5f}".format(cluster_pv[clu_idx]))
+
         return True
 
+    plt.fill_between(times, ub, lb, alpha=.2, color=color)
+    plt.plot(times, mean_data, linewidth=1.5, color=color)
+
     if chance is not None:
-        sig_mean = mean_data[times>0]
-        sig_mean = sig_mean[sig<0.05]
-    plt.fill_between(times, ub, lb, alpha=.2,color=color)
-    plt.plot(times, mean_data, linewidth=1.5,color=color)
-    if (chance is not None) and (pos_sig is not None):
-        plt.plot(times_sig,[pos_sig]*len(times_sig), linestyle='-', color=color, linewidth=2)
-    elif (chance is not None):
-        plt.plot(times_sig,sig_mean,linewidth=3,color=color)
+        if len(good_cluster_inds) > 0:
+            for i_clu, clu_idx in enumerate(good_cluster_inds):
+                clu_times = times[clusters[clu_idx]]
+                sig_mean = mean_data[times>0]
+                sig_mean = sig_mean[clusters[clu_idx]]
+                if (pos_sig is not None):
+                    plt.plot(clu_times,[pos_sig]*len(clu_times), linestyle='-', color=color, linewidth=2)
+                else:
+                    plt.plot(clu_times,sig_mean,linewidth=3,color=color)
+
     if fig_name is not None:
         plt.gcf().savefig(fig_name)
 
