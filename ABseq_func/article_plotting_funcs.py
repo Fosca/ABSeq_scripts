@@ -12,6 +12,7 @@ from scipy.signal import savgol_filter
 import numpy as np
 from ABseq_func.stats_funcs import stats
 from scipy import stats
+import matplotlib.ticker as ticker
 
 # ----------------------------------------------------------------------------------------------------------------------
 def heatmap_avg_subj(data_subjs, times, filter=True, fig_name='',figsize=(10*0.8, 1)):
@@ -32,14 +33,21 @@ def heatmap_avg_subj(data_subjs, times, filter=True, fig_name='',figsize=(10*0.8
         plt.gcf().savefig(fig_name)
 
 # ----------------------------------------------------------------------------------------------------------------------
-def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b', chance = 0.5, pos_sig = None, plot_shaded_vertical = False):
+def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b', chance = 0.5, pos_sig = None, plot_shaded_vertical = False, xlims=None):
 
     """
     param data_seq_subjs: n_subject X n_times array that you want to plot as mean + s.e.m in shaded bars
     param pos_sig: If you want to plot the significant time-points as a line under the graph, set this value to the y position of the line
     param plot_shaded_vertical: True if you want to plot a grey zone where the temporal cluster test is significan
+    param plot_shaded_vertical: xlims: if not None, will crop the data according to time before plotting and computing significant clusters
     """
     plt.gcf()
+
+    if xlims:
+        idx = np.where((times>=xlims[0]) & (times<=xlims[1]))[0]
+        data_seq_subjs = data_seq_subjs[:, idx]
+        times = times[idx]
+
     # ---- determine the significant time-windows ----
     if chance is not None:
         sig = stats_funcs.stats(data_seq_subjs[:, times > 0] - chance)
@@ -98,7 +106,7 @@ def compute_corr_comp(data):
 
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= '',
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0):
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0, xlims=[-50, 650], ymin=None, ylabel=None):
 
     """
     param data_7seq: data in the shape of 7 X n_subjects X n_times
@@ -113,15 +121,27 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
     # plt.axhline(0.5, linestyle='-', color='black', linewidth=1)  # ligne horizontale à 0.5 pas applicable pour valeurs GFP à 1e-25!
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-    ax.set_xlim(np.min(times), np.max(times))
+    # ax.set_xlim(np.min(times), np.max(times))
+    ax.set_xlim(xlims)
+    if ymin:
+        ax.set_ylim(ymin=ymin)
 
     for ii, SeqID in enumerate(range(1, 8)):
         plot_timecourses(data_7seq[ii,:,:], times, filter=True, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii,chance=chance)  #
 
     if plot_pearson_corrComplexity:
         pearsonr = compute_corr_comp(data_7seq)
-        plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True)
+        plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True, xlims=xlims)
 
+    # Remove some spines?
+    for key in ('top', 'right'):
+        ax.spines[key].set(visible=False)
+        # Add ylabel and format x10^...
+    if ylabel == 'GFP':
+        ax.set_ylabel(ylabel)
+        fmt = ticker.ScalarFormatter(useMathText=True)
+        fmt.set_powerlimits((0, 0))
+        ax.get_yaxis().set_major_formatter(fmt)
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
     utils.create_folder(op.join(config.fig_path,save_fig_path))
     plt.gcf().savefig(op.join(config.fig_path,save_fig_path,fig_name+ suffix + '.svg'))
