@@ -61,7 +61,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
 
     # ---- determine the significant time-windows ----
     if chance is not None:
-        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0] - chance, n_permutations=2 ** 8, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
+        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0] - chance, n_permutations=2 ** 12, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
         good_cluster_inds = np.where(cluster_pv < 0.05)[0]
 
     n_subj = data_seq_subjs.shape[0]
