@@ -5,17 +5,17 @@ import numpy as np
 print('jaime les tomates')
 
 # cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_long')
-# cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
+cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
 
 # cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
-cluster_funcs.create_qsub('SVM_features_sequence_structure1', 'stru1', 'stru1', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure2', 'stru2', 'stru2', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure3', 'stru3', 'stru3', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure4', 'stru4', 'stru4', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure5', 'stru5', 'stru5', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure6', 'stru6', 'stru6', queue='Nspin_bigM')
-cluster_funcs.create_qsub('SVM_features_sequence_structure7', 'stru7', 'stru7', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure1', 'stru1', 'stru1', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure2', 'stru2', 'stru2', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure3', 'stru3', 'stru3', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure4', 'stru4', 'stru4', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure5', 'stru5', 'stru5', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure6', 'stru6', 'stru6', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('SVM_features_sequence_structure7', 'stru7', 'stru7', queue='Nspin_bigM')
 
 # cluster_funcs.create_qsub('SVM_quad_ordpos', 'quad_ordpos', 'quad_ordpos', queue='Nspin_long')
 # cluster_funcs.create_qsub('epoch_items', 'epo_it', 'epo_it', queue='Nspin_bigM')
