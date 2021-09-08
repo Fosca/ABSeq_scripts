@@ -38,9 +38,10 @@ def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=Fals
     extent = [min(times), max(times), 0, 0.03]
     plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="RdBu_r", extent=extent, vmin=ylims[0], vmax=ylims[1])
     plt.gca().set_yticks([])
-    plt.colorbar()
+    plt.gca().set_xticks([])
+    plt.colorbar(label='Pearsor r')
     if fig_name is not None:
-        plt.gcf().savefig(fig_name, dpi=300)
+        plt.gcf().savefig(fig_name, dpi=300, bbox_inches='tight')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -174,5 +175,5 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
     utils.create_folder(op.join(config.fig_path, save_fig_path))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'))
-    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300)
+    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300, bbox_inches='tight')
     plt.close('all')
