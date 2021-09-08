@@ -538,8 +538,8 @@ def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=N
 
     # Save resampled, concatenated runs (in case we need it)
     print('Saving concatenated runs')
-    fname = op.join(meg_subject_dir, subject + '_allruns_final_raw.fif')
-    raw.save(fname, overwrite=True)
+    # fname = op.join(meg_subject_dir, subject + '_allruns_final_raw.fif')
+    # raw.save(fname, overwrite=True)
 
     if config.noEEG:
         picks = mne.pick_types(raw.info, meg=True, eeg=False, stim=True, eog=True, exclude=())
