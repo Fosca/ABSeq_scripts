@@ -20,7 +20,7 @@ class fn_template:
 #-----------------------------------------------------------------------------------------------------------------------
 def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,decim=1,
                                          baseline=(None, 0), clean=True,
-                                         which_analysis='SequenceID_StimPosition',
+                                         which_analysis='SequenceID_StimPosition',recompute=False,
                                          factors_or_interest = ('StimID','SequenceID', 'StimPosition','Complexity','RepeatAlter','ChunkBeginning','ChunkEnd','OpenedChunks','ChunkDepth','ChunkNumber','WithinChunkPosition','ClosedChunks')):
 
     """
@@ -45,7 +45,7 @@ def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,de
     else:
         bl_str = '_baseline'
 
-    epochs_RSA = extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean)
+    epochs_RSA = extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute = recompute)
 
     # ========= split half method ================
     inds_per_block, _ = SVM_funcs.train_test_different_blocks(epochs_RSA)
@@ -66,7 +66,7 @@ def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,de
 
 
 #-----------------------------------------------------------------------------------------------------------------------
-def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute = False):
+def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute = True):
     """
     This function computes and saves the epochs epoched for the RSA.
     :param subject:
@@ -80,7 +80,11 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute
     """
 
     if recompute:
-        print("=== put here the code for recomputing ===")
+        print("=== we are recomputing the epochs but not saving them ! ===")
+        if clean:
+            epochs = epoching_funcs.run_epochs(subject,epoch_on_first_element=False,tmin=tmin,tmax=tmax,baseline=baseline,whattoreturn = 'ARglobal')
+        else:
+            epochs = epoching_funcs.run_epochs(subject,epoch_on_first_element=False,tmin=tmin,tmax=tmax,baseline=baseline,whattoreturn = '')
     else:
         epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
 

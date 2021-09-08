@@ -37,10 +37,10 @@ subjects_list = config.subjects_list
 sensors = ['mag','grad']
 n_subjects = len(config.subjects_list)
 
-filename = "SW_train_different_blocks_cleanedGAT_results"
+name = "SW_train_different_blocks_cleanedGAT_results"
 
 for suffix in ["_hab","_stand","_viol",""]:
-    filename = filename+suffix
+    filename = name+suffix
     #  ============== ============== ============== ============== ============== ============== ============== ============
     #                         2 -  LOAD THE DATA AND RESHAPE IT
     #  ============== ============== ============== ============== ============== ============== ============== ============
