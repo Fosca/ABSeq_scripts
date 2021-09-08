@@ -81,6 +81,7 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute
 
     if recompute:
         print("=== put here the code for recomputing ===")
+        epochs = epoching_funcs.run_epochs(subject,epoch_on_first_element=False,tmin=tmin,tmax=tmax,baseline=baseline,whattoreturn = '')
     else:
         epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
 
