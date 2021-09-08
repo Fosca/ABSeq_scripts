@@ -537,7 +537,7 @@ def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=N
     del raw_list
 
     # Save resampled, concatenated runs (in case we need it)
-    print('Saving concatenated runs')
+    # print('Saving concatenated runs')
     # fname = op.join(meg_subject_dir, subject + '_allruns_final_raw.fif')
     # raw.save(fname, overwrite=True)
 
@@ -593,17 +593,18 @@ def run_epochs(subject, epoch_on_first_element, baseline=True,tmin = None,tmax=N
         epochs.metadata = metadata_pandas
 
     # Save epochs (before AutoReject)
-    print('  Writing epochs to disk')
-    if epoch_on_first_element:
-        extension = subject + '_1st_element_epo'
-    else:
-        extension = subject + '_epo'
-    epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
 
-    print("Output: ", epochs_fname)
     if whattoreturn is None:
+        print('  Writing epochs to disk')
+        if epoch_on_first_element:
+            extension = subject + '_1st_element_epo'
+        else:
+            extension = subject + '_epo'
+        epochs_fname = op.join(output_dir, config.base_fname.format(**locals()))
+        print("Output: ", epochs_fname)
         epochs.save(epochs_fname, overwrite=True)
     elif whattoreturn == '':
+        epochs.load_data()
         return epochs
     else:
         print("=== we continue on the autoreject part ===")
