@@ -317,10 +317,9 @@ def compute_rsa_dissim_matrix(subject):
     """
     We compute the dissimilarity matrix by grouping the epochs by sequence and position (for standard sequences only)
     """
-    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None, which_analysis='')
-    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'euclidean', baseline=None, which_analysis='')
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None, which_analysis='',clean=False)
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'euclidean', baseline=None, which_analysis='',clean=False)
     # rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'mahalanobis', baseline=None, which_analysis='')
-
 
 
 def compute_correlation_stc_complexity(subject):
