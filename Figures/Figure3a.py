@@ -4,10 +4,13 @@
   + CORRELATION WITH COMPLEXITY
 ==========================================================
 
-1- Compute (or load) GFP for each subject and 4 categories of trials (items):
+1 - Compute (or load) GFP for each subject and 4 categories of trials (items):
 habituation, standard, violation, violation_minus_standard (epochs balanced with parameter 'sequence')
 
-
+2 - Plot data:
+    - line plot 7 sequences
+    - correlation with complexity: heatmap
+For habituation epochs, deviant_minus_standard epochs
 """
 
 # ---- import the packages -------
@@ -127,44 +130,30 @@ else:
 #  ============== ============== ============== ============== ============== ============== ============== ============
 #                2 - PLOTS
 #  ============== ============== ============== ============== ============== ============== ============== ============
+from importlib import reload
+reload(article_plotting_funcs)
 
-#  ============== HABITUATION PLOT ============== #
+#  ============== HABITUATION PLOTS ============== #
 data_7seq = np.dstack(gfp_data['habituation']['mag'].values())
 data_7seq = np.transpose(data_7seq, (2, 0, 1))
+# Data line plot 7seq
+article_plotting_funcs.plot_7seq_timecourses(data_7seq,gfp_data['times']*1000, save_fig_path='GFP/',fig_name='GFPxComplexity_Habituation', suffix= '',
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=None, xlims=[-50, 350], ymin=0, ylabel='GFP')
+# Correlation with complexity heatmap
+pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_Habituation_heatmap_complexity_pearsonr.png'))
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_Habituation_heatmap_complexity_pearsonr.svg'))
 
-article_plotting_funcs.plot_7seq_timecourses(data_7seq,gfp_data['times']*1000, save_fig_path='GFP/',fig_name='GFPxComplexity_Habituation_', suffix= '',
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=None)
+#  ============== DEV minus STAND PLOTS ============== #
+data_7seq = np.dstack(gfp_data['viol_minus_stand']['mag'].values())
+data_7seq = np.transpose(data_7seq, (2, 0, 1))
+# Data line plot 7seq
+article_plotting_funcs.plot_7seq_timecourses(data_7seq,gfp_data['times']*1000, save_fig_path='GFP/',fig_name='GFPxComplexity_viol_minus_stand', suffix= '',
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=None, xlims=[-50, 650], ymin=0)
+# Correlation with complexity heatmap
+pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 650], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.png'))
+article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times']*1000, xlims=[-50, 650], ylims=[-0.5, 0.5], fig_name= op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.svg'))
 
 
 
-from ABseq_func import article_plotting_funcs
-
-
-
-
-
-reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
-
-
-plt.close('all')
-for sens in sensors:
-    # ---- set figure's parameters, plot layout ----
-    fig, ax = plt.subplots(1, 1, figsize=(10*0.8, 7*0.8))
-    plt.axvline(0, linestyle='-', color='black', linewidth=2)
-    plt.axhline(0.5, linestyle='-', color='black', linewidth=1)
-    for xx in range(3):
-        plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-    ax.set_xlim(np.min(times),np.max(times))
-    perform_seq = results[sens]
-    for ii,SeqID in enumerate(range(1, 8)):
-        perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
-        diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
-        reshaped_data[sens][ii,:,:] = diago_seq
-        petit_plot(diago_seq, times, filter=True, color= colorslist[SeqID - 1],pos_sig=0.47-0.005*ii) #
-    petit_plot(pearson_r[sens],times,chance=0,plot_shaded_vertical=True)
-    plt.gca().set_xlabel('Time (ms)',fontsize=14)
-    plt.gca().set_ylabel('Performance',fontsize=14)
-    # plt.show()
-    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s' % sens+suffix+'.svg'))
-    plt.gcf().savefig(op.join(config.fig_path, 'SVM/standard_vs_deviant/', 'All_sequences_standard_VS_deviant_cleaned_%s' % sens+suffix+'.png'), dpi=300)
-    plt.close('all')

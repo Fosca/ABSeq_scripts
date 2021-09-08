@@ -17,22 +17,29 @@ import mne.stats
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-def heatmap_avg_subj(data_subjs, times, filter=True, fig_name='',figsize=(10*0.8, 1)):
+def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=False, fig_name='', figsize=(10 * 0.8, 1)):
     """
     Function to plot the data_subjs as a heatmap.
     data_subjs is of the shape n_subjects X n_times
     """
     fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    if xlims:
+        idx = np.where((times >= xlims[0]) & (times <= xlims[1]))[0]
+        data_subjs = data_subjs[:, idx]
+        times = times[idx]
+
     # ---- determine the significant time-windows ----
     mean_data = np.mean(data_subjs, axis=0)
     if filter == True:
         mean = savgol_filter(mean_data, 11, 3)
     extent = [min(times), max(times), 0, 0.03]
-    plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="viridis", extent=extent)
+    plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="RdBu", extent=extent, vmin=ylims[0], vmax=ylims[1])
     plt.gca().set_yticks([])
     plt.colorbar()
     if fig_name is not None:
         plt.gcf().savefig(fig_name)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b', chance = 0.5, pos_sig = None, plot_shaded_vertical = False, xlims=None):
@@ -45,6 +52,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
     """
     plt.gcf()
 
+    # ---- crop data if necessary
     if xlims:
         idx = np.where((times>=xlims[0]) & (times<=xlims[1]))[0]
         data_seq_subjs = data_seq_subjs[:, idx]
@@ -52,9 +60,10 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
 
     # ---- determine the significant time-windows ----
     if chance is not None:
-        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0]- chance, n_permutations=2**8, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
-        good_cluster_inds = np.where(cluster_pv < 0.05)[0]
-
+        sig = stats_funcs.stats(data_seq_subjs[:, times > 0] - chance)
+        # ---- determine the significant times ----
+        times_sig = times[times > 0]
+        times_sig = times_sig[sig<0.05]
     n_subj = data_seq_subjs.shape[0]
     # ----- average the data and determine the s.e.m -----
     mean_data = np.mean(data_seq_subjs, axis=0)
@@ -66,33 +75,23 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
         ub = savgol_filter(ub, 11, 3)
         lb = savgol_filter(lb, 11, 3)
 
-    ylims = plt.gca().get_ylim()
-    if plot_shaded_vertical:
-        if len(good_cluster_inds) > 0:
-            for i_clu, clu_idx in enumerate(good_cluster_inds):
-                clu_times = times[clusters[clu_idx]]
-                plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black',
-                                       alpha=.1)
-                print("The p-value of the cluster number %i"%(i_clu)+" is {:.5f}".format(cluster_pv[clu_idx]))
-
+    if plot_shaded_vertical and len(times_sig)!=0:
+        ylims = plt.gca().get_ylim()
+        plt.gca().fill_between([times_sig[0],times_sig[-1]],ylims[1], ylims[0], color='black', alpha=.1)  ## !!! DOES NOT TAKE INTO ACCOUNT MULTIPLE CLUSTERS !!
         return True
 
+    if chance is not None:
+        sig_mean = mean_data[times>0]
+        sig_mean = sig_mean[sig<0.05]
     plt.fill_between(times, ub, lb, alpha=.2,color=color)
     plt.plot(times, mean_data, linewidth=1.5,color=color)
-
-    if chance is not None:
-        if len(good_cluster_inds) > 0:
-            for i_clu, clu_idx in enumerate(good_cluster_inds):
-                clu_times = times[clusters[clu_idx]]
-                sig_mean = mean_data[times>0]
-                sig_mean = sig_mean[clusters[clu_idx]]
-                if (pos_sig is not None):
-                    plt.plot(clu_times,[pos_sig]*len(clu_times), linestyle='-', color=color, linewidth=2)
-                else:
-                    plt.plot(clu_times,sig_mean,linewidth=3,color=color)
-
+    if (chance is not None) and (pos_sig is not None):
+        plt.plot(times_sig,[pos_sig]*len(times_sig), linestyle='-', color=color, linewidth=2)
+    elif (chance is not None):
+        plt.plot(times_sig,sig_mean,linewidth=3,color=color)
     if fig_name is not None:
         plt.gcf().savefig(fig_name)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 def compute_corr_comp(data):
@@ -116,9 +115,10 @@ def compute_corr_comp(data):
 
     return pearson
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= '',
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0, ymin=None, ylabel=None):
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0, ymin=None, ylabel=None,filter=False):
 
     """
     param data_7seq: data in the shape of 7 X n_subjects X n_times
@@ -136,30 +136,35 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
     # plt.axhline(0.5, linestyle='-', color='black', linewidth=1)  # ligne horizontale à 0.5 pas applicable pour valeurs GFP à 1e-25!
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
-    # ax.set_xlim(np.min(times), np.max(times))
-    ax.set_xlim(xlims)
-    if ymin:
-        ax.set_ylim(ymin=ymin)
 
     for ii, SeqID in enumerate(range(1, 8)):
-        plot_timecourses(data_7seq[ii,:,:], times, filter=True, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii,chance=chance)  #
+        plot_timecourses(data_7seq[ii,:,:], times, filter=filter, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii,chance=chance)  #
 
     if plot_pearson_corrComplexity:
         pearsonr = compute_corr_comp(data_7seq)
         plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True, xlims=xlims)
 
-    # Remove some spines?
-    for key in ('top', 'right'):
-        ax.spines[key].set(visible=False)
-        # Add ylabel and format x10^...
+    # Set limits
+    if xlims:
+        ax.set_xlim(xlims)
+    else:
+        ax.set_xlim(np.min(times), np.max(times))
+    if ymin!=None:
+        ax.set_ylim(ymin=ymin)
+
+    # # Remove some spines?
+    # for key in ('top', 'right'):
+    #     ax.spines[key].set(visible=False)
+
+    # Add ylabel and format x10^...
     if ylabel == 'GFP':
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, fontsize=14)
         fmt = ticker.ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((0, 0))
         ax.get_yaxis().set_major_formatter(fmt)
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
-    utils.create_folder(op.join(config.fig_path,save_fig_path))
-    plt.gcf().savefig(op.join(config.fig_path,save_fig_path,fig_name+ suffix + '.svg'))
-    plt.gcf().savefig(op.join(config.fig_path, save_fig_path,fig_name + suffix + '.png'), dpi=300)
+    utils.create_folder(op.join(config.fig_path, save_fig_path))
+    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'))
+    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300)
     plt.close('all')
 
