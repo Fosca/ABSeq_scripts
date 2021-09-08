@@ -108,11 +108,13 @@ def petit_plot(diago_score,times,filter=False,fig_name='',color='b',chance = 0.5
 #  ============== ============== ============== ============== ============== ============== ============== ============
 
 
-filter = True
+filter = False
 NUM_COLORS = 7
 cm = plt.get_cmap('viridis')
 colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
 plt.close('all')
+
+
 
 subjects_list = config.subjects_list
 sensors = ['mag','grad']
@@ -142,7 +144,23 @@ for sens in sensors:
         else:
             print("Missing data for %s "%GAT_path)
 
+
+
 reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
+
+plt.close('all')
+for sens in sensors:
+    perform_seq = results[sens]
+    for ii,SeqID in enumerate(range(1, 8)):
+        perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
+        diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
+        reshaped_data[sens][ii,:,:] = diago_seq
+
+article_plotting_funcs.plot_7seq_timecourses(reshaped_data,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= suffix,
+                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0.5)
+
+
+
 
 #  ============== ============== ============== ============== ============== ============== ============== ============
 #                3 - Correlating performance WITH COMPLEXITY
@@ -195,6 +213,9 @@ for sens in sensors:
 #                         4 - plot the GAT diagonal for each of the 7 sequences
 #  ============== ============== ============== ============== ============== ============== ============== ============
 
+
+reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
+
 plt.close('all')
 for sens in sensors:
     # ---- set figure's parameters, plot layout ----
@@ -209,8 +230,8 @@ for sens in sensors:
         perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
         diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
         reshaped_data[sens][ii,:,:] = diago_seq
-        petit_plot(diago_seq, times, filter=True, color= colorslist[SeqID - 1],pos_sig=0.47-0.005*ii) #
-    petit_plot(pearson_r[sens],times,chance=0,plot_shaded_vertical=True)
+        petit_plot(diago_seq, times, filter=filter, color= colorslist[SeqID - 1],pos_sig=0.47-0.005*ii) #
+    petit_plot(pearson_r[sens],times,chance=0,plot_shaded_vertical=True,filter=filter)
     plt.gca().set_xlabel('Time (ms)',fontsize=14)
     plt.gca().set_ylabel('Performance',fontsize=14)
     # plt.show()

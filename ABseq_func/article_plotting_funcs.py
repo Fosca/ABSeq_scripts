@@ -105,6 +105,7 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
     param data_7seq: data in the shape of 7 X n_subjects X n_times
     param times: the times for the plot
     """
+
     NUM_COLORS = 7
     cm = plt.get_cmap('viridis')
     colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
