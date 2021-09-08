@@ -40,7 +40,7 @@ def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=Fals
     plt.gca().set_yticks([])
     plt.colorbar()
     if fig_name is not None:
-        plt.gcf().savefig(fig_name)
+        plt.gcf().savefig(fig_name, dpi=300)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -76,10 +76,11 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
         lb = savgol_filter(lb, 11, 3)
 
     ylims = plt.gca().get_ylim()
+    stat_times = times[times > 0]  # since stats were done on times > 0 (time index of clusters is based on this)
     if plot_shaded_vertical:
         if len(good_cluster_inds) > 0:
             for i_clu, clu_idx in enumerate(good_cluster_inds):
-                clu_times = times[clusters[clu_idx]]
+                clu_times = stat_times[clusters[clu_idx]]
                 # plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black', alpha=.1)
                 plt.gca().fill_between([clu_times[0], clu_times[-1]], -99999, 99999, color='black', alpha=.08, linewidth=0.0)
                 print("The p-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(cluster_pv[clu_idx]))
