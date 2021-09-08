@@ -14,7 +14,7 @@ import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import initialization_paths
 
-from ABseq_func import *
+from ABseq_func import article_plotting_funcs
 import matplotlib
 matplotlib.rc('xtick', labelsize=12)
 matplotlib.rc('ytick', labelsize=12)
@@ -33,16 +33,11 @@ filename = "SW_train_different_blocks_cleanedGAT_results"
 suffix = "_viol"
 filename = filename+suffix
 
-
-
-
 filter = False
 NUM_COLORS = 7
 cm = plt.get_cmap('viridis')
 colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
 plt.close('all')
-
-
 
 subjects_list = config.subjects_list
 sensors = ['mag','grad']
@@ -64,10 +59,8 @@ for sens in sensors:
             GAT_results = np.load(GAT_path, allow_pickle=True).item()
             times = 1000*GAT_results['times']
             GAT_results = GAT_results['GAT']
-            # print(np.mean(GAT_results[sens]["average_all_sequences"]))
             for key in ['SeqID_%i' % i for i in range(1, 8)]:
                 results[sens][key].append(GAT_results[sens][key])
-            # avg_res[sens].append(GAT_results[sens]["average_all_sequences"])
             n_subj +=1
         else:
             print("Missing data for %s "%GAT_path)
@@ -75,15 +68,12 @@ for sens in sensors:
 
 
 reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
-
-plt.close('all')
 for sens in sensors:
     perform_seq = results[sens]
     for ii,SeqID in enumerate(range(1, 8)):
         perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
         diago_seq = np.diagonal(perform_seqID,axis1=1,axis2=2)
         reshaped_data[sens][ii,:,:] = diago_seq
-
-article_plotting_funcs.plot_7seq_timecourses(reshaped_data,times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= suffix,
-                          pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0.5)
+    article_plotting_funcs.plot_7seq_timecourses(reshaped_data[sens],times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= suffix,
+                              pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0.5)
 

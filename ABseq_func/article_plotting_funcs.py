@@ -108,6 +108,7 @@ def plot_7seq_timecourses(data_7seq,times, save_fig_path='SVM/standard_vs_devian
     NUM_COLORS = 7
     cm = plt.get_cmap('viridis')
     colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    plt.close('all')
 
     fig, ax = plt.subplots(1, 1, figsize=(10 * 0.8, 7 * 0.8))
     plt.axvline(0, linestyle='-', color='black', linewidth=2)
