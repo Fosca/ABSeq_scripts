@@ -66,7 +66,7 @@ def preprocess_and_compute_dissimilarity(subject, metrics, tmin=-0.4, tmax=1.,de
 
 
 #-----------------------------------------------------------------------------------------------------------------------
-def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean):
+def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean,recompute = False):
     """
     This function computes and saves the epochs epoched for the RSA.
     :param subject:
@@ -79,9 +79,11 @@ def extract_good_epochs_for_RSA(subject,tmin,tmax,baseline,decim,clean):
     :return:
     """
 
+    if recompute:
 
+    else:
+        epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
 
-    epochs = epoching_funcs.load_epochs_items(subject,cleaned=clean)
     epochs.pick_types(meg=True)
     epochs.crop(tmin,tmax)
     if decim is not None:
