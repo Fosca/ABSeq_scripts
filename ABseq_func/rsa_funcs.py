@@ -338,40 +338,36 @@ def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition'))
     :param reshape_order: the list of fields that says in which hierarchical order we want to organize the data
     :return:
     """
-
     if len(fields)>2:
         ValueError("This function doesn t take more than 2 arguments to reorder")
 
-    meta_original = dissimilarity_matrix.md0
-    initial_index = []
-    meta_filter = meta_original.copy()
-
-    counter = 0
-    key_values1 = np.unique(meta_original[fields[0]])
-    for val1 in key_values1:
-        meta_filter1 = meta_original[meta_filter[fields[0]].values == val1]
-        key_values2 = np.unique(meta_filter1[fields[1]])
-        for val2 in key_values2:
-            meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
-            idx = meta_filter2.index[0]
-            initial_index.append(idx)
-            counter += 1
-
-    dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
-
-    for m in range(counter):
-        ind_m = initial_index[m]
-        if ind_m is not None:
-            for n in range(counter):
-                ind_n = initial_index[n]
-                if ind_n is not None:
-                    dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
-
-    meta_final = meta_original.reindex(initial_index)
+    meta_fin = []
+    for meta_original in [dissimilarity_matrix.md0,dissimilarity_matrix.md1]:
+        initial_index = []
+        meta_filter = meta_original.copy()
+        counter = 0
+        key_values1 = np.unique(meta_original[fields[0]])
+        for val1 in key_values1:
+            meta_filter1 = meta_original[meta_filter[fields[0]].values == val1]
+            key_values2 = np.unique(meta_filter1[fields[1]])
+            for val2 in key_values2:
+                meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
+                idx = meta_filter2.index[0]
+                initial_index.append(idx)
+                counter += 1
+        dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
+        for m in range(counter):
+            ind_m = initial_index[m]
+            if ind_m is not None:
+                for n in range(counter):
+                    ind_n = initial_index[n]
+                    if ind_n is not None:
+                        dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
+        meta_fin.append(meta_original.reindex(initial_index))
 
     dissimilarity_matrix.data = dissim_final
-    dissimilarity_matrix.md0 = meta_final
-    dissimilarity_matrix.md1 = meta_final
+    dissimilarity_matrix.md0 = meta_fin[0]
+    dissimilarity_matrix.md1 = meta_fin[1]
 
     return dissimilarity_matrix
 
