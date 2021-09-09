@@ -2,7 +2,7 @@ import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
 from initialization_paths import initialization_paths
-from ABseq_func import rsa_funcs, epoching_funcs, utils,cluster_funcs
+from ABseq_func import rsa_funcs, epoching_funcs, utils, cluster_funcs
 import config
 import numpy as np
 from src import umne
@@ -18,8 +18,8 @@ dis = rsa_funcs.dissimilarity
 # ______________________________________________________________________________________________________________________
 
 # _____________________________________________________________________________________________________________________
-def viz_predictor_mats(dis_pred, md, max_val=None):
-    dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md)
+def viz_predictor_mats(dis_pred, md,md2, max_val=None):
+    dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md,md2=md2)
     if max_val is None:
         max_val = np.max(dis_pred_field.data)
     umne.rsa.plot_dissimilarity(dis_pred_field, max_value=max_val,
