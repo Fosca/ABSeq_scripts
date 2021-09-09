@@ -315,16 +315,19 @@ def all_stimuli():
     return df
 
 #-----------------------------------------------------------------------------------------------------------------------
-def gen_predicted_dissimilarity(dissimilarity_func,md=None):
+def gen_predicted_dissimilarity(dissimilarity_func,md=None,md2=None):
     """
     Generate a predicted dissimilarity matrix (for all stimuli)
     """
     if md is None:
         md = all_stimuli()
 
-    result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md)
-
-    return umne.rsa.DissimilarityMatrix([result], md, md)
+    if md2 is None:
+        result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md)
+        return umne.rsa.DissimilarityMatrix([result], md, md)
+    else:
+        result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md2)
+        return umne.rsa.DissimilarityMatrix([result], md, md2)
 
 #-----------------------------------------------------------------------------------------------------------------------
 def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition')):
@@ -448,21 +451,23 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     dissim_mat = reorder_matrix(dissim_mat, fields=(
     'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
     'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
-    md = dissim_mat.md1
+    md1 = dissim_mat.md1
+    md2 = dissim_mat.md2
+
     diss_matrix = dict()
 
-    diss_matrix['InfoType'] = gen_predicted_dissimilarity(dis.InfoType, md=md)
-    diss_matrix['SameSeqAndPosition'] = gen_predicted_dissimilarity(dis.SameSeqAndPosition, md=md)
-    diss_matrix['stim_ID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md)
-    diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md)
-    diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md)
-    diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md)
-    diss_matrix['repeatalter'] = gen_predicted_dissimilarity(dis.repeatalter, md=md)
-    diss_matrix['ChunkBeg'] = gen_predicted_dissimilarity(dis.ChunkBeg, md=md)
-    diss_matrix['ChunkEnd'] = gen_predicted_dissimilarity(dis.ChunkEnd, md=md)
-    diss_matrix['ChunkNumber'] = gen_predicted_dissimilarity(dis.ChunkNumber, md=md)
-    diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md)
-    diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md)
-    diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md)
+    diss_matrix['InfoType'] = gen_predicted_dissimilarity(dis.InfoType, md=md1)
+    diss_matrix['SameSeqAndPosition'] = gen_predicted_dissimilarity(dis.SameSeqAndPosition, md=md1)
+    diss_matrix['stim_ID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md1)
+    diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md1)
+    diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md1)
+    diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md1)
+    diss_matrix['repeatalter'] = gen_predicted_dissimilarity(dis.repeatalter, md=md1)
+    diss_matrix['ChunkBeg'] = gen_predicted_dissimilarity(dis.ChunkBeg, md=md1)
+    diss_matrix['ChunkEnd'] = gen_predicted_dissimilarity(dis.ChunkEnd, md=md1)
+    diss_matrix['ChunkNumber'] = gen_predicted_dissimilarity(dis.ChunkNumber, md=md1)
+    diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md1)
+    diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md1)
+    diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md1)
 
     return diss_matrix, md, dis, dissim_mat.times

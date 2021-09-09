@@ -73,3 +73,6 @@ for suffix in ["_hab","_stand","_viol",""]:
         article_plotting_funcs.plot_7seq_timecourses(reshaped_data[sens],times, save_fig_path='SVM/standard_vs_deviant/',fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix= suffix+sens,
                                   pos_horizontal_bar = 0.47,plot_pearson_corrComplexity=True,chance=0.5)
 
+        pearson = article_plotting_funcs.compute_corr_comp(reshaped_data[sens])
+        article_plotting_funcs.heatmap_avg_subj(pearson, times, xlims=None, ylims=[-.5, .5], filter=False, fig_name=config.fig_path+'/SVM/standard_vs_deviant/heatmap_complexity_pearson_'+suffix+sens+'.svg',
+                         figsize=(10 * 0.8, 1))
