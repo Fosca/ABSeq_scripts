@@ -452,7 +452,7 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
     'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
     md1 = dissim_mat.md1
-    md2 = dissim_mat.md2
+    md2 = dissim_mat.md0
 
     diss_matrix = dict()
 
