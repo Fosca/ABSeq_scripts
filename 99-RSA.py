@@ -75,6 +75,7 @@ def plot_regression_results(regression_results, times, figure_id=1, alpha=0.15, 
 
 analysis_name = "SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 analysis_name = "StimID_SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
+analysis_name = "_no_baseline_all_dataStimID_SequenceID_StimPosition_Complexity_RepeatAlter_ChunkBeginning_ChunkEnd_OpenedChunks_ChunkDepth_ChunkNumber_WithinChunkPosition_ClosedChunks_no_baseline"
 
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 #                                            LOOKING AT PREDICTORS
@@ -138,7 +139,7 @@ for metric_type in ["spearmanr","euclidean"]:
 #                             RUNNING THE REGRESSION ON THE DISSIMILARITY MATRICES FROM THE DATA
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 # %%% the regressors we consider %%%%
-reg_dict = {'InfoType':dis.InfoType ,'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,
+reg_dict = {'stimID':dis.stim_ID ,'SequenceID':dis.SequenceID,'Complexity':dis.Complexity,'OrdinalPos':dis.OrdinalPos,'repeatalter':dis.repeatalter,
             'ChunkBeg':dis.ChunkBeg, 'ChunkEnd':dis.ChunkEnd, 'ChunkNumber':dis.ChunkNumber, 'ChunkDepth':dis.ChunkDepth,
             'NOpenChunks':dis.NOpenChunks}
 
@@ -156,6 +157,8 @@ for metric_type in metrics:
         included_cells_getter=None,filename_subj_id_pattern='.*_(\\w+).*.dmat')
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
+    utils.create_folder(path_save_reg)
+    utils.create_folder(plot_path)
     np.save(path_save_reg+metric_type+suffix+'_reg.npy',reg_dis)
 
 # AND PLOT

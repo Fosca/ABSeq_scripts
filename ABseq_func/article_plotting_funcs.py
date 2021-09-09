@@ -81,7 +81,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
             for i_clu, clu_idx in enumerate(good_cluster_inds):
                 clu_times = times[clusters[clu_idx]]
                 # plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black', alpha=.1)
-                plt.gca().fill_between([clu_times[0], clu_times[-1]], -99999, 99999, color='black', alpha=.08, linewidth=0.0)
+                plt.gca().fill_between([clu_times[0], clu_times[-1]], -10, 10, color='black', alpha=.08, linewidth=0.0)
                 print("The p-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(cluster_pv[clu_idx]))
         plt.gca().set_ylim(ylims)
         return True
