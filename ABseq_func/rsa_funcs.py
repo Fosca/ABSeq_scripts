@@ -338,9 +338,11 @@ def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition'))
     :param reshape_order: the list of fields that says in which hierarchical order we want to organize the data
     :return:
     """
+
+    if len(fields)>2:
+        ValueError("This function doesn t take more than 2 arguments to reorder")
+
     meta_original = dissimilarity_matrix.md0
-    mapping = {key:[] for key in fields}
-    # indices = {'initial_index':[],'final_index':[]}
     initial_index = []
     meta_filter = meta_original.copy()
 
@@ -353,10 +355,6 @@ def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition'))
             meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
             idx = meta_filter2.index[0]
             initial_index.append(idx)
-            # indices['initial_index'].append(idx)
-            # indices['final_index'].append(counter)
-            # mapping[fields[0]].append(val1)
-            # mapping[fields[1]].append(val2)
             counter += 1
 
     dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
@@ -446,11 +444,9 @@ def extract_ticks_labels_from_md(metadata):
 def Predictor_dissimilarity_matrix_and_md(analysis_name):
     dis = dissimilarity
     dissim_mat = np.load(
-        "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/" + analysis_name + "/spearmanr_sub01-pa_190002.dmat",
+        "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/" + analysis_name + "/spearmanr_sub03-mr_190273.dmat",
         allow_pickle=True)
-    dissim_mat = reorder_matrix(dissim_mat, fields=(
-    'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
-    'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
+    dissim_mat = reorder_matrix(dissim_mat, fields=('SequenceID', 'StimPosition'))
     md1 = dissim_mat.md1
     md2 = dissim_mat.md0
 
