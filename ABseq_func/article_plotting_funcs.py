@@ -38,9 +38,10 @@ def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=Fals
     extent = [min(times), max(times), 0, 0.03]
     plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="RdBu_r", extent=extent, vmin=ylims[0], vmax=ylims[1])
     plt.gca().set_yticks([])
-    plt.colorbar()
+    plt.gca().set_xticks([])
+    plt.colorbar(label='Pearsor r')
     if fig_name is not None:
-        plt.gcf().savefig(fig_name)
+        plt.gcf().savefig(fig_name, dpi=300, bbox_inches='tight')
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +62,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
 
     # ---- determine the significant time-windows ----
     if chance is not None:
-        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0] - chance, n_permutations=2 ** 8, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
+        t_obs, clusters, cluster_pv, H0 = mne.stats.permutation_cluster_1samp_test(data_seq_subjs[:, times > 0] - chance, n_permutations=2 ** 12, out_type='mask')  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic))
         good_cluster_inds = np.where(cluster_pv < 0.05)[0]
 
     n_subj = data_seq_subjs.shape[0]
@@ -76,10 +77,11 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
         lb = savgol_filter(lb, 11, 3)
 
     ylims = plt.gca().get_ylim()
+    stat_times = times[times > 0]  # since stats were done on times > 0 (time index of clusters is based on this)
     if plot_shaded_vertical:
         if len(good_cluster_inds) > 0:
             for i_clu, clu_idx in enumerate(good_cluster_inds):
-                clu_times = times[clusters[clu_idx]]
+                clu_times = stat_times[clusters[clu_idx]]
                 # plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black', alpha=.1)
                 plt.gca().fill_between([clu_times[0], clu_times[-1]], -10, 10, color='black', alpha=.08, linewidth=0.0)
                 print("The p-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(cluster_pv[clu_idx]))
@@ -173,5 +175,5 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
     utils.create_folder(op.join(config.fig_path, save_fig_path))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'))
-    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300)
+    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300, bbox_inches='tight')
     plt.close('all')
