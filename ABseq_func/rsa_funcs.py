@@ -315,16 +315,19 @@ def all_stimuli():
     return df
 
 #-----------------------------------------------------------------------------------------------------------------------
-def gen_predicted_dissimilarity(dissimilarity_func,md=None):
+def gen_predicted_dissimilarity(dissimilarity_func,md=None,md2=None):
     """
     Generate a predicted dissimilarity matrix (for all stimuli)
     """
     if md is None:
         md = all_stimuli()
 
-    result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md)
-
-    return umne.rsa.DissimilarityMatrix([result], md, md)
+    if md2 is None:
+        result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md)
+        return umne.rsa.DissimilarityMatrix([result], md, md)
+    else:
+        result = umne.rsa.gen_predicted_dissimilarity(dissimilarity_func, md, md2)
+        return umne.rsa.DissimilarityMatrix([result], md, md2)
 
 #-----------------------------------------------------------------------------------------------------------------------
 def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition')):
@@ -335,42 +338,36 @@ def reorder_matrix(dissimilarity_matrix, fields =('SequenceID', 'StimPosition'))
     :param reshape_order: the list of fields that says in which hierarchical order we want to organize the data
     :return:
     """
-    meta_original = dissimilarity_matrix.md0
-    mapping = {key:[] for key in fields}
-    # indices = {'initial_index':[],'final_index':[]}
-    initial_index = []
-    meta_filter = meta_original.copy()
+    if len(fields)>2:
+        ValueError("This function doesn t take more than 2 arguments to reorder")
 
-    counter = 0
-    key_values1 = np.unique(meta_original[fields[0]])
-    for val1 in key_values1:
-        meta_filter1 = meta_original[meta_filter[fields[0]].values == val1]
-        key_values2 = np.unique(meta_filter1[fields[1]])
-        for val2 in key_values2:
-            meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
-            idx = meta_filter2.index[0]
-            initial_index.append(idx)
-            # indices['initial_index'].append(idx)
-            # indices['final_index'].append(counter)
-            # mapping[fields[0]].append(val1)
-            # mapping[fields[1]].append(val2)
-            counter += 1
-
-    dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
-
-    for m in range(counter):
-        ind_m = initial_index[m]
-        if ind_m is not None:
-            for n in range(counter):
-                ind_n = initial_index[n]
-                if ind_n is not None:
-                    dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
-
-    meta_final = meta_original.reindex(initial_index)
+    meta_fin = []
+    for meta_original in [dissimilarity_matrix.md0,dissimilarity_matrix.md1]:
+        initial_index = []
+        meta_filter = meta_original.copy()
+        counter = 0
+        key_values1 = np.unique(meta_original[fields[0]])
+        for val1 in key_values1:
+            meta_filter1 = meta_original[meta_filter[fields[0]].values == val1]
+            key_values2 = np.unique(meta_filter1[fields[1]])
+            for val2 in key_values2:
+                meta_filter2 = meta_filter1[meta_filter1[fields[1]].values == val2]
+                idx = meta_filter2.index[0]
+                initial_index.append(idx)
+                counter += 1
+        dissim_final = np.nan*np.ones((dissimilarity_matrix.data.shape[0],counter,counter))
+        for m in range(counter):
+            ind_m = initial_index[m]
+            if ind_m is not None:
+                for n in range(counter):
+                    ind_n = initial_index[n]
+                    if ind_n is not None:
+                        dissim_final[:,m,n] = dissimilarity_matrix.data[:,ind_m,ind_n]
+        meta_fin.append(meta_original.reindex(initial_index))
 
     dissimilarity_matrix.data = dissim_final
-    dissimilarity_matrix.md0 = meta_final
-    dissimilarity_matrix.md1 = meta_final
+    dissimilarity_matrix.md0 = meta_fin[0]
+    dissimilarity_matrix.md1 = meta_fin[1]
 
     return dissimilarity_matrix
 
@@ -443,26 +440,26 @@ def extract_ticks_labels_from_md(metadata):
 def Predictor_dissimilarity_matrix_and_md(analysis_name):
     dis = dissimilarity
     dissim_mat = np.load(
-        "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/" + analysis_name + "/spearmanr_sub01-pa_190002.dmat",
+        "/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/rsa/dissim/" + analysis_name + "/spearmanr_sub03-mr_190273.dmat",
         allow_pickle=True)
-    dissim_mat = reorder_matrix(dissim_mat, fields=(
-    'SequenceID', 'StimPosition', 'Complexity', 'RepeatAlter', 'ChunkBeginning', 'ChunkEnd', 'OpenedChunks',
-    'ChunkDepth', 'ChunkNumber', 'WithinChunkPosition', 'ClosedChunks'))
-    md = dissim_mat.md1
+    dissim_mat = reorder_matrix(dissim_mat, fields=('SequenceID', 'StimPosition'))
+    md1 = dissim_mat.md1
+    md2 = dissim_mat.md0
+
     diss_matrix = dict()
 
-    diss_matrix['InfoType'] = gen_predicted_dissimilarity(dis.InfoType, md=md)
-    diss_matrix['SameSeqAndPosition'] = gen_predicted_dissimilarity(dis.SameSeqAndPosition, md=md)
-    diss_matrix['stim_ID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md)
-    diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md)
-    diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md)
-    diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md)
-    diss_matrix['repeatalter'] = gen_predicted_dissimilarity(dis.repeatalter, md=md)
-    diss_matrix['ChunkBeg'] = gen_predicted_dissimilarity(dis.ChunkBeg, md=md)
-    diss_matrix['ChunkEnd'] = gen_predicted_dissimilarity(dis.ChunkEnd, md=md)
-    diss_matrix['ChunkNumber'] = gen_predicted_dissimilarity(dis.ChunkNumber, md=md)
-    diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md)
-    diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md)
-    diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md)
+    diss_matrix['InfoType'] = gen_predicted_dissimilarity(dis.InfoType, md=md1)
+    diss_matrix['SameSeqAndPosition'] = gen_predicted_dissimilarity(dis.SameSeqAndPosition, md=md1)
+    diss_matrix['stim_ID'] = gen_predicted_dissimilarity(dis.stim_ID, md=md1,md2=md2)
+    diss_matrix['Complexity'] = gen_predicted_dissimilarity(dis.Complexity, md=md1)
+    diss_matrix['SequenceID'] = gen_predicted_dissimilarity(dis.SequenceID, md=md1)
+    diss_matrix['OrdinalPos'] = gen_predicted_dissimilarity(dis.OrdinalPos, md=md1)
+    diss_matrix['repeatalter'] = gen_predicted_dissimilarity(dis.repeatalter, md=md1)
+    diss_matrix['ChunkBeg'] = gen_predicted_dissimilarity(dis.ChunkBeg, md=md1)
+    diss_matrix['ChunkEnd'] = gen_predicted_dissimilarity(dis.ChunkEnd, md=md1)
+    diss_matrix['ChunkNumber'] = gen_predicted_dissimilarity(dis.ChunkNumber, md=md1)
+    diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md1)
+    diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md1)
+    diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md1)
 
-    return diss_matrix, md, dis, dissim_mat.times
+    return diss_matrix, md1, md2, dis, dissim_mat.times
