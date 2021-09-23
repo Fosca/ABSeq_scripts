@@ -162,9 +162,6 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         epochs_final._data = data_good_shape
         epochs = epochs_final
 
-
-
-
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
         suffix += 'baselined_'
@@ -245,7 +242,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     residual_epochs.save(op.join(results_path,'residuals' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
-def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_channels=True,
+def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_channels='mag_to_grad',
                        apply_baseline=False, suffix='', save_evoked_for_regressor_level=True):
     """
     This function computes and saves the regression results when regressing on the epochs (or residuals if specified in epochs_fname)
@@ -506,14 +503,14 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
                 # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
                     fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo.jpg'
                     print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
                     fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo_bars.jpg'
                     print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
 
             # =========================================================== #

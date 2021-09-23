@@ -309,7 +309,7 @@ def linear_reg(subject):
     filter_names = ['Hab','Stand','Viol']
     for filter_name in filter_names:
         regression_funcs.compute_regression(subject, ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
-                                                      'RepeatAlternp1'], "", filter_name, remap_channels=True)
+                                                      'RepeatAlternp1'], "", filter_name, remap_channels='mag_to_grad')
 
         # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
         regression_funcs.compute_regression(subject, ['Complexity','WithinChunkPosition','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','OpenedChunks'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/" + subject +"/residuals--remapped_clean-epo.fif", filter_name,
