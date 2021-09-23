@@ -146,8 +146,8 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
     elif remap_channels =='mag_to_grad' and epochs_fname == '':
         print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
         from mne.channels.layout import _merge_grad_data as rms_grad
-        epochs_final = epochs.copy().as_type('mag')
-        epochs = epochs.as_type('grad')
+        epochs_final = epochs.copy()
+        epochs_final.as_type('mag')
         print('The data is of shape')
         print(epochs._data.shape)
         print('We put it in n_channels X n_epochs X n_times')
