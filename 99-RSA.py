@@ -81,7 +81,7 @@ analysis_name = "_no_baseline_all_dataStimID_SequenceID_StimPosition_Complexity_
 #                                            LOOKING AT PREDICTORS
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 
-diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+diss_matrix, md,md2, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
 
 #  --- Visualize the predictor matrices ---
 
@@ -90,7 +90,7 @@ save_regressors_path = config.result_path+"/rsa/dissim/"+analysis_name+'/regress
 utils.create_folder(save_regressors_path)
 
 for key in diss_matrix.keys():
-    viz_predictor_mats(eval('dis.'+key), md)
+    viz_predictor_mats(eval('dis.'+key), md,md2=md2)
     plt.gcf().savefig(save_regressors_path+key+'.png')
     plt.close('all')
 
@@ -117,7 +117,7 @@ fig.savefig(config.result_path+'/rsa/dissim/'+analysis_name+'/correlations/corre
 #                             VISUALIZING THE DISSIMILARITY MATRIX DATA
 # ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======  ======
 
-for metric_type in ["spearmanr","euclidean"]:
+for metric_type in ["correlation"]:
     print("==== Running the analysis for the metric %s ===="%metric_type)
     dissim_metric = rsa_funcs.load_and_avg_dissimilarity_matrices(config.result_path + "rsa/dissim/"+analysis_name+"/"+metric_type+"*.dmat")
     dissim_metric = rsa_funcs.reorder_matrix(dissim_metric, fields=(
@@ -144,12 +144,12 @@ reg_dict = {'stimID':dis.stim_ID ,'SequenceID':dis.SequenceID,'Complexity':dis.C
             'NOpenChunks':dis.NOpenChunks}
 
 # reg_dict = {'StimID':dis.stim_ID,'SeqID':dis.SequenceID}
-suffix = '_withInfoType'
+suffix = ''
 # metrics = ["euclidean","spearmanr"]
-metrics = ["spearmanr"]
+metrics = ["correlation"]
 # 1 - 1 - 1 -  PERFORM THE REGRESSION WITH ALL THE REGRESSORS TOGETHER
 for metric_type in metrics:
-    diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+    diss_matrix, md, md2, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
     dis = rsa_funcs.dissimilarity
     reg_dis = umne.rsa.load_and_regress_dissimilarity(
         config.result_path+"/rsa/dissim/"+analysis_name+"/"+metric_type+"*",
@@ -163,6 +163,7 @@ for metric_type in metrics:
 
 # AND PLOT
 for metric_type in metrics:
+
     path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
     plot_path = path_save_reg + '/plots/'
     reg_dis = np.load(path_save_reg+metric_type+suffix+'_reg.npy',allow_pickle=True)
@@ -171,15 +172,15 @@ for metric_type in metrics:
     fig.savefig(plot_path+metric_type+suffix+'_all.png')
     for ii, name in enumerate(reg_dict.keys()):
         plt.close('all')
-        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])
-        plt.ylim([-0.06,0.07])
+        fig = umne.rsa.plot_regression_results(reg_dis[0][:, :, ii, np.newaxis], times,show_significance=True, significance_time_window=[-0.4,1])
+        plt.ylim([-0.06,0.1])
         fig.savefig(plot_path+metric_type+suffix+'_'+name + '.png')
 
 
 # 2 - 2 - 2 -  PERFORM THE REGRESSION FOR EACH REGRESSOR SEPARATELY
 
-for metric_type in ["euclidean","spearmanr"]:
-    diss_matrix, md, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+for metric_type in ["correlation"]:
+    # diss_matrix, md, md2, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
     dis = rsa_funcs.dissimilarity
     for ii , name in enumerate(reg_dict.keys()):
         reg_dis = umne.rsa.load_and_regress_dissimilarity(

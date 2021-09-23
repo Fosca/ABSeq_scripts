@@ -101,7 +101,7 @@ def filter_string_for_metadata():
     return filters
 
 # ----------------------------------------------------------------------------------------------------------------------
-def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,filter_name,remap_grads,apply_baseline,suffix):
+def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_names, filter_name, remap_channels, apply_baseline, suffix):
     """
     This function loads and removes the epochs that have nan fields in the metadata for the regressors of interest in the analysis
     It performs the additional modifications to the epochs (filtering, remapping, baselining) that are asked
@@ -111,7 +111,7 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
     :param cleaned: Set it to True if you want to perform the analysis on cleaned (AR global) data
     :param regressors_names: List of fieds that exist in the metadata of the epochs
     :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
-    :param remap_grads: True if you want to remaps the 306 channels onto 102 virtual mags
+    :param remap_channels: 'grad_to_mag' if you want to remaps the 306 channels onto 102 virtual mags and 'mag_to_grad' is you want to remap the 306 sensors into 102 sensors with the norm(rms) of the grads
     :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
     :return:
@@ -138,11 +138,32 @@ def prepare_epochs_for_regression(subject,cleaned,epochs_fname,regressors_names,
         to_append_to_results_path += '_' + name
     results_path = results_path + to_append_to_results_path[1:]+ '/'
     # - - - - OPTIONNAL STEPS - - - -
-    if remap_grads and epochs_fname == '':
+    if remap_channels =='grad_to_mag' and epochs_fname == '':
         print('Remapping grads to mags')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
-        suffix += 'remapped_'
+        suffix += 'remapped_gtm'
+    elif remap_channels =='mag_to_grad' and epochs_fname == '':
+        print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
+        from mne.channels.layout import _merge_grad_data as rms_grad
+        epochs_final = epochs.copy().as_type('mag')
+        epochs = epochs.as_type('grad')
+        print('The data is of shape')
+        print(epochs._data.shape)
+        print('We put it in n_channels X n_epochs X n_times')
+        data_good_shape = np.transpose(epochs._data,(1,0,2))
+        print(data_good_shape.shape)
+        data_good_shape = rms_grad(data_good_shape)
+        print("After rms_grad it is of shape ")
+        data_good_shape.shape
+        print("We put it back to the original n_epochs X n_channels X n_times")
+        data_good_shape = np.transpose(data_good_shape,(1,0,2))
+        print("and replace the data from epochs_final by it")
+        epochs_final._data = data_good_shape
+        epochs = epochs_final
+
+
+
 
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
@@ -224,8 +245,8 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     residual_epochs.save(op.join(results_path,'residuals' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
-def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_grads=True,
-                       apply_baseline=False, suffix='',save_evoked_for_regressor_level=True):
+def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_channels=True,
+                       apply_baseline=False, suffix='', save_evoked_for_regressor_level=True):
     """
     This function computes and saves the regression results when regressing on the epochs (or residuals if specified in epochs_fname)
     :param subject: subject's NIP
@@ -233,7 +254,7 @@ def compute_regression(subject, regressors_names, epochs_fname, filter_name, cle
     :epochs_fname: '' if you want to load the normal epochs otherwise specify what you want to load (path starting in the linear_model folder of the results)
     :param cleaned: Set it to True if you want to perform the analysis on cleaned (AR global) data
     :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
-    :param remap_grads: True if you want to remaps the 306 channels onto 102 virtual mags
+    :param remap_channels: 'grad_to_mag' if you want to remaps the 306 channels onto 102 virtual mags and 'mag_to_grad' is you want to remap the 306 sensors into 102 sensors with the norm(rms) of the grads
     :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
 
@@ -241,7 +262,7 @@ def compute_regression(subject, regressors_names, epochs_fname, filter_name, cle
 
     # - prepare the epochs (removing the ones that have nans for the fields of interest) and define the results path and suffix ---
     epochs, results_path, suffix = prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_names,
-                                                                 filter_name, remap_grads, apply_baseline, suffix)
+                                                                 filter_name, remap_channels, apply_baseline, suffix)
 
     if save_evoked_for_regressor_level:
         save_evoked_levels_regressors(epochs, subject, regressors_names, results_path, suffix)

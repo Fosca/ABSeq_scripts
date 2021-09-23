@@ -165,8 +165,10 @@ def SVM_generate_different_sequences(subject):
 # 1 - torun
 def SVM_generate_all_sequences(subject):
     # ---- I modified the following functions so they run on the cleaned epochs ------
-    # SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
-    # SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # --- generate the decoders on the different folds (split per run) ------
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # ----
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
     # apply to the 16 items sequences
     SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.131, 0.210], sliding_window=True,cleaned=True)
     SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.131, 0.210], sliding_window=True,cleaned=True)
@@ -306,8 +308,12 @@ def linear_reg(subject):
     from ABseq_func import regression_funcs
     filter_names = ['Hab','Stand','Viol']
     for filter_name in filter_names:
+        regression_funcs.compute_regression(subject, ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
+                                                      'RepeatAlternp1'], "", filter_name, remap_channels=True)
+
         # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
-        regression_funcs.compute_regression(subject,['Complexity','WithinChunkPosition','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','OpenedChunks'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/"+subject+"/residuals--remapped_clean-epo.fif",filter_name,remap_grads=True)
+        regression_funcs.compute_regression(subject, ['Complexity','WithinChunkPosition','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','OpenedChunks'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/" + subject +"/residuals--remapped_clean-epo.fif", filter_name,
+                                            remap_channels=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
 #                                   RSA
