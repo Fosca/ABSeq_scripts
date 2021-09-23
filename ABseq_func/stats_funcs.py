@@ -246,7 +246,9 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     if legend:
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
+        # fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
+        fig, ax = plt.subplots(1, 1, figsize=(10 * 0.8, 7 * 0.8))
+
     if blackfig:
         textcolor = 'white'
         linecolor = 'white'
@@ -257,8 +259,8 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         linecolor = 'black'
     plt.axvline(0, linestyle='-', color=linecolor, linewidth=2)
     for xx in range(3):
-        plt.axvline(250 * xx, linestyle='--', color=linecolor, linewidth=1)
-    ax.set_xlabel('Time (ms)', color=textcolor)
+        plt.axvline(250 * xx, linestyle='--', color=linecolor, linewidth=0.5)
+    ax.set_xlabel('Time (ms)', color=textcolor, fontsize=14)
     condnames = list(evoked_dict.keys())
     if len(condnames) == 2:
         colorslist = ['r', 'b']
@@ -278,28 +280,28 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         data = evoked_dict[condname].copy()
         evoked_funcs.plot_evoked_with_sem_1cond(data, condnames_lgd[ncond], ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
     ymin, ymax = ax.get_ylim()
-    ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='grey', alpha=0.2, linewidth=0.0)
+    ax.fill_betweenx((-99999, 999999), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='grey', alpha=.08, linewidth=0.0)
+    ax.set_ylim([ymin, ymax])
     if legend:
         # plt.legend(loc='best', fontsize=6)
         l = plt.legend(fontsize=9, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
         for text in l.get_texts():
             text.set_color(textcolor)
-    for key in ('top', 'right'):  # Remove spines
-        ax.spines[key].set(visible=False)
+    # for key in ('top', 'right'):  # Remove spines
+    #     ax.spines[key].set(visible=False)
     # ax.spines['bottom'].set_position('zero')
     fmt = ticker.ScalarFormatter(useMathText=True)
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
-    ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
+    # ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
     ax.set_xlim([-50, 350])
-    ax.set_ylim([ymin, ymax])
-    ax.set_ylabel(units[ch_type], color=textcolor)
+    ax.set_ylabel(units[ch_type], color=textcolor, fontsize=14)
     ax.spines['bottom'].set_color(linecolor)
     ax.spines['left'].set_color(linecolor)
     ax.tick_params(axis='x', colors=textcolor)
     ax.tick_params(axis='y', colors=textcolor)
     plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1), fontsize=10, weight='bold', color=textcolor)
-    fig.tight_layout(pad=0.5, w_pad=0)
+    # fig.tight_layout(pad=0.5, w_pad=0)
 
     return fig
 

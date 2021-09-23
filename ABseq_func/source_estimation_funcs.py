@@ -422,8 +422,8 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     # axes[evoked_idx].set_axisbelow(True)
     # axes[evoked_idx].spines['bottom'].set_position('zero')
     # axes[evoked_idx].set_axisbelow(False)
-    for key in ('top', 'right'):
-        axes[evoked_idx].spines[key].set(visible=False)
+    # for key in ('top', 'right'):
+    #     axes[evoked_idx].spines[key].set(visible=False)
     # Tweak the ticks and limits
     if signallims == 'fixed':
         if ch_type == 'mag':
