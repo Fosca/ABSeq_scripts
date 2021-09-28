@@ -5,7 +5,7 @@ import numpy as np
 print('jaime les tomates')
 
 # cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_long')
-cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
+# cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspin_bigM')
 
 # cluster_funcs.create_qsub('SVM_generate_all_sequences', 'SVM_arGlob', 'SVM_arGlob', queue='Nspin_bigM')
 
@@ -31,7 +31,7 @@ cluster_funcs.create_qsub('compute_rsa_dissim_matrix', 'rsa', 'rsa', queue='Nspi
 # cluster_funcs.create_qsub('compute_evoked', 'evo', 'evo', queue='Nspin_bigM')
 
 
-# cluster_funcs.create_qsub('linear_reg', 'lrXX', 'lrXX', queue='Nspin_bigM')
+cluster_funcs.create_qsub('linear_reg', 'lr_maps', 'lr_maps', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg1', 'lr1', 'lr1', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('linear_reg2', 'lr2', 'lr2', queue='Nspin_bigM')
 # cluster_funcs.create_qsub('SVM_full_sequences_16items1', '116its', '116its', queue='Nspin_bigM')
