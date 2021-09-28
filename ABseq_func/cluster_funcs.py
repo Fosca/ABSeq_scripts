@@ -3,7 +3,6 @@ from __future__ import division
 import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
-
 from initialization_paths import initialization_paths
 from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs, rsa_funcs
 import config
@@ -306,6 +305,7 @@ def ord_code_16items(subject,load_residuals_regression=False):
 
 def linear_reg(subject):
     from ABseq_func import regression_funcs
+    config.noEEG = True
     filter_names = ['Hab','Stand','Viol']
     for filter_name in filter_names:
         regression_funcs.compute_regression(subject, ['Complexity'], "", filter_name, remap_channels='mag_to_grad')

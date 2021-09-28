@@ -116,13 +116,6 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
     :return:
 
-    subject = config.subjects_list[0]
-    cleaned = True
-    epochs_fname = ''
-    regressors_names = ['Complexity']
-    filter_name = ''
-    remap_channels = 'mag_to_grad'
-
     """
     linear_reg_path = config.result_path + '/linear_models/' +filter_name+'/'
     epo_fname = linear_reg_path + epochs_fname
@@ -154,8 +147,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
         from mne.channels.layout import _merge_grad_data as rms_grad
         epochs_final = epochs.copy()
-        epochs_final.as_type(ch_type='mag',mode='accurate')
-        epochs = epochs.as_type(ch_type='grad',mode='accurate')
+        epochs_final.as_type('mag')
         print('The data is of shape')
         print(epochs._data.shape)
         print('We put it in n_channels X n_epochs X n_times')

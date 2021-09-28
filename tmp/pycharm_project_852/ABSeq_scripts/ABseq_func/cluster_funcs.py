@@ -2,8 +2,9 @@
 from __future__ import division
 import sys
 sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
 from initialization_paths import initialization_paths
-from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs
+from ABseq_func import TP_funcs, SVM_funcs, utils, epoching_funcs, rsa_funcs
 import config
 import mne
 import numpy as np
@@ -156,14 +157,24 @@ def autoreject_marmouset(subject):
 # ---------------------------------------- DECODING FUNCTIONS FOR THE CLUSTER ------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 def SVM_generate_different_sequences(subject):
-    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
-    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    SVM_funcs.generate_SVM_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
+    SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=False,sliding_window=True)
 
 
+# 1 - torun
 def SVM_generate_all_sequences(subject):
-    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
-def GAT_SVM_all_seq(subject):
-    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=True,sliding_window=True)
+    # ---- I modified the following functions so they run on the cleaned epochs ------
+    # --- generate the decoders on the different folds (split per run) ------
+    SVM_funcs.generate_SVM_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # ----
+    SVM_funcs.GAT_SVM_trained_all_sequences(subject, load_residuals_regression=False,sliding_window=True,cleaned=True)
+    # apply to the 16 items sequences
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.131, 0.210], sliding_window=True,cleaned=True)
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.131, 0.210], sliding_window=True,cleaned=True)
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.211, 0.410],  sliding_window=True,cleaned=True)
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.211, 0.410], sliding_window=True,cleaned=True)
+
+
 
 def GAT_SVM_separate_seq(subject):
     SVM_funcs.GAT_SVM_trained_separate_sequences(subject, load_residuals_regression=True,sliding_window=True)
@@ -175,63 +186,111 @@ def SVM_generate_different_sequences(subject):
 def SVM_GAT_all_sequences(subject):
     SVM_funcs.GAT_SVM(subject, load_residuals_regression=True,sliding_window=True)
 
-def SVM_full_sequences_16items(subject):
-    # ----- We test on the 16 items sequences. We average the predictions of the decoders between 140 and 180 ms -----
-    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.140, 0.180], window=True, sliding_window=True)
-    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.140, 0.180], window=True, sliding_window=True)
+def SVM_full_sequences_16items1(subject):
+    # subject = config.subjects_list[0]
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.130, 0.210], window=True, sliding_window=True,cleaned=True)
+def SVM_full_sequences_16items2(subject):
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.210, 0.410], window=True, sliding_window=True,cleaned=True)
+def SVM_full_sequences_16items3(subject):
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.130, 0.210], window=True, sliding_window=True,cleaned=True)
+def SVM_full_sequences_16items4(subject):
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.210, 0.410], window=True, sliding_window=True,cleaned=True)
+
+
+def SVM_full_sequences_16itemsX(subject):
+    SVM_funcs.apply_SVM_filter_16_items_epochs(subject, times=[0.120, 0.190], window=True, sliding_window=True,cleaned=False)
+def SVM_full_sequences_16itemsY(subject):
+    SVM_funcs.apply_SVM_filter_16_items_epochs_habituation(subject, times=[0.120, 0.190], window=True, sliding_window=True,cleaned=False)
+
+
+def epoching_ARglobal(subject):
+    epoching_funcs.run_epochs(subject,epoch_on_first_element=False,baseline=False)
+    epoching_funcs.run_epochs(subject,epoch_on_first_element=True,baseline=False)
 
 # ======================================================================================================================
 # =====================================  FEATURES DECODING =============================================================
 # ======================================================================================================================
-
 # ---- stimulus ID ------
 def SVM_features_stimID(subject,load_residuals_regression=True,cross_validation = None):
-
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'StimID', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
-
 # ---- repetition or alternation ------
-def SVM_features_repeatalter(subject,load_residuals_regression=True,cross_validation = None):
+def SVM_features_repeatalter(subject,load_residuals_regression=False,cross_validation = None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
                                  list_sequences=[3,4,5,6,7], cross_val_func=cross_validation)
-
 # ---- ordinal position ------
-def SVM_features_withinchunk(subject, load_residuals_regression=True, cross_validation=None):
+def SVM_features_withinchunk(subject, load_residuals_regression=False, cross_validation=None):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
                                            load_residuals_regression=load_residuals_regression,
                                            list_sequences=[4, 5, 6], cross_val_func=cross_validation,nvalues_feature=4)
 
 # ----- ordinal position focus on quads ----
-def SVM_quad_ordpos(subject):
-    for resid in [True,False]:
-        SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=resid,
-                                     list_sequences=[4], cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15",nvalues_feature=4)
+def SVM_quad_ordpos(subject,cleaned=True):
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=False,
+                                 list_sequences=[4], cross_val_func=None,filter_from_metadata="StimPosition > 2 and StimPosition < 15",nvalues_feature=4,clean=cleaned)
 
 
 # ----- ordinal position focus on quads ----
-def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regression=True):
-
-    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=load_residuals_regression,
-                                           filter_from_metadata="StimPosition > 2 and StimPosition < 15",cross_val_func=SVM_funcs.train_quads_test_others,nvalues_feature=4)
+# def SVM_features_withinchunk_train_quads_test_others(subject,load_residuals_regression=True):
+#
+#     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition', load_residuals_regression=load_residuals_regression,
+#                                            filter_from_metadata="StimPosition > 2 and StimPosition < 15",cross_val_func=SVM_funcs.train_quads_test_others,nvalues_feature=4)
 
 # ----- quelles séquences ? ----
-def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=True):
-
+def SVM_features_number_ofOpenedChunks(subject,load_residuals_regression=False,cleaned=True):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',SVM_dec =SVM_funcs.regression_decoder(),balance_features=False,distance=False,  load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 
 # ----- quelles séquences pour chunk opening ? ----
-def SVM_features_chunkBeg(subject,load_residuals_regression=True):
-
+def SVM_features_chunkBeg(subject,load_residuals_regression=False,cleaned=True):
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
 
 
 # ----- quelles séquences pour chunk closing ? ----
-def SVM_features_chunkEnd(subject,load_residuals_regression=True):
+def SVM_features_chunkEnd(subject,load_residuals_regression=False,cleaned=True):
 
     SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
                                            cross_val_func=None,list_sequences=[3,4,5,6,7])
+
+
+# ----- quelles séquences pour chunk closing ? ----
+def SVM_features_sequence_structure1(subject,load_residuals_regression=False,cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkBeginning',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+
+def SVM_features_sequence_structure2(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkEnd',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6])
+
+def SVM_features_sequence_structure3(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'WithinChunkPosition',
+                                           load_residuals_regression=load_residuals_regression,
+                                           list_sequences=[4, 5, 6], cross_val_func=cross_val_func,nvalues_feature=4)
+
+def SVM_features_sequence_structure4(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'RepeatAlter', load_residuals_regression=load_residuals_regression,
+                                 list_sequences=[3,4,5,6], cross_val_func=cross_val_func)
+
+def SVM_features_sequence_structure5(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'OpenedChunks',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
+def SVM_features_sequence_structure6(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ClosedChunks',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
+def SVM_features_sequence_structure7(subject, load_residuals_regression=False, cleaned=True):
+    cross_val_func = SVM_funcs.leave_one_sequence_out
+    SVM_funcs.SVM_feature_decoding_wrapper(subject, 'ChunkDepth',load_residuals_regression=load_residuals_regression,
+                                           cross_val_func=cross_val_func,list_sequences=[3,4,5,6],nvalues_feature=4,SVM_dec=SVM_funcs.regression_decoder(),balance_features=False,distance=False,clean = cleaned)
+
 
 
 def ord_code_16items(subject,load_residuals_regression=False):
@@ -239,45 +298,34 @@ def ord_code_16items(subject,load_residuals_regression=False):
     SVM_funcs.SVM_ordinal_code_train_test_quads(subject)
 
 # ----------------------------------------------------------------------------------------------------------------------
+#                            LINEAR REGRESSIONS
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-def compute_evoked(subject):
-    evoked_funcs.create_evoked(subject, cleaned=False)
-    evoked_funcs.create_evoked(subject, cleaned=True)
-
 
 def linear_reg(subject):
-    from ABseq_func import linear_reg_funcs  # spent hours on the issue "linear_reg_funcs is not defined", although all other similar functions worked with no issues. This was the solution.
-    linear_reg_funcs.run_linear_regression(subject, cleaned=True)
+    from ABseq_func import regression_funcs
+    config.noEEG = True
+    filter_names = ['Hab','Stand','Viol']
+    for filter_name in filter_names:
+        regression_funcs.compute_regression(subject, ['Complexity'], "", filter_name, remap_channels='mag_to_grad')
 
+        # regression_funcs.compute_regression(subject,['Intercept','surprise_100','Surprisenp1','RepeatAlter','RepeatAlternp1'],"",filter_name,remap_grads=True)
+        # regression_funcs.compute_regression(subject, ['Complexity','WithinChunkPosition','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth','OpenedChunks'],"/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/" + subject +"/residuals--remapped_clean-epo.fif", filter_name,
+        #                                   remap_channels=True)
 
-def surprise_omegas_analysis(subject):
-    import numpy as np
-    from ABseq_func import TP_funcs
-    list_omegas = np.logspace(-1,2,50)
+# ----------------------------------------------------------------------------------------------------------------------
+#                                   RSA
+# ----------------------------------------------------------------------------------------------------------------------
 
-    TP_funcs.from_epochs_to_surprise(subject, list_omegas)
-    TP_funcs.append_surprise_to_metadata_clean(subject)
-    from importlib import reload
-    reload(TP_funcs)
-    # TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=50,hfilter=None)
-    TP_funcs.run_linear_regression_surprises(subject, list_omegas, clean=True, decim=None, hfilter=10)
-
-    # ----------- then we have to compute the optimal omega for each time and channel -------------
-    # TP_funcs.regress_out_optimal_omega(subject, clean=True)
-    # TP_funcs.compute_posterior_probability(subject)
-    # TP_funcs.regress_out_optimal_omega_per_channel(subject)
-
-
-def simplified_linear_regression_latest(subject):
-    from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt_latest(subject)
-
-
-def simplified_with_complexity(subject):
-    from ABseq_func import linear_reg_funcs
-    linear_reg_funcs.run_linear_reg_surprise_repeat_alt(subject, with_complexity=True)
+def compute_rsa_dissim_matrix(subject):
+    """
+    We compute the dissimilarity matrix by grouping the epochs by sequence and position (for standard sequences only)
+    """
+    rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'correlation', baseline=None, which_analysis='_no_baseline_all_data',clean=False,recompute=True)
+    # rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None, which_analysis='_no_baseline_all_data',clean=False,recompute=True)
+    # rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'euclidean', baseline=None, which_analysis='_no_baseline_all_data',clean=False,recompute=True)
+    # rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'mahalanobis', baseline=None, which_analysis='')
 
 
 def compute_correlation_stc_complexity(subject):
