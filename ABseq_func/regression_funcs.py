@@ -120,8 +120,9 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
     cleaned = True
     epochs_fname = ''
     regressors_names = ['Complexity']
-    filter_name = ''
+    filter_name = 'Hab'
     remap_channels = 'mag_to_grad'
+    suffix = ''
 
     """
     linear_reg_path = config.result_path + '/linear_models/' +filter_name+'/'
@@ -144,31 +145,30 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
             epochs.metadata[name] = scale(epochs.metadata[name])
         to_append_to_results_path += '_' + name
     results_path = results_path + to_append_to_results_path[1:]+ '/'
+
     # - - - - OPTIONNAL STEPS - - - -
     if remap_channels =='grad_to_mag' and epochs_fname == '':
         print('Remapping grads to mags')
+        # ---- build fake epochs with only mags ----
+        epochs_final = epochs.copy()
+        epochs_final.pick_types(meg='mag')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_gtm'
+        epochs_final._data = epochs._data
+
     elif remap_channels =='mag_to_grad' and epochs_fname == '':
         print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
         from mne.channels.layout import _merge_grad_data as rms_grad
         epochs_final = epochs.copy()
-        epochs_final.as_type(ch_type='mag',mode='accurate')
+        epochs_final.pick_types(meg='mag')
         epochs = epochs.as_type(ch_type='grad',mode='accurate')
-        print('The data is of shape')
-        print(epochs._data.shape)
-        print('We put it in n_channels X n_epochs X n_times')
         data_good_shape = np.transpose(epochs._data,(1,0,2))
-        print(data_good_shape.shape)
         data_good_shape = rms_grad(data_good_shape)
-        print("After rms_grad it is of shape ")
-        data_good_shape.shape
-        print("We put it back to the original n_epochs X n_channels X n_times")
         data_good_shape = np.transpose(data_good_shape,(1,0,2))
-        print("and replace the data from epochs_final by it")
+
         epochs_final._data = data_good_shape
-        epochs = epochs_final
+        suffix += 'remapped_mtg'
 
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
@@ -182,7 +182,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         epochs = epochs[filters[filter_name]]
     print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
 
-    return epochs, results_path, suffix
+    return epochs_final, results_path, suffix
 
 # ----------------------------------------------------------------------------------------------------------------------
 def run_regression_CV(epochs, regressors_names):
@@ -262,6 +262,9 @@ def compute_regression(subject, regressors_names, epochs_fname, filter_name, cle
     :param remap_channels: 'grad_to_mag' if you want to remaps the 306 channels onto 102 virtual mags and 'mag_to_grad' is you want to remap the 306 sensors into 102 sensors with the norm(rms) of the grads
     :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
+
+    apply_baseline = False
+    suffix=''
 
     """
 
