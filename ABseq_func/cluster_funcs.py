@@ -308,7 +308,7 @@ def linear_reg(subject):
     config.noEEG = True
     filter_names = ['Hab','Stand','Viol']
     for filter_name in filter_names:
-        regression_funcs.compute_regression(subject, ['Complexity'], "", filter_name, remap_channels='mag_to_grad')
+        regression_funcs.compute_regression(subject, ['Intercept','Complexity'], "", filter_name, remap_channels='mag_to_grad')
         # regression_funcs.compute_regression(subject, ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
         #                                               'RepeatAlternp1'], "", filter_name, remap_channels='mag_to_grad')
 
