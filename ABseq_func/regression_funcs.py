@@ -312,7 +312,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
     return True
 
 # ----------------------------------------------------------------------------------------------------------------------
-def merge_individual_regression_results(regressors_names, epochs_fname, filter_name):
+def merge_individual_regression_results(regressors_names, epochs_fname, filter_name,suffix = ''):
 
     """
     This function loads individual regression results (betas, computed by 'compute_regression' function)
@@ -339,7 +339,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
     # Load data from all subjects
     tmpdat = dict()
     for name in regressors_names:
-        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name='beta_' + name, root_path=results_path)
+        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name='beta_' + name + suffix, root_path=results_path)
 
     # Store as epo objects
     for name in regressors_names:
