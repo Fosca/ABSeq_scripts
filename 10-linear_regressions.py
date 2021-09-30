@@ -43,26 +43,30 @@ for filter_name in filter_names:
     # Regression of complexity on original data - group analysis
     reg_names = ['Intercept', 'Complexity']
     regression_funcs.merge_individual_regression_results(reg_names, "", filter_name,suffix = '--remapped_mtgclean' )
-    regression_funcs.regression_group_analysis(reg_names, "", filter_name, remap_grads=True, Do3Dplot=True)
+    regression_funcs.regression_group_analysis(reg_names, "", filter_name, suffix='remapped_mtg', Do3Dplot=False)
 
 
     # Regression of complexity on original data - group analysis
     reg_names = ['Intercept', 'Complexity']
     regression_funcs.merge_individual_regression_results(reg_names, "", filter_name)
-    regression_funcs.regression_group_analysis(reg_names, "", filter_name, remap_grads=True, Do3Dplot=True)
+    regression_funcs.regression_group_analysis(reg_names, "", filter_name, suffix='', Do3Dplot=True)
 
     # Regression of structure regressors on surprise-regression residuals - group analysis
     reg_names = ['Complexity','WithinChunkPosition','ChunkBeginning', 'ChunkEnd', 'ChunkNumber', 'ChunkDepth']
     regression_funcs.merge_individual_regression_results(reg_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name)
-    regression_funcs.regression_group_analysis(reg_names, "Intercept_surpris e_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, remap_grads=True, Do3Dplot=False)
+    regression_funcs.regression_group_analysis(reg_names,
+                                               "Intercept_surpris e_100_Surprisenp1_RepeatAlter_RepeatAlternp1",
+                                               filter_name, suffix=True, Do3Dplot=False)
 
 
     # Regression of surprise (& more) on original data - group analysis
     reg_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter', 'RepeatAlternp1']
     regression_funcs.merge_individual_regression_results(reg_names, "", filter_name)
-    regression_funcs.regression_group_analysis(reg_names, "", filter_name, remap_grads=True, Do3Dplot=True)
+    regression_funcs.regression_group_analysis(reg_names, "", filter_name, suffix=True, Do3Dplot=True)
 
     # Regression of complexity on surprise-regression residuals - group analysis
     reg_names = ['Complexity']
     regression_funcs.merge_individual_regression_results(reg_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name)
-    regression_funcs.regression_group_analysis(reg_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, remap_grads=True, Do3Dplot=True)
+    regression_funcs.regression_group_analysis(reg_names,
+                                               "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1",
+                                               filter_name, suffix=True, Do3Dplot=True)

@@ -353,7 +353,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
         exec(name + "_epo.save(op.join(out_path, '" + name + suffix + "_epo.fif'), overwrite=True)")
 
 # ----------------------------------------------------------------------------------------------------------------------
-def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads='mag_to_grad', Do3Dplot=True):
+def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffix='', Do3Dplot=True):
 
     """
     This function loads individual regression results merged as epochs arrays (with 'merge_individual_regression_results' function)
@@ -361,7 +361,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
     :param regressors_names: regressors used in the regression (required to find path and files)
     :epochs_fname: '' empty unless regresssions was conducted with the residuals of a previous regression
     :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
-    :param remap_grads: True if regression was computed with 102 virtual mags
+    :param suffix: '' or 'remapped_mtg' or 'remapped_gtm'
     :param Do3Dplot: create the sources figures (may not work, depending of the computer config)
     """
 
@@ -383,10 +383,10 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
     results_path = op.join(results_path, 'group')
 
     # Ch_types
-    if remap_grads == 'mag_to_grad':
+    if suffix == 'mag_to_grad':
         ch_types = ['grad']
         suffix += 'remapped_mtg'
-    elif remap_grads == 'grad_to_mag':
+    elif suffix == 'grad_to_mag':
         ch_types = ['mag']
         suffix += 'remapped_gtm'
     else:
@@ -411,7 +411,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
 
     # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
     if Do3Dplot:
-        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=remap_grads)
+        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=suffix)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
     linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path)
