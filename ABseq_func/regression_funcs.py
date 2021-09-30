@@ -353,7 +353,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
         exec(name + "_epo.save(op.join(out_path, '" + name + "_epo.fif'), overwrite=True)")
 
 # ----------------------------------------------------------------------------------------------------------------------
-def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads=True, Do3Dplot=True):
+def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads='mag_to_grad', Do3Dplot=True):
 
     """
     This function loads individual regression results merged as epochs arrays (with 'merge_individual_regression_results' function)
@@ -382,6 +382,15 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
         results_path = op.join(results_path, to_append_to_results_path[1:])
     results_path = op.join(results_path, 'group')
 
+    # Ch_types
+    if remap_grads == 'mag_to_grad':
+        ch_types = ['grad']
+        suffix += 'remapped_mtg'
+    elif remap_grads == 'grad_to_mag':
+        ch_types = ['mag']
+        suffix += 'remapped_gtm'
+    else:
+        ch_types = config.ch_types
     # Load data
     betas = dict()
     for name in regressors_names:
@@ -399,12 +408,6 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
     for name in regressors_names:
         analysis_name += '_' + name
     analysis_name = analysis_name[1:]
-
-    # Ch_types
-    if remap_grads:
-        ch_types = ['mag']
-    else:
-        ch_types = config.ch_types
 
     # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
     if Do3Dplot:
