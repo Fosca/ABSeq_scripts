@@ -350,7 +350,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
     out_path = op.join(results_path, 'group')
     utils.create_folder(out_path)
     for name in regressors_names:
-        exec(name + "_epo.save(op.join(out_path, '" + name + "_epo.fif'), overwrite=True)")
+        exec(name + "_epo.save(op.join(out_path, '" + name + suffix + "_epo.fif'), overwrite=True)")
 
 # ----------------------------------------------------------------------------------------------------------------------
 def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads='mag_to_grad', Do3Dplot=True):
