@@ -494,7 +494,7 @@ def plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=
     return all_stcs, all_betasevoked  # can be useful
 
 
-def plot_betas_heatmaps(betas, ch_types, fig_path):
+def plot_betas_heatmaps(betas, ch_types, fig_path,suffix=''):
     savepath = op.join(fig_path, 'Signals')
     utils.create_folder(savepath)
     for ch_type in ch_types:
@@ -528,7 +528,7 @@ def plot_betas_heatmaps(betas, ch_types, fig_path):
             subplots_ax.set_ylabel('Channels')
             subplots_ax.set_title(regressor_name, loc='center', weight='normal')
             fig.colorbar(im, ax=subplots_ax, shrink=1, location='bottom')
-        fig_name = op.join(savepath, 'betas_' + ch_type + '.png')
+        fig_name = op.join(savepath, 'betas_' + ch_type +suffix+ '.png')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
         plt.close(fig)
@@ -578,7 +578,7 @@ def plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_n
     plt.close('all')
 
 
-def plot_betas_butterfly(betas, ch_types, fig_path):
+def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
     savepath = op.join(fig_path, 'Signals')
     utils.create_folder(savepath)
 
@@ -600,13 +600,13 @@ def plot_betas_butterfly(betas, ch_types, fig_path):
             plt.close(fig)
         if 'mag' in ch_types:  # MAG
             fig = evokeds.plot_joint(ts_args=ts_args, title='MAG_' + regressor_name, topomap_args=topomap_args, picks='mag', times=times, show=False)
-            fig_name = savepath + op.sep + ('MAG_' + regressor_name + '.png')
+            fig_name = savepath + op.sep + ('MAG_' + regressor_name +suffix+ '.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300, bbox_inches='tight')
             plt.close(fig)
         if 'grad' in ch_types:  # GRAD
             fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name, topomap_args=topomap_args, picks='grad', times=times, show=False)
-            fig_name = savepath + op.sep + ('GRAD_' + regressor_name + '.png')
+            fig_name = savepath + op.sep + ('GRAD_' + regressor_name +suffix+ '.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300, bbox_inches='tight')
             plt.close(fig)

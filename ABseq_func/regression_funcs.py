@@ -384,7 +384,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
 
     # Ch_types
     if suffix == 'mag_to_grad':
-        ch_types = ['grad']
+        ch_types = ['mag']
         suffix += 'remapped_mtg'
     elif suffix == 'grad_to_mag':
         ch_types = ['mag']
@@ -414,10 +414,10 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=suffix)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
-    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path)
+    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path,suffix=suffix)
 
     # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
-    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path)
+    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path,suffix=suffix)
 
     # =========================================================== #
     # Group stats
@@ -448,7 +448,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
 
             # PLOT CLUSTERS
             if len(good_cluster_inds) > 0:
-                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type)
+                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type+suffix)
                 stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False)
 
             if Do3Dplot:

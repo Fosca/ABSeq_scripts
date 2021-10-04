@@ -39,7 +39,6 @@ import matplotlib.pyplot as plt  # avoids the script getting stuck when plotting
 
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
-
     # Regression of complexity on original data - group analysis
     reg_names = ['Intercept', 'Complexity']
     regression_funcs.merge_individual_regression_results(reg_names, "", filter_name,suffix = '--remapped_mtgclean' )
