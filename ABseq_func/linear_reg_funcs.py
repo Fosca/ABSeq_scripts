@@ -584,6 +584,9 @@ def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
 
     ylim_eeg = 0.3
     ylim_mag = 30
+    if suffix == 'mag_to_grad':
+        ylim_mag = 100
+
     ylim_grad = 6
     # Butterfly plots - in EEG/MAG/GRAD
     ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])

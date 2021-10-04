@@ -385,10 +385,8 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     # Ch_types
     if suffix == 'mag_to_grad':
         ch_types = ['mag']
-        suffix += 'remapped_mtg'
     elif suffix == 'grad_to_mag':
         ch_types = ['mag']
-        suffix += 'remapped_gtm'
     else:
         ch_types = config.ch_types
     # Load data

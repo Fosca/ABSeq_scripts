@@ -41,8 +41,8 @@ filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
     # Regression of complexity on original data - group analysis
     reg_names = ['Intercept', 'Complexity']
-    regression_funcs.merge_individual_regression_results(reg_names, "", filter_name,suffix = '--remapped_mtgclean' )
-    regression_funcs.regression_group_analysis(reg_names, "", filter_name, suffix='remapped_mtg', Do3Dplot=False)
+    # regression_funcs.merge_individual_regression_results(reg_names, "", filter_name,suffix = '--remapped_mtgclean' )
+    regression_funcs.regression_group_analysis(reg_names, "", filter_name, suffix='mag_to_grad', Do3Dplot=False)
 
 
     # Regression of complexity on original data - group analysis
