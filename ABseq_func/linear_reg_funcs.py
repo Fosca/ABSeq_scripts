@@ -535,7 +535,7 @@ def plot_betas_heatmaps(betas, ch_types, fig_path,suffix=''):
     # return betadata, plt, savepath
 
 
-def plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath):
+def plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath,suffix=''):
     beta_average = betas[regressor_name].copy().average()
     if ch_type == 'eeg':
         betadata = beta_average.copy().pick_types(eeg=True, meg=False).data
@@ -572,7 +572,7 @@ def plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_n
         for yidx in range(len(chanidx)):
             mask[chanidx[yidx], xstart:xend] = 0
     ax.imshow(mask, origin='upper', extent=[minT, maxT, betadata.shape[0], 0], aspect='auto', cmap='gray', alpha=.3)
-    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_allclust_heatmap.jpg'
+    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + suffix + '_allclust_heatmap.jpg'
     print('Saving ' + fig_name)
     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
     plt.close('all')
@@ -597,7 +597,7 @@ def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
         evokeds = betas[regressor_name].average()
         if 'eeg' in ch_types:  # EEG
             fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
-            fig_name = savepath + op.sep + ('EEG_' + regressor_name + '.png')
+            fig_name = savepath + op.sep + ('EEG_' + regressor_name + suffix+'.png')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300, bbox_inches='tight')
             plt.close(fig)
