@@ -473,6 +473,12 @@ def Import_fMRI_DSM(roiset_name, trial_type):
     '''
 
     measure = 'correlation'  # 'euclidean', 'spearman' or 'correlation' (i.e. = 1-PearsonR)
-    data_path = op.join(op.sep, 'neurospin','unicog','protocols','IRMf','ABseq16fMRI_PlantonAlRoumi_2020','Data','4_SECOND_LEVEL','ABseq','RSA','Results_RSA_ROI','without_demean', roiset_name)
+    same_run_correlation_excluded = True
+
+    if same_run_correlation_excluded:
+        data_path = op.join(op.sep, 'neurospin','unicog','protocols','IRMf','ABseq16fMRI_PlantonAlRoumi_2020','Data','4_SECOND_LEVEL','ABseq','RSA','Results_RSA_ROI','without_demean', 'samerun_exluded', roiset_name)
+    else:
+        data_path = op.join(op.sep, 'neurospin','unicog','protocols','IRMf','ABseq16fMRI_PlantonAlRoumi_2020','Data','4_SECOND_LEVEL','ABseq','RSA','Results_RSA_ROI','without_demean', roiset_name)
     fMRI_dsm = pd.read_csv(op.join(data_path, trial_type+'_extractOnly', measure, roiset_name+'_avg_'+measure+'_DSM.csv'))
     return fMRI_dsm
+
