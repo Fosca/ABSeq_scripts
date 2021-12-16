@@ -172,16 +172,16 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         suffix += 'remapped_mtg'
 
     if apply_baseline:
-        epochs = epochs.apply_baseline(baseline=(-0.050, 0))
+        epochs_final = epochs_final.apply_baseline(baseline=(-0.050, 0))
         suffix += 'baselined_'
     if cleaned:
         suffix += 'clean_'
     # ====== filter epochs according to the hab, test, including repeat alternate or not etc. ====== #
-    before = len(epochs)
+    before = len(epochs_final)
     filters = regression_funcs.filter_string_for_metadata()
     if filter_name is not None:
-        epochs = epochs[filters[filter_name]]
-    print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
+        epochs_final = epochs_final[filters[filter_name]]
+    print('Keeping %.1f%% of epochs' % (len(epochs_final) / before * 100))
 
     return epochs_final, results_path, suffix
 
