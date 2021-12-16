@@ -24,7 +24,11 @@ tcrop = 0.5
 
 ###################### COMPLEXITY ############################################
 
-complexity = {1:4,2:6,3:6,4:6,5:12,6:15,7:28}
+complexity = {1: 4, 2: 6, 3: 6, 4: 6, 5: 12, 6: 15, 7: 28}
+seqcolors = [[0, 0, 2 / 3], [0, 0, 1], [0, 1 / 3, 1],
+             [0, 2 / 3, 1], [0, 1, 1], [1 / 3, 1, 2 / 3], [2 / 3, 1, 1 / 3],
+             [1, 1, 0], [1, 2 / 3, 0], [1, 1 / 3, 0]]  # colors for 10 sequences as in fMRI
+seqcolors = [seqcolors[i] for i in [0, 1, 2, 3, 4, 5, 9]]  # keep only the 7 sequences of MEG
 
 ###################### exclude EEG? ############################################
 noEEG = True
@@ -132,7 +136,6 @@ runs_dict['sub07-jm_100109'] = ['run01', 'run02', 'run03', 'run04', 'run06', 'ru
                                 'run08', 'run09', 'run10', 'run11', 'run12', 'run13', 'run14']  # skipped a run during acquisition
 # runs_dict['sub14-js_180232'] = [         'run02', 'run03', 'run04', 'run05', 'run06', 'run07',
 #                                 'run08', 'run09', 'run10', 'run11', 'run12', 'run13', 'run14'] # (audio)triggers too much amplified (too many detected) /// CORRECTED
-
 
 
 # ``ch_types``  : list of st
@@ -892,6 +895,7 @@ ica_decim = 10
 
 def default_reject_comps():
     return dict(meg=[], eeg=[])
+
 
 # VERSION 12/02/2021
 rejcomps_man = defaultdict(default_reject_comps)
