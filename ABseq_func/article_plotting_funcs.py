@@ -142,9 +142,11 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     NUM_COLORS = 7
     cm = plt.get_cmap('viridis')
     colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    # OR USE PREDEFINED COLORS:
+    colorslist = config.seqcolors
     plt.close('all')
 
-    fig, ax = plt.subplots(1, 1, figsize=(10 * 0.8, 7 * 0.8))
+    fig, ax = plt.subplots(1, 1, figsize=(10 * 0.5, 7 * 0.5))
     plt.axvline(0, linestyle='-', color='black', linewidth=2)
     # plt.axhline(0.5, linestyle='-', color='black', linewidth=1)  # ligne horizontale à 0.5 pas applicable pour valeurs GFP à 1e-25!
     for xx in range(3):
@@ -173,6 +175,7 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
         fmt.set_powerlimits((0, 0))
         ax.get_yaxis().set_major_formatter(fmt)
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
+
     utils.create_folder(op.join(config.fig_path, save_fig_path))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'))
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300, bbox_inches='tight')
