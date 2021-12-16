@@ -9,6 +9,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.stats import sem
 from scipy.signal import savgol_filter
 import matplotlib.ticker as ticker
+
+import config
 from ABseq_func import evoked_funcs, epoching_funcs
 import copy
 from mne.channels.layout import _merge_grad_data as rms_grad
@@ -247,7 +249,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
     else:
         # fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
-        fig, ax = plt.subplots(1, 1, figsize=(10 * 0.8, 7 * 0.8))
+        fig, ax = plt.subplots(1, 1, figsize=(10 * 0.5, 7 * 0.5))
 
     if blackfig:
         textcolor = 'white'
@@ -268,6 +270,10 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         NUM_COLORS = len(condnames)
         cm = plt.get_cmap('viridis')
         colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+        # OR USE PREDEFINED COLORS:
+        if NUM_COLORS == 7:
+            print('7 levels: using "seqcolors"')
+            colorslist = config.seqcolors
 
     condnames_lgd = condnames.copy()
     if condnames[-1][-14:] == 'SequenceID_07-' and len(condnames) == 7:
@@ -287,6 +293,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         l = plt.legend(fontsize=9, bbox_to_anchor=(0., 1.25, 1., .08), loc=2, ncol=3, mode="expand", borderaxespad=.8, frameon=False)
         for text in l.get_texts():
             text.set_color(textcolor)
+        plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1), fontsize=10, weight='bold', color=textcolor)
     # for key in ('top', 'right'):  # Remove spines
     #     ax.spines[key].set(visible=False)
     # ax.spines['bottom'].set_position('zero')
@@ -300,7 +307,6 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     ax.spines['left'].set_color(linecolor)
     ax.tick_params(axis='x', colors=textcolor)
     ax.tick_params(axis='y', colors=textcolor)
-    plt.title(ch_type + '_' + analysis_name + '_clust_' + str(i_clu + 1), fontsize=10, weight='bold', color=textcolor)
     # fig.tight_layout(pad=0.5, w_pad=0)
 
     return fig
