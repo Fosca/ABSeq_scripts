@@ -384,9 +384,9 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     results_path = op.join(results_path, 'group')
 
     # Ch_types
-    if suffix == 'mag_to_grad' or 'gtm' in suffix:
-        ch_types = ['mag']
-    elif suffix == 'grad_to_mag' or 'mtg' in suffix:
+    if suffix == 'mag_to_grad' or 'mtg' in suffix:
+        ch_types = ['grad']
+    elif suffix == 'grad_to_mag' or 'gtm' in suffix:
         ch_types = ['mag']
     else:
         ch_types = config.ch_types
