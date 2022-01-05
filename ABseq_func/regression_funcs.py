@@ -163,6 +163,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         from mne.channels.layout import _merge_grad_data as rms_grad
         epochs_final = epochs.copy()
         epochs_final.pick_types(meg='mag')
+
         epochs = epochs.as_type(ch_type='grad',mode='accurate')
         data_good_shape = np.transpose(epochs._data,(1,0,2))
         data_good_shape = rms_grad(data_good_shape)
@@ -170,6 +171,10 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
 
         epochs_final._data = data_good_shape
         suffix += 'remapped_mtg'
+
+    elif remap_channels == 'mag_to_grad' and epochs_fname != '':
+        print("-- LOADING THE RESIDUALS THAT HAVE BEEN COMPUTED ON RMS OF MAG_TO_GRAD. NO NEED TO TAKE THE MAG_TO_GRAD AGAIN AND RMS. --")
+        epochs_final = epochs
 
     if apply_baseline:
         epochs_final = epochs_final.apply_baseline(baseline=(-0.050, 0))
