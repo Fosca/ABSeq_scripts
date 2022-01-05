@@ -582,12 +582,13 @@ def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
     savepath = op.join(fig_path, 'Signals')
     utils.create_folder(savepath)
 
-    ylim_eeg = 0.3
-    ylim_mag = 100
-    ylim_grad = 6
+    # ylim_eeg = 0.3
+    # ylim_mag = 100
+    # ylim_grad = 6
     # Butterfly plots - in EEG/MAG/GRAD
-    ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
-    ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
+    # ylim = dict(eeg=[-ylim_eeg, ylim_eeg], mag=[-ylim_mag, ylim_mag], grad=[-ylim_grad, ylim_grad])
+    # ts_args = dict(gfp=True, time_unit='s', ylim=ylim)
+    ts_args = dict(gfp=True, time_unit='s')
     topomap_args = dict(time_unit='s')
     times = 'peaks'
     for x, regressor_name in enumerate(betas.keys()):
