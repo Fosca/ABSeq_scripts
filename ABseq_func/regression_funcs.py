@@ -403,7 +403,8 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
 =======
     # Ch_types
     if suffix == 'mag_to_grad' or 'mtg' in suffix:
-        ch_types = ['grad']
+        ch_types = ['mag']
+        print('The grads we obtained are actually the RMS of grads so they should be considered as mags for the plots.')
     elif suffix == 'grad_to_mag' or 'gtm' in suffix:
         ch_types = ['mag']
     else:
