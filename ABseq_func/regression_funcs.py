@@ -508,13 +508,10 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
                 path = op.abspath(op.join(results_path, os.pardir))
                 subpath = regressor_name + '_evo'
-<<<<<<< HEAD
-                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
-=======
+                # evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
                 evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
                 warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
                 evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
->>>>>>> a6b3de481ea4c3286920f694b9c4734149bce311
 
                # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
