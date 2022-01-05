@@ -395,12 +395,6 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         results_path = op.join(results_path, to_append_to_results_path[1:])
     results_path = op.join(results_path, 'group')
 
-<<<<<<< HEAD
-    # Load data
-    betas = dict()
-    for name in regressors_names:
-        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name+ suffix + "_epo.fif'))")
-=======
     # Ch_types
     if suffix == 'mag_to_grad' or 'mtg' in suffix:
         ch_types = ['mag']
@@ -414,10 +408,9 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     betas = dict()
     for name in regressors_names:
         exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name + suffix + "_epo.fif'))")
->>>>>>> a6b3de481ea4c3286920f694b9c4734149bce311
         # betas[name] = globals()[name + '_epo']
         betas[name] = locals()[name + '_epo']
-        print('There is ' + str(len(betas[name])) + ' betas for ' + name + suffix)
+        print('There is ' + str(len(betas[name])) + ' betas for ' + name)
 
     # Results figures path
     fig_path = op.join(results_path, 'figures')
