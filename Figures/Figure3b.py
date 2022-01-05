@@ -12,5 +12,10 @@ for filter_name in filter_names:
 
     # Regression of complexity on original data - group analysis
     regressors_names = ['Intercept', 'Complexity']
-    regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
+    print('coucou1')
+    regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_mtg')
+    print('coucou2')
+    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_mtg', Do3Dplot=False)
+
+    # regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
+    # regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
