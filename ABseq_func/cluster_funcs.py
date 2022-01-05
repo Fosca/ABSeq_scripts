@@ -301,8 +301,6 @@ def ord_code_16items(subject,load_residuals_regression=False):
 #                            LINEAR REGRESSIONS
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-
 def linear_reg(subject):
     from ABseq_func import regression_funcs
     config.noEEG = True
