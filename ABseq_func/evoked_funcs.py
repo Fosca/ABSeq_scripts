@@ -699,7 +699,7 @@ def load_evoked_resid(subject='all', filter_name='', filter_not=None, root_path=
     return evoked_dict
 
 
-def load_regression_evoked(subject='all', path='', subpath=''):
+def load_regression_evoked(subject='all', path='', subpath='',filter =''):
     """
     Load evoked for several subjects when paths are in the format "path + subject + subpath"
     /!\ all files in the folder are loaded (alphabetical order (?))
@@ -710,7 +710,7 @@ def load_regression_evoked(subject='all', path='', subpath=''):
     if subject == 'all':
         for subj in config.subjects_list:
             subject_path = op.join(path, subj, subpath)
-            evoked_names = sorted(glob.glob(subject_path + op.sep + '*.fif'))
+            evoked_names = sorted(glob.glob(subject_path + op.sep + '*'+filter+'*.fif'))
             # evoked_dict = {'evo'+str(k): mne.read_evokeds(evoked_names[k]) for k in range(len(evoked_names))}
 
             file_names = []

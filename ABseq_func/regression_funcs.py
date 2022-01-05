@@ -353,7 +353,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
         exec(name + "_epo.save(op.join(out_path, '" + name + suffix + "_epo.fif'), overwrite=True)")
 
 # ----------------------------------------------------------------------------------------------------------------------
-def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffix='', Do3Dplot=True):
+def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffix='', Do3Dplot=True, ch_types = ['mag'],suffix_evoked = ''):
 
     """
     This function loads individual regression results merged as epochs arrays (with 'merge_individual_regression_results' function)
@@ -363,6 +363,13 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
     :param suffix: '' or 'remapped_mtg' or 'remapped_gtm'
     :param Do3Dplot: create the sources figures (may not work, depending of the computer config)
+    regressors_names = reg_names
+    epochs_fname = ''
+    filter_name = 'Hab'
+    suffix='--remapped_mtgclean'
+    Do3Dplot=False
+    ch_types = ['mag']
+
     """
 
     # ===================== LOAD GROUP REGRESSION RESULTS & SET PATHS ==================== #
@@ -382,20 +389,13 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         results_path = op.join(results_path, to_append_to_results_path[1:])
     results_path = op.join(results_path, 'group')
 
-    # Ch_types
-    if suffix == 'mag_to_grad':
-        ch_types = ['mag']
-    elif suffix == 'grad_to_mag':
-        ch_types = ['mag']
-    else:
-        ch_types = config.ch_types
     # Load data
     betas = dict()
     for name in regressors_names:
-        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name + "_epo.fif'))")
+        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name+ suffix + "_epo.fif'))")
         # betas[name] = globals()[name + '_epo']
         betas[name] = locals()[name + '_epo']
-        print('There is ' + str(len(betas[name])) + ' betas for ' + name)
+        print('There is ' + str(len(betas[name])) + ' betas for ' + name + suffix)
 
     # Results figures path
     fig_path = op.join(results_path, 'figures')
@@ -492,7 +492,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
                 path = op.abspath(op.join(results_path, os.pardir))
                 subpath = regressor_name + '_evo'
-                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
 
                # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
