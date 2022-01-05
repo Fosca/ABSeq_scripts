@@ -16,6 +16,7 @@ from sklearn import linear_model
 import numpy as np
 import mne
 import copy
+import warnings
 
 # ----------------------------------------------------------------------------------------------------------------------
 def update_metadata_epochs_and_save_epochs(subject):
@@ -162,6 +163,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         from mne.channels.layout import _merge_grad_data as rms_grad
         epochs_final = epochs.copy()
         epochs_final.pick_types(meg='mag')
+
         epochs = epochs.as_type(ch_type='grad',mode='accurate')
         data_good_shape = np.transpose(epochs._data,(1,0,2))
         data_good_shape = rms_grad(data_good_shape)
@@ -170,17 +172,21 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         epochs_final._data = data_good_shape
         suffix += 'remapped_mtg'
 
+    elif remap_channels == 'mag_to_grad' and epochs_fname != '':
+        print("-- LOADING THE RESIDUALS THAT HAVE BEEN COMPUTED ON RMS OF MAG_TO_GRAD. NO NEED TO TAKE THE MAG_TO_GRAD AGAIN AND RMS. --")
+        epochs_final = epochs
+
     if apply_baseline:
-        epochs = epochs.apply_baseline(baseline=(-0.050, 0))
+        epochs_final = epochs_final.apply_baseline(baseline=(-0.050, 0))
         suffix += 'baselined_'
     if cleaned:
         suffix += 'clean_'
     # ====== filter epochs according to the hab, test, including repeat alternate or not etc. ====== #
-    before = len(epochs)
+    before = len(epochs_final)
     filters = regression_funcs.filter_string_for_metadata()
     if filter_name is not None:
-        epochs = epochs[filters[filter_name]]
-    print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
+        epochs_final = epochs_final[filters[filter_name]]
+    print('Keeping %.1f%% of epochs' % (len(epochs_final) / before * 100))
 
     return epochs_final, results_path, suffix
 
@@ -389,10 +395,25 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         results_path = op.join(results_path, to_append_to_results_path[1:])
     results_path = op.join(results_path, 'group')
 
+<<<<<<< HEAD
     # Load data
     betas = dict()
     for name in regressors_names:
         exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name+ suffix + "_epo.fif'))")
+=======
+    # Ch_types
+    if suffix == 'mag_to_grad' or 'mtg' in suffix:
+        ch_types = ['grad']
+    elif suffix == 'grad_to_mag' or 'gtm' in suffix:
+        ch_types = ['mag']
+    else:
+        ch_types = config.ch_types
+
+    # Load data
+    betas = dict()
+    for name in regressors_names:
+        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name + suffix + "_epo.fif'))")
+>>>>>>> a6b3de481ea4c3286920f694b9c4734149bce311
         # betas[name] = globals()[name + '_epo']
         betas[name] = locals()[name + '_epo']
         print('There is ' + str(len(betas[name])) + ' betas for ' + name + suffix)
@@ -412,10 +433,10 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=suffix)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
-    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path,suffix=suffix)
+    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path, suffix=suffix)
 
     # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
-    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path,suffix=suffix)
+    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path, suffix=suffix)
 
     # =========================================================== #
     # Group stats
@@ -487,12 +508,19 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
             # =========================================================== #
             # ==========  cluster evoked data plot --> per regressor level
             # =========================================================== #
+            filter_evo = suffix.replace('-', '')  # we load all files in the subjects folder, we need an additional filter after importing
 
             if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
                 # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
                 path = op.abspath(op.join(results_path, os.pardir))
                 subpath = regressor_name + '_evo'
+<<<<<<< HEAD
                 evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
+=======
+                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
+                evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
+>>>>>>> a6b3de481ea4c3286920f694b9c4734149bce311
 
                # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
@@ -511,18 +539,20 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 path = op.abspath(op.join(results_path, os.pardir))
                 subpath = 'SequenceID' + '_evo'
                 evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
+                evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
 
                 # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
+                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
                     fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.jpg'
                     print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
                     fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
                     fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.jpg'
                     print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
+                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
                     plt.close('all')
 
             # =========================================================== #

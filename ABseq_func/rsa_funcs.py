@@ -463,3 +463,22 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md1)
 
     return diss_matrix, md1, md2, dis, dissim_mat.times
+
+
+def Import_fMRI_DSM(roiset_name, trial_type):
+    '''
+    roiset_name: 'PallierLang' or 'MathsNetwork'
+    trial_type: DSM computed on 'habituation' 'standard' or 'deviant' trials
+    Returns a 7x7 dissimilarity matrix where coordinates (0,0)=RepeatAB vs RepeatBA, and (6, 6)=ComplexAB vs ComplexBA
+    '''
+
+    measure = 'correlation'  # 'euclidean', 'spearman' or 'correlation' (i.e. = 1-PearsonR)
+    same_run_correlation_excluded = True
+
+    if same_run_correlation_excluded:
+        data_path = op.join(op.sep, 'neurospin','unicog','protocols','IRMf','ABseq16fMRI_PlantonAlRoumi_2020','Data','4_SECOND_LEVEL','ABseq','RSA','Results_RSA_ROI','without_demean', 'samerun_exluded', roiset_name)
+    else:
+        data_path = op.join(op.sep, 'neurospin','unicog','protocols','IRMf','ABseq16fMRI_PlantonAlRoumi_2020','Data','4_SECOND_LEVEL','ABseq','RSA','Results_RSA_ROI','without_demean', roiset_name)
+    fMRI_dsm = pd.read_csv(op.join(data_path, trial_type+'_extractOnly', measure, roiset_name+'_avg_'+measure+'_DSM.csv'))
+    return fMRI_dsm
+
