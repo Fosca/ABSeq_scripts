@@ -116,6 +116,14 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
     :return:
 
+    subject = config.subjects_list[0]
+    cleaned = True
+    epochs_fname = ''
+    regressors_names = ['Complexity']
+    filter_name = 'Hab'
+    remap_channels = 'mag_to_grad'
+    suffix = ''
+
     """
     linear_reg_path = config.result_path + '/linear_models/' +filter_name+'/'
     epo_fname = linear_reg_path + epochs_fname
@@ -137,30 +145,30 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
             epochs.metadata[name] = scale(epochs.metadata[name])
         to_append_to_results_path += '_' + name
     results_path = results_path + to_append_to_results_path[1:]+ '/'
+
     # - - - - OPTIONNAL STEPS - - - -
     if remap_channels =='grad_to_mag' and epochs_fname == '':
         print('Remapping grads to mags')
+        # ---- build fake epochs with only mags ----
+        epochs_final = epochs.copy()
+        epochs_final.pick_types(meg='mag')
         epochs = epochs.as_type('mag')
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_gtm'
+        epochs_final._data = epochs._data
+
     elif remap_channels =='mag_to_grad' and epochs_fname == '':
         print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
         from mne.channels.layout import _merge_grad_data as rms_grad
         epochs_final = epochs.copy()
-        epochs_final.as_type('mag')
-        print('The data is of shape')
-        print(epochs._data.shape)
-        print('We put it in n_channels X n_epochs X n_times')
+        epochs_final.pick_types(meg='mag')
+        epochs = epochs.as_type(ch_type='grad',mode='accurate')
         data_good_shape = np.transpose(epochs._data,(1,0,2))
-        print(data_good_shape.shape)
         data_good_shape = rms_grad(data_good_shape)
-        print("After rms_grad it is of shape ")
-        data_good_shape.shape
-        print("We put it back to the original n_epochs X n_channels X n_times")
         data_good_shape = np.transpose(data_good_shape,(1,0,2))
-        print("and replace the data from epochs_final by it")
+
         epochs_final._data = data_good_shape
-        epochs = epochs_final
+        suffix += 'remapped_mtg'
 
     if apply_baseline:
         epochs = epochs.apply_baseline(baseline=(-0.050, 0))
@@ -174,7 +182,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         epochs = epochs[filters[filter_name]]
     print('Keeping %.1f%% of epochs' % (len(epochs) / before * 100))
 
-    return epochs, results_path, suffix
+    return epochs_final, results_path, suffix
 
 # ----------------------------------------------------------------------------------------------------------------------
 def run_regression_CV(epochs, regressors_names):
@@ -255,6 +263,9 @@ def compute_regression(subject, regressors_names, epochs_fname, filter_name, cle
     :param apply_baseline: Set it to True if initially the epochs are not baselined and you want to baseline them.
     :param suffix: Initial suffix value if your want to specify something in particular. In any case it may be updated according to the steps you do to the epochs.
 
+    apply_baseline = False
+    suffix=''
+
     """
 
     # - prepare the epochs (removing the ones that have nans for the fields of interest) and define the results path and suffix ---
@@ -301,7 +312,7 @@ def save_evoked_levels_regressors(epochs,subject, regressors_names,results_path,
     return True
 
 # ----------------------------------------------------------------------------------------------------------------------
-def merge_individual_regression_results(regressors_names, epochs_fname, filter_name):
+def merge_individual_regression_results(regressors_names, epochs_fname, filter_name,suffix = ''):
 
     """
     This function loads individual regression results (betas, computed by 'compute_regression' function)
@@ -328,7 +339,7 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
     # Load data from all subjects
     tmpdat = dict()
     for name in regressors_names:
-        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name='beta_' + name, root_path=results_path)
+        tmpdat[name], path_evo = evoked_funcs.load_evoked('all', filter_name='beta_' + name + suffix, root_path=results_path)
 
     # Store as epo objects
     for name in regressors_names:
@@ -339,10 +350,10 @@ def merge_individual_regression_results(regressors_names, epochs_fname, filter_n
     out_path = op.join(results_path, 'group')
     utils.create_folder(out_path)
     for name in regressors_names:
-        exec(name + "_epo.save(op.join(out_path, '" + name + "_epo.fif'), overwrite=True)")
+        exec(name + "_epo.save(op.join(out_path, '" + name + suffix + "_epo.fif'), overwrite=True)")
 
 # ----------------------------------------------------------------------------------------------------------------------
-def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap_grads=True, Do3Dplot=True):
+def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffix='', Do3Dplot=True, ch_types = ['mag'],suffix_evoked = ''):
 
     """
     This function loads individual regression results merged as epochs arrays (with 'merge_individual_regression_results' function)
@@ -350,8 +361,15 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
     :param regressors_names: regressors used in the regression (required to find path and files)
     :epochs_fname: '' empty unless regresssions was conducted with the residuals of a previous regression
     :param filter_name: 'Stand', 'Viol', 'StandMultiStructure', 'Hab', 'Stand_excluseRA', 'Viol_excluseRA', 'StandMultiStructure_excluseRA', 'Hab_excluseRA'
-    :param remap_grads: True if regression was computed with 102 virtual mags
+    :param suffix: '' or 'remapped_mtg' or 'remapped_gtm'
     :param Do3Dplot: create the sources figures (may not work, depending of the computer config)
+    regressors_names = reg_names
+    epochs_fname = ''
+    filter_name = 'Hab'
+    suffix='--remapped_mtgclean'
+    Do3Dplot=False
+    ch_types = ['mag']
+
     """
 
     # ===================== LOAD GROUP REGRESSION RESULTS & SET PATHS ==================== #
@@ -374,10 +392,10 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
     # Load data
     betas = dict()
     for name in regressors_names:
-        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name + "_epo.fif'))")
+        exec(name + "_epo = mne.read_epochs(op.join(results_path, '" + name+ suffix + "_epo.fif'))")
         # betas[name] = globals()[name + '_epo']
         betas[name] = locals()[name + '_epo']
-        print('There is ' + str(len(betas[name])) + ' betas for ' + name)
+        print('There is ' + str(len(betas[name])) + ' betas for ' + name + suffix)
 
     # Results figures path
     fig_path = op.join(results_path, 'figures')
@@ -389,21 +407,15 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
         analysis_name += '_' + name
     analysis_name = analysis_name[1:]
 
-    # Ch_types
-    if remap_grads:
-        ch_types = ['mag']
-    else:
-        ch_types = config.ch_types
-
     # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
     if Do3Dplot:
-        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=remap_grads)
+        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=suffix)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
-    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path)
+    linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path,suffix=suffix)
 
     # =========================== PLOT THE BUTTERFLY OF THE REGRESSORS ========================== #
-    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path)
+    linear_reg_funcs.plot_betas_butterfly(betas, ch_types, fig_path,suffix=suffix)
 
     # =========================================================== #
     # Group stats
@@ -434,7 +446,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
 
             # PLOT CLUSTERS
             if len(good_cluster_inds) > 0:
-                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type)
+                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type+suffix)
                 stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False)
 
             if Do3Dplot:
@@ -469,7 +481,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
                         info = analysis_name + '_' + regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
                         # figname_initial = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
                         plt.title(info)
-                        plt.savefig(op.join(savepath, info + '_sources.png'), bbox_inches='tight', dpi=600)
+                        plt.savefig(op.join(savepath, info + suffix + '_sources.png'), bbox_inches='tight', dpi=600)
                         plt.close('all')
 
             # =========================================================== #
@@ -480,13 +492,13 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
                 # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
                 path = op.abspath(op.join(results_path, os.pardir))
                 subpath = regressor_name + '_evo'
-                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
 
                # ----------------- PLOTS ----------------- #
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=False, legend=True, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_evo.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_evo.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
@@ -504,11 +516,11 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=True, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + '_eachSeq_evo_bars.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.jpg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
@@ -517,4 +529,4 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, remap
             # ==========  heatmap betas plot
             # =========================================================== #
             if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
-                linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath)
+                linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath,suffix)
