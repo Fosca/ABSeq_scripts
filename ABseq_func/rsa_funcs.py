@@ -301,9 +301,24 @@ class dissimilarity:
     @staticmethod
     def Language_network(stim1, stim2):
         path_lang_network = config.scripts_path+'/RSA_predictors_from_MRI/PallierLang_avg_correlation_DSM.csv'
-        lang_df = pd.read_csv(path_lang_network)
-        lang = pd.DataFrame(lang_df)
-        lang[1,2]
+        lang_df = pd.read_csv(path_lang_network,header=None)
+        dissim_mat = lang_df.values.shape
+        seq1 = stim1['SequenceID']
+        seq2 = stim2['SequenceID']
+
+        return dissim_mat[seq1-1,seq2-1]
+
+    # ---------------------------------------------------------
+    @staticmethod
+    def Maths_network(stim1, stim2):
+        path_lang_network = config.scripts_path + '/RSA_predictors_from_MRI/MathsNetwork_avg_correlation_DSM.csv'
+        math_df = pd.read_csv(path_lang_network, header=None)
+        dissim_mat = math_df.values.shape
+
+        seq1 = stim1['SequenceID']
+        seq2 = stim2['SequenceID']
+
+        return dissim_mat[seq1 - 1, seq2 - 1]
 
 
 # ================================================================================================================
