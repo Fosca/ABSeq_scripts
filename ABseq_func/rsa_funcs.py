@@ -12,7 +12,10 @@ from src import umne
 import glob
 import os.path as op
 import matplotlib.pyplot as plt
+import pandas as pd
 cm = plt.get_cmap('viridis')
+
+
 
 class fn_template:
     dissim = config.result_path + "rsa/dissim/{:}/{:}_{:}.dmat"
@@ -122,6 +125,7 @@ class dissimilarity:
     Target dissimilarity functions
     Each function gets two dictionnaries containing several metadata fields and returns a dissimilarity score (high = dissimilar)
     """
+
     @staticmethod
     def InfoType(stim1, stim2):
         """
@@ -292,6 +296,13 @@ class dissimilarity:
         nopenchunks2 = stim2['ClosedChunks']
 
         return np.abs(nopenchunks2-nopenchunks1)
+
+    # ---------------------------------------------------------
+    @staticmethod
+    def Language_network(stim1, stim2):
+        path_lang_network = config.scripts_path+'/RSA_predictors_from_MRI/PallierLang_avg_correlation_DSM.csv'
+        lang_df = pd.read_csv(path_lang_network)
+
 
 # ================================================================================================================
 
