@@ -16,7 +16,6 @@ dis = rsa_funcs.dissimilarity
 #      rsa_funcs.preprocess_and_compute_dissimilarity(subject, 'spearmanr', baseline=None,
 #                                                    which_analysis='')
 # ______________________________________________________________________________________________________________________
-
 # _____________________________________________________________________________________________________________________
 def viz_predictor_mats(dis_pred, md,md2, max_val=None):
     dis_pred_field = rsa_funcs.gen_predicted_dissimilarity(dis_pred, md,md2=md2)
@@ -178,6 +177,8 @@ for metric_type in metrics:
 
 
 # 2 - 2 - 2 -  PERFORM THE REGRESSION FOR EACH REGRESSOR SEPARATELY
+
+reg_dict = {'maths':dis.Maths_network ,'language':dis.Language_network}
 
 for metric_type in ["correlation"]:
     # diss_matrix, md, md2, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)

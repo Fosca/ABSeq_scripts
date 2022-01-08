@@ -306,7 +306,7 @@ class dissimilarity:
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
 
-        return dissim_mat[seq1-1,seq2-1]
+        return dissim_mat[int(seq1)-1,int(seq2)-1]
 
     # ---------------------------------------------------------
     @staticmethod
@@ -318,7 +318,7 @@ class dissimilarity:
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
 
-        return dissim_mat[seq1 - 1, seq2 - 1]
+        return dissim_mat[int(seq1) - 1, int(seq2) - 1]
 
 
 # ================================================================================================================
