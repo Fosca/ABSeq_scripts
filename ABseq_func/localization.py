@@ -1,8 +1,7 @@
 import numpy as np
 import sys
-import sys
-sys.path.append('/neurospin/meg/meg_tmp/Geom_Seq_Fosca_2017/GeomSeq_New/')
-from initialization_NS import init_NS
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts')
+sys.path.append('/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/umne/')
 import matplotlib.cm as cm
 from sklearn.svm import SVC
 import mne
@@ -165,7 +164,7 @@ def localize_standard_VS_deviant_code(subject,n_permutations = 2000,n_channels =
     np.save(save_path_subject + 'results'+str(n_permutations)+'_permut'+str(n_channels)+'_chans'+'_'+str(round(toi*1000))+'.npy', performance_loc)
 
 
-def compute_sensor_weights(subject,analysis_name='stimulus_code',results_name='results.npy'):
+def compute_sensor_weights(subject,analysis_name='Standard_VS_Deviant',results_name='results.npy'):
     """
     Function to build back how much each sensor contributes to the decoding performance
     :param subject: subject id
@@ -204,7 +203,7 @@ def compute_sensor_weights(subject,analysis_name='stimulus_code',results_name='r
     return sensor_weights_avg
 
 
-def sensor_weights_all_subj_as_epo(analysis_name='stimulus_code',results_name='results.npy'):
+def sensor_weights_all_subj_as_epo(analysis_name='Standard_VS_Deviant',results_name='results.npy'):
 
     sensor_weights_all = []
     for subject in config.subjects_list:
@@ -222,9 +221,9 @@ def sensor_weights_all_subj_as_epo(analysis_name='stimulus_code',results_name='r
 
     return mne.EpochsArray(data,info)
 
-def plot_weights_maps(analysis_name='stimulus_code',results_name='results.npy',suffix='',save=False,chan_types=['mag'],chance=None,vmin=None,vmax=None,font_size = 8):
+def plot_weights_maps(analysis_name='Standard_VS_Deviant',results_name='results.npy',suffix='',chan_types=['mag'],chance=None,vmin=None,vmax=None,font_size = 8):
 
-    save_path = config.figure_path+'/localization/'+analysis_name+'/'
+    save_path = config.fig_path+'/localization/'+analysis_name+'/'
     utils.create_folder(save_path)
     epoch = sensor_weights_all_subj_as_epo(analysis_name=analysis_name,results_name=results_name)
 
@@ -261,17 +260,5 @@ def plot_weights_maps(analysis_name='stimulus_code',results_name='results.npy',s
 
 
 
-def localization_spatial_cluster(chance,analysis_name='stimulus_code',results_name='results.npy',chan_types=['mag']):
 
-    import mne
-    from mne.stats import permutation_cluster_1samp_test
-
-    save_path = config.figure_path+'/localization/'+analysis_name+'/'
-    utils.create_folder(save_path)
-    epoch = sensor_weights_all_subj_as_epo(analysis_name=analysis_name,results_name=results_name)
-
-    connectivity = mne.channels.find_ch_connectivity(epoch.info, ch_type='mag')[0]
-    epoch.pick_types(meg='mag')
-    cluster_stats = mne.stats.permutation_cluster_1samp_test(epoch.get_data()-chance,connectivity=connectivity)
-
-
+plot_weights_maps(analysis_name='Standard_VS_Deviant',results_name='results2000_permut30_chans_165.npy')

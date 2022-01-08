@@ -305,7 +305,6 @@ class dissimilarity:
         dissim_mat = lang_df.values
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
-        print(seq1)
         return dissim_mat[int(seq1)-1,int(seq2)-1]
 
     # ---------------------------------------------------------
@@ -314,10 +313,8 @@ class dissimilarity:
         path_lang_network = config.scripts_path + '/RSA_predictors_from_MRI/MathsNetwork_avg_correlation_DSM.csv'
         math_df = pd.read_csv(path_lang_network, header=None)
         dissim_mat = math_df.values
-
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
-        print(seq1)
         return dissim_mat[int(seq1) - 1, int(seq2) - 1]
 
 

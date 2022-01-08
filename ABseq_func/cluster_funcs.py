@@ -336,4 +336,4 @@ def compute_correlation_stc_complexity(subject):
 
 def compute_sensor_contribution_decoding_standardVSdeviant(subject):
     from ABseq_func import localization
-    localization.localize_standard_VS_deviant_code(subject, n_permutations=2000, n_channels=30, select_grad=False, cleaned=True)
+    localization.localize_standard_VS_deviant_code(subject, n_permutations=2000, n_channels=20, select_grad=True, cleaned=True)
