@@ -333,3 +333,7 @@ def compute_rsa_dissim_matrix(subject):
 def compute_correlation_stc_complexity(subject):
     from ABseq_func import stc_funcs
     stc_funcs.compute_correlation_comp_all_conditions(subject)
+
+def compute_sensor_contribution_decoding_standardVSdeviant(subject):
+    from ABseq_func import localization
+    localization.localize_standard_VS_deviant_code(subject, n_permutations=2000, n_channels=30, select_grad=False, cleaned=True)
