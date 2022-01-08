@@ -305,7 +305,7 @@ class dissimilarity:
         dissim_mat = lang_df.values
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
-
+        print(seq1)
         return dissim_mat[int(seq1)-1,int(seq2)-1]
 
     # ---------------------------------------------------------
@@ -317,7 +317,7 @@ class dissimilarity:
 
         seq1 = stim1['SequenceID']
         seq2 = stim2['SequenceID']
-
+        print(seq1)
         return dissim_mat[int(seq1) - 1, int(seq2) - 1]
 
 
