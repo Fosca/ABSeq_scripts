@@ -302,6 +302,8 @@ class dissimilarity:
     def Language_network(stim1, stim2):
         path_lang_network = config.scripts_path+'/RSA_predictors_from_MRI/PallierLang_avg_correlation_DSM.csv'
         lang_df = pd.read_csv(path_lang_network)
+        lang = pd.DataFrame(lang_df)
+        lang[1,2]
 
 
 # ================================================================================================================
