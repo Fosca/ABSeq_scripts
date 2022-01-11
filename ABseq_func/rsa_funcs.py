@@ -486,6 +486,9 @@ def Predictor_dissimilarity_matrix_and_md(analysis_name):
     diss_matrix['ChunkDepth'] = gen_predicted_dissimilarity(dis.ChunkDepth, md=md1)
     diss_matrix['NOpenChunks'] = gen_predicted_dissimilarity(dis.NOpenChunks, md=md1)
     diss_matrix['NClosedChunks'] = gen_predicted_dissimilarity(dis.NClosedChunks, md=md1)
+    diss_matrix['maths_ROIs']= gen_predicted_dissimilarity(dis.Maths_network, md=md1)
+    diss_matrix['lang_ROIs']= gen_predicted_dissimilarity(dis.Language_network, md=md1)
+
 
     return diss_matrix, md1, md2, dis, dissim_mat.times
 

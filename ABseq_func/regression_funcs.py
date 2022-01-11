@@ -248,12 +248,19 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
         beta = epochs.average().copy()
         beta._data = np.asarray(betas[ii, :, :])
         beta.save(op.join(results_path,'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
-        residuals = residuals - np.asarray(
+        explained_signal = np.asarray(
             [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
+        residuals = residuals - explained_signal
+
+    epochs.save(op.join(results_path, 'epochs' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
 
     residual_epochs = epochs.copy()
     residual_epochs._data = residuals
     residual_epochs.save(op.join(results_path,'residuals' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
+
+    explained_signal_epochs = epochs.copy()
+    explained_signal_epochs._data = explained_signal
+    explained_signal_epochs.save(op.join(results_path,'explained_signal' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
 def compute_regression(subject, regressors_names, epochs_fname, filter_name, cleaned=True, remap_channels='mag_to_grad',

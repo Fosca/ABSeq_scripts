@@ -194,6 +194,8 @@ for metric_type in ["correlation"]:
         np.save(path_save_reg+metric_type+name+'_reg.npy',reg_dis)
 
 # AND PLOT
+diss_matrix, md, md2, dis, times = rsa_funcs.Predictor_dissimilarity_matrix_and_md(analysis_name)
+
 for metric_type in ["correlation"]:
     for ii , name in enumerate(reg_dict.keys()):
         path_save_reg = config.result_path+'/rsa/dissim/'+analysis_name+'/regression_results/'
@@ -201,6 +203,7 @@ for metric_type in ["correlation"]:
         plot_path = path_save_reg + '/plots/'
         plt.close('all')
         fig = umne.rsa.plot_regression_results(reg_dis[0][:, :,0, np.newaxis], times,show_significance=True, significance_time_window=[0,0.6])
+        plt.show()
         fig.savefig(plot_path+metric_type+'_'+name + '_alone.png')
 
 

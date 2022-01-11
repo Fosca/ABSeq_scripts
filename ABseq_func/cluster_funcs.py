@@ -306,11 +306,11 @@ def linear_reg(subject):
     config.noEEG = True
     filter_names = ['Hab','Stand','Viol']
     for filter_name in filter_names:
-        regression_funcs.compute_regression(subject, ['Intercept','Complexity'], "", filter_name, remap_channels='mag_to_grad',apply_baseline=True)
+        regression_funcs.compute_regression(subject, ['Intercept','Complexity'], "", filter_name, remap_channels='grad_to_mag',apply_baseline=True,cleaned=True)
         regression_funcs.compute_regression(subject, ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
-                                                      'RepeatAlternp1'], "", filter_name, remap_channels='mag_to_grad',apply_baseline=True)
-        regression_funcs.compute_regression(subject, ['Complexity'], "/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/" + subject + "/residuals--remapped_mtgbaselined_clean-epo.fif",
-                                            filter_name)
+                                                      'RepeatAlternp1'], "", filter_name, remap_channels='grad_to_mag',apply_baseline=True,cleaned=True)
+        regression_funcs.compute_regression(subject, ['Complexity'], "/Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1/" + subject + "/residuals--remapped_gtmbaselined_clean-epo.fif",
+                                            filter_name,cleaned=True)
 
 # 1 - Compute the linear regression of the data as a function of Intercept and Complexity. Save, for each participant separately, the betas for Intercept and Complexity and the residuals of the model.
 # 2 - merge_individual_regression_results function loads each beta for each subject and builds a fake epoch object that has as many epochs as participants. This is saved in the group folder

@@ -259,6 +259,4 @@ def plot_weights_maps(analysis_name='Standard_VS_Deviant',results_name='results.
     return fig
 
 
-
-
-plot_weights_maps(analysis_name='Standard_VS_Deviant',results_name='results2000_permut30_chans_165.npy')
+# plot_weights_maps(analysis_name='Standard_VS_Deviant',results_name='only_gradresults2000_permut20_chans_165.npy',chan_types=['grad'])
