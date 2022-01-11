@@ -503,7 +503,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                         info = analysis_name + '_' + regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
                         # figname_initial = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
                         plt.title(info)
-                        plt.savefig(op.join(savepath, info + suffix + '_sources.png'), bbox_inches='tight', dpi=600)
+                        plt.savefig(op.join(savepath, info + suffix + '_sources.svg'), bbox_inches='tight', dpi=600)
                         plt.close('all')
 
             # =========================================================== #
@@ -524,7 +524,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=False, legend=True, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_evo.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_evo.svg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                     plt.close('all')
@@ -544,11 +544,11 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 for i_clu, clu_idx in enumerate(good_cluster_inds):
                     cinfo = cluster_info[i_clu]
                     fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.svg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
                     fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.jpg'
+                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.svg'
                     print('Saving ' + fig_name)
                     fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
                     plt.close('all')
