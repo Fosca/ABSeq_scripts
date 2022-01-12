@@ -10,7 +10,7 @@ import numpy as np
 # =========================================================== #
 import matplotlib.pyplot as plt  # avoids the script getting stuck when plotting sources ?!
 
-def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab',suffix='--remapped_gtmbaselined_clean-epo.fif'):
+def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab',suffix='--remapped_gtmbaselined_clean-epo.fif',compute=True):
 
     results_path = op.join(config.result_path, 'linear_models')
     epochs_all = []
@@ -25,6 +25,7 @@ def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab
 
     if compute:
         for subject in config.subjects_list:
+            print(subject)
             subj_path = op.join(results_path,subject)
             epochs = mne.read_epochs(op.join(subj_path,'epochs'+suffix))
             intercept = mne.read_epochs(op.join(subj_path,'intercept'+suffix))
@@ -49,20 +50,22 @@ def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab
         resid = mne.read_epochs(op.join(results_path,'residuals_allsubjects-epo.fif'))
         interc = mne.read_epochs(op.join(results_path,'intercept_allsubjects-epo.fif'))
 
+    print("==== NOW PLOTTING ===")
+
     fig = epo.average().plot_joint()
-    plt.gcf().savefig(op.join(results_path,'epochs_allsubjects.svg'))
+    plt.gcf().savefig(op.join(results_path,'group','figures','epochs_allsubjects.svg'))
     plt.close(fig)
 
     fig = expl.average().plot_joint()
-    plt.gcf().savefig(op.join(results_path,'explained_signal_allsubjects.svg'))
+    plt.gcf().savefig(op.join(results_path,'group','figures','explained_signal_allsubjects.svg'))
     plt.close(fig)
 
     fig = resid.average().plot_joint()
-    plt.savefig(op.join(results_path,'residuals_allsubjects.svg'))
+    plt.savefig(op.join(results_path,'group','figures','residuals_allsubjects.svg'))
     plt.close(fig)
 
     fig = interc.average().plot_joint()
-    plt.savefig(op.join(results_path,'intercept_allsubjects.svg'))
+    plt.savefig(op.join(results_path,'group','figures','intercept_allsubjects.svg'))
     plt.close(fig)
 
 
@@ -73,8 +76,7 @@ for filter_name in filter_names:
     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
                                                       'RepeatAlternp1']
     load_epochs_explained_signal_and_residuals(regressors_names, filter_name='Hab',
-                                               suffix='--remapped_gtmbaselined_clean-epo.fif')
-
+                                               suffix='--remapped_gtmbaselined_clean-epo.fif',compute=False)
 
 
 filter_names = ['Hab', 'Stand', 'Viol']
