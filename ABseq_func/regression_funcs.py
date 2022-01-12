@@ -251,6 +251,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
         beta.save(op.join(results_path,'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
 
     explained = []
+
     for ii, name_reg in enumerate(regressors_names):
         explained_signal = np.asarray(
             [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
@@ -260,7 +261,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
         else:
             explained.append(explained_signal)
 
-    residuals = residuals - intercept - explained_signal
+    residuals = residuals - intercept - np.mean(explained,axis=0)
 
     intercept_epochs = epochs.copy()
     intercept_epochs._data = residuals
