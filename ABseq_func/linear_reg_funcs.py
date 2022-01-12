@@ -426,16 +426,16 @@ def plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=
         mean_betas = mne.grand_average(all_betasevoked[regressor_name])
 
         # Create figures
-        output_file = op.join(savepath, 'Sources_' + regressor_name + '.png')
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '.svg')
         figure_title = analysis_name + ' regression: ' + regressor_name
         source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims=None)
-        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at70ms.png')
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at70ms.svg')
         source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.070, ch_type='mag', colormap='viridis', colorlims='auto', signallims=None)
-        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at140ms.png')
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_at140ms.svg')
         source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.140, ch_type='mag', colormap='viridis', colorlims='auto', signallims=None)
 
         # Timecourse source figure
-        output_file = op.join(savepath, 'Sources_' + regressor_name + '_timecourse.png')
+        output_file = op.join(savepath, 'Sources_' + regressor_name + '_timecourse.svg')
         times_to_plot = [.0, .050, .100, .150, .200, .250, .300]
         win_size = .050
         stc = mean_stc
@@ -528,7 +528,7 @@ def plot_betas_heatmaps(betas, ch_types, fig_path,suffix=''):
             subplots_ax.set_ylabel('Channels')
             subplots_ax.set_title(regressor_name, loc='center', weight='normal')
             fig.colorbar(im, ax=subplots_ax, shrink=1, location='bottom')
-        fig_name = op.join(savepath, 'betas_' + ch_type +suffix+ '.png')
+        fig_name = op.join(savepath, 'betas_' + ch_type +suffix+ '.svg')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
         plt.close(fig)
@@ -595,19 +595,19 @@ def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
         evokeds = betas[regressor_name].average()
         if 'eeg' in ch_types:  # EEG
             fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
-            fig_name = savepath + op.sep + ('EEG_' + regressor_name + suffix+'.png')
+            fig_name = savepath + op.sep + ('EEG_' + regressor_name + suffix+'.svg')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300, bbox_inches='tight')
             plt.close(fig)
         if 'mag' in ch_types:  # MAG
             fig = evokeds.plot_joint(title='MAG_' + regressor_name, picks='mag', times=times, show=False)
-            fig_name = savepath + op.sep + ('MAG_' + regressor_name +suffix+ '.png')
+            fig_name = savepath + op.sep + ('MAG_' + regressor_name +suffix+ '.svg')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300)
             plt.close(fig)
         if 'grad' in ch_types:  # GRAD
             fig = evokeds.plot_joint(ts_args=ts_args, title='GRAD_' + regressor_name, topomap_args=topomap_args, picks='grad', times=times, show=False)
-            fig_name = savepath + op.sep + ('GRAD_' + regressor_name +suffix+ '.png')
+            fig_name = savepath + op.sep + ('GRAD_' + regressor_name +suffix+ '.svg')
             print('Saving ' + fig_name)
             plt.savefig(fig_name, dpi=300, bbox_inches='tight')
             plt.close(fig)

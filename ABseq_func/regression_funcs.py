@@ -409,7 +409,8 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     elif suffix == 'grad_to_mag' or 'gtm' in suffix:
         ch_types = ['mag']
     else:
-        ch_types = config.ch_types
+        if ch_types =='':
+            ch_types = config.ch_types
 
     # Load data
     betas = dict()
