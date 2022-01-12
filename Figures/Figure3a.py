@@ -14,6 +14,9 @@ For habituation epochs, deviant_minus_standard epochs
 """
 
 # ---- import the packages -------
+import sys
+sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
+import os.path as op
 from ABseq_func import *
 import config
 import mne
