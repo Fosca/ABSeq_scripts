@@ -36,7 +36,7 @@ def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=Fals
     if filter == True:
         mean = savgol_filter(mean_data, 11, 3)
     extent = [min(times), max(times), 0, 0.03]
-    plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="RdBu_r", extent=extent, vmin=ylims[0], vmax=ylims[1])
+    plt.imshow(mean_data[np.newaxis, :], aspect="auto", cmap="PRGn", extent=extent, vmin=ylims[0], vmax=ylims[1])
     plt.gca().set_yticks([])
     plt.gca().set_xticks([])
     plt.colorbar(label='Pearsor r')
