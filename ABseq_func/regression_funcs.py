@@ -244,13 +244,27 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
 
     # save betas and residuals
     residuals = epochs.get_data()
+
     for ii, name_reg in enumerate(regressors_names):
         beta = epochs.average().copy()
         beta._data = np.asarray(betas[ii, :, :])
         beta.save(op.join(results_path,'beta_' + name_reg + '--' + suffix[:-1] + '-ave.fif'))
+
+    explained = []
+    for ii, name_reg in enumerate(regressors_names):
         explained_signal = np.asarray(
             [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
-        residuals = residuals - explained_signal
+        if name_reg == 'Intercept':
+            intercept = np.asarray(
+            [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
+        else:
+            explained.append(explained_signal)
+
+    residuals = residuals - intercept - explained_signal
+
+    intercept_epochs = epochs.copy()
+    intercept_epochs._data = residuals
+    intercept_epochs.save(op.join(results_path,'intercept' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
     epochs.save(op.join(results_path, 'epochs' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
 

@@ -305,6 +305,7 @@ def linear_reg(subject):
     from ABseq_func import regression_funcs
     config.noEEG = True
     filter_names = ['Hab','Stand','Viol']
+    filter_names = ['Hab']
     for filter_name in filter_names:
         regression_funcs.compute_regression(subject, ['Intercept','Complexity'], "", filter_name, remap_channels='grad_to_mag',apply_baseline=True,cleaned=True)
         regression_funcs.compute_regression(subject, ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
