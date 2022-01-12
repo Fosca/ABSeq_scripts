@@ -140,8 +140,8 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
         xlims = [times[0], times[-1]]
 
     NUM_COLORS = 7
-    cm = plt.get_cmap('viridis')
-    colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
+    # cm = plt.get_cmap('viridis')
+    # colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
     # OR USE PREDEFINED COLORS:
     colorslist = config.seqcolors
     plt.close('all')
@@ -177,6 +177,6 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     plt.gca().set_xlabel('Time (ms)', fontsize=14)
 
     utils.create_folder(op.join(config.fig_path, save_fig_path))
-    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'))
+    plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'), bbox_inches='tight')
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300, bbox_inches='tight')
     plt.close('all')

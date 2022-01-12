@@ -76,7 +76,7 @@ for filter_name in filter_names:
     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
                                                       'RepeatAlternp1']
     load_epochs_explained_signal_and_residuals(regressors_names, filter_name='Hab',
-                                               suffix='--remapped_gtmbaselined_clean-epo.fif',compute=False)
+                                               suffix='--remapped_gtmbaselined_clean-epo.fif',compute=True)
 
 
 filter_names = ['Hab', 'Stand', 'Viol']
