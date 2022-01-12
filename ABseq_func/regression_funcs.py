@@ -153,7 +153,7 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
         # ---- build fake epochs with only mags ----
         epochs_final = epochs.copy()
         epochs_final.pick_types(meg='mag')
-        epochs = epochs.as_type('mag')
+        epochs = epochs.as_type('mag',mode="accurate")
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_gtm'
         epochs_final._data = epochs._data
