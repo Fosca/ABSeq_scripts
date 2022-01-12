@@ -22,18 +22,20 @@ def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab
         to_append_to_results_path += '_' + name
     results_path = op.join(results_path,filter_name, to_append_to_results_path[1:])
 
-    # for subject in config.subjects_list:
-    #     subj_path = op.join(results_path,subject)
-    #     epochs = mne.read_epochs(op.join(subj_path,'epochs'+suffix))
-    #     explained_signal = mne.read_epochs(op.join(subj_path,'explained_signal'+suffix))
-    #     residuals = mne.read_epochs(op.join(subj_path,'residuals'+suffix))
-    #     epochs_all.append(epochs.average()._data)
-    #     explained_signal_all.append(explained_signal.average()._data)
-    #     residuals_all.append(residuals.average()._data)
-    #
-    # epo = mne.EpochsArray(np.asarray(epochs_all),tmin=epochs.tmin, info = epochs.info)
-    # expl = mne.EpochsArray(np.asarray(explained_signal_all),tmin=epochs.tmin, info = epochs.info)
-    # resid = mne.EpochsArray(np.asarray(residuals_all),tmin=epochs.tmin, info = epochs.info)
+    for subject in config.subjects_list:
+        subj_path = op.join(results_path,subject)
+        epochs = mne.read_epochs(op.join(subj_path,'epochs'+suffix))
+        intercept = mne.read_epochs(op.join(subj_path,'epochs'+suffix))
+        explained_signal = mne.read_epochs(op.join(subj_path,'explained_signal'+suffix))
+        residuals = mne.read_epochs(op.join(subj_path,'residuals'+suffix))
+        epochs_all.append(epochs.average()._data)
+        explained_signal_all.append(explained_signal.average()._data)
+        residuals_all.append(residuals.average()._data)
+
+    epo = mne.EpochsArray(np.asarray(epochs_all),tmin=epochs.tmin, info = epochs.info)
+    expl = mne.EpochsArray(np.asarray(explained_signal_all),tmin=epochs.tmin, info = epochs.info)
+    resid = mne.EpochsArray(np.asarray(residuals_all),tmin=epochs.tmin, info = epochs.info)
+    interc =
 
     epo = mne.read_epochs(op.join(results_path,'epochs_allsubjects-epo.fif'))
     expl = mne.read_epochs(op.join(results_path,'explained_signal_allsubjects-epo.fif'))

@@ -264,7 +264,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     residuals = residuals - intercept - np.mean(explained,axis=0)
 
     intercept_epochs = epochs.copy()
-    intercept_epochs._data = residuals
+    intercept_epochs._data = intercept
     intercept_epochs.save(op.join(results_path,'intercept' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
     epochs.save(op.join(results_path, 'epochs' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
