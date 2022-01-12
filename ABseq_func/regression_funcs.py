@@ -261,11 +261,13 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
         else:
             explained.append(explained_signal)
 
-    residuals = residuals - intercept - np.mean(explained,axis=0)
-
-    intercept_epochs = epochs.copy()
-    intercept_epochs._data = intercept
-    intercept_epochs.save(op.join(results_path,'intercept' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
+    if 'Intercept' in regressors_names:
+        residuals = residuals - intercept - np.mean(explained,axis=0)
+        intercept_epochs = epochs.copy()
+        intercept_epochs._data = intercept
+        intercept_epochs.save(op.join(results_path, 'intercept' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
+    else:
+        residuals = residuals - np.mean(explained, axis=0)
 
     epochs.save(op.join(results_path, 'epochs' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
 
