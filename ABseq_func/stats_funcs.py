@@ -273,7 +273,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         # OR USE PREDEFINED COLORS:
         if NUM_COLORS == 7:
             print('7 levels: using "seqcolors"')
-            colorslist = config.seqcolors
+        colorslist = config.seqcolors
 
     condnames_lgd = condnames.copy()
     if condnames[-1][-14:] == 'SequenceID_07-' and len(condnames) == 7:

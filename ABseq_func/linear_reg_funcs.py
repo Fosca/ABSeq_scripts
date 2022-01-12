@@ -531,7 +531,7 @@ def plot_betas_heatmaps(betas, ch_types, fig_path,suffix=''):
         fig_name = op.join(savepath, 'betas_' + ch_type +suffix+ '.svg')
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
-        plt.close(fig)
+        # plt.close(fig)
     # return betadata, plt, savepath
 
 
