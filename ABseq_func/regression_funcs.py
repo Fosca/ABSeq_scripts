@@ -244,6 +244,8 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
 
     # save betas and residuals
     residuals = epochs.get_data()
+
+    # -- explained with be the explained signal ---
     explained = []
 
     for ii, name_reg in enumerate(regressors_names):
@@ -261,12 +263,12 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
             explained.append(explained_signal)
 
     if 'Intercept' in regressors_names:
-        residuals = residuals - intercept - np.mean(explained,axis=0)
+        residuals = residuals - intercept - np.sum(explained,axis=0)
         intercept_epochs = epochs.copy()
         intercept_epochs._data = intercept
         intercept_epochs.save(op.join(results_path, 'intercept' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
     else:
-        residuals = residuals - np.mean(explained, axis=0)
+        residuals = residuals - np.sum(explained, axis=0)
 
     epochs.save(op.join(results_path, 'epochs' + '--' + suffix[:-1] + '-epo.fif'), overwrite=True)
 
@@ -275,7 +277,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
     residual_epochs.save(op.join(results_path,'residuals' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
     explained_signal_epochs = epochs.copy()
-    explained_signal_epochs._data = explained_signal
+    explained_signal_epochs._data = np.mean(explained,axis=0)
     explained_signal_epochs.save(op.join(results_path,'explained_signal' + '--' +  suffix[:-1] + '-epo.fif'), overwrite=True)
 
 # ----------------------------------------------------------------------------------------------------------------------
