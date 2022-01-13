@@ -421,11 +421,13 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     results_path = op.join(results_path, 'group')
 
     # Ch_types
+    remap_grads = False
     if suffix == 'mag_to_grad' or 'mtg' in suffix:
         ch_types = ['mag']
         print('The grads we obtained are actually the RMS of grads so they should be considered as mags for the plots.')
     elif suffix == 'grad_to_mag' or 'gtm' in suffix:
         ch_types = ['mag']
+        remap_grads = True
     else:
         if ch_types =='':
             ch_types = config.ch_types
@@ -450,7 +452,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
 
     # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
     if Do3Dplot:
-        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=suffix)
+        all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=remap_grads)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
     linear_reg_funcs.plot_betas_heatmaps(betas, ch_types, fig_path, suffix=suffix)

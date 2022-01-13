@@ -69,15 +69,15 @@ def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab
     plt.close(fig)
 
 
-
-filter_names = ['Hab', 'Stand', 'Viol']
-for filter_name in filter_names:
-    print("--- runing the analysis for "+filter_name +" -----")
-    regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
-                                                      'RepeatAlternp1']
-    load_epochs_explained_signal_and_residuals(regressors_names, filter_name='Hab',
-                                               suffix='--remapped_gtmbaselined_clean-epo.fif',compute=True)
-
+#
+# filter_names = ['Hab', 'Stand', 'Viol']
+# for filter_name in filter_names:
+#     print("--- runing the analysis for "+filter_name +" -----")
+#     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
+#                                                       'RepeatAlternp1']
+#     load_epochs_explained_signal_and_residuals(regressors_names, filter_name='Hab',
+#                                                suffix='--remapped_gtmbaselined_clean-epo.fif',compute=True)
+#
 
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
