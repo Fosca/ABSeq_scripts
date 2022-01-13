@@ -234,7 +234,7 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
 
         fig.tight_layout(pad=0.5, w_pad=0)
         fig.subplots_adjust(bottom=.05)
-        fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.png'
+        fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.svg'
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
     plt.close('all)')
@@ -286,7 +286,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
         data = evoked_dict[condname].copy()
         evoked_funcs.plot_evoked_with_sem_1cond(data, condnames_lgd[ncond], ch_type, cinfo['channels_cluster'], color=colorslist[ncond], filter=filter_smooth, axis=None)
     ymin, ymax = ax.get_ylim()
-    ax.fill_betweenx((-99999, 999999), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='grey', alpha=.08, linewidth=0.0)
+    ax.fill_betweenx((ymin, ymax), cinfo['sig_times'][0], cinfo['sig_times'][-1], color='grey', alpha=.08, linewidth=0.0)
     ax.set_ylim([ymin, ymax])
     if legend:
         # plt.legend(loc='best', fontsize=6)

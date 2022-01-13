@@ -81,6 +81,14 @@ def load_epochs_explained_signal_and_residuals(regressors_names,filter_name='Hab
 
 #
 filter_names = ['Hab', 'Stand', 'Viol']
+filter_names = ['Stand', 'Viol']
+for filter_name in filter_names:
+    print("--- runing the analysis for "+filter_name +" -----")
+    regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
+                                                      'RepeatAlternp1']
+    load_epochs_explained_signal_and_residuals(regressors_names, filter_name=filter_name,
+                                               suffix='--remapped_gtmbaselined_clean-epo.fif',compute=True)
+filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
     print("--- runing the analysis for "+filter_name +" -----")
     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
@@ -95,7 +103,7 @@ for filter_name in filter_names:
     # Regression of complexity on data remapped on magnetometers - group analysis
     regressors_names = ['Intercept', 'Complexity']
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
+    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
 
     # Regression of complexity on original data - group analysis
 

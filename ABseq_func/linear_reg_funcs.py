@@ -593,6 +593,7 @@ def plot_betas_butterfly(betas, ch_types, fig_path,suffix=''):
     times = 'peaks'
     for x, regressor_name in enumerate(betas.keys()):
         evokeds = betas[regressor_name].average()
+
         if 'eeg' in ch_types:  # EEG
             fig = evokeds.plot_joint(ts_args=ts_args, title='EEG_' + regressor_name, topomap_args=topomap_args, picks='eeg', times=times, show=False)
             fig_name = savepath + op.sep + ('EEG_' + regressor_name + suffix+'.svg')
