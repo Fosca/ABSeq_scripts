@@ -325,6 +325,7 @@ def normalized_sources_from_evoked(subject, evoked, remap_grads=False):
     snr = 3.0
     lambda2 = 1.0 / snr ** 2
     if remap_grads:
+        print("-- we are reading the inverse operator for remapped solution ----")
         inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv-remapped.fif'))
     else:
         inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv.fif'))
