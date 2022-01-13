@@ -234,7 +234,7 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
 
         fig.tight_layout(pad=0.5, w_pad=0)
         fig.subplots_adjust(bottom=.05)
-        fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.png'
+        fig_name = figname_initial + '_clust_' + str(i_clu + 1) + '.svg'
         print('Saving ' + fig_name)
         plt.savefig(fig_name, dpi=300)
     plt.close('all)')
