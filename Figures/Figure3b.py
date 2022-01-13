@@ -85,7 +85,7 @@ for filter_name in filter_names:
     # Regression of complexity on data remapped on magnetometers - group analysis
     regressors_names = ['Intercept', 'Complexity']
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
+    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
 
     # Regression of complexity on original data - group analysis
 
