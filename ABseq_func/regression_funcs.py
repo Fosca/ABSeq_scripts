@@ -151,12 +151,9 @@ def prepare_epochs_for_regression(subject, cleaned, epochs_fname, regressors_nam
     if remap_channels =='grad_to_mag' and epochs_fname == '':
         print('Remapping grads to mags')
         # ---- build fake epochs with only mags ----
-        epochs_final = epochs.copy()
-        epochs_final.pick_types(meg='mag')
-        epochs = epochs.as_type('mag',mode="accurate")
+        epochs_final = epochs.as_type('mag',mode="accurate")
         print(str(len(epochs.ch_names)) + ' remaining channels!')
         suffix += 'remapped_gtm'
-        epochs_final._data = epochs._data
 
     elif remap_channels =='mag_to_grad' and epochs_fname == '':
         print('Remapping mags to grads and taking the rms. The final type of channels will be mag but actually it is rms of grads')
