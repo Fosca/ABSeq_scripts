@@ -1,7 +1,7 @@
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
 import os.path as op
-from ABseq_func import regression_funcs
+from ABseq_func import regression_funcs, epoching_funcs
 import config
 import mne
 import numpy as np
@@ -12,11 +12,17 @@ import matplotlib.pyplot as plt  # avoids the script getting stuck when plotting
 
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
-    print("--------------------1---------------------")
-    # Regression of complexity on data remapped on magnetometers - group analysis
-    regressors_names = ['Intercept', 'Complexity']
+    print("--------------------2---------------------")
+    regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
+                                                      'RepeatAlternp1']
+
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
     regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
+
+    print("--------------------3---------------------")
+    regressors_names = ['Complexity']
+    regression_funcs.merge_individual_regression_results(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean')
+    regression_funcs.regression_group_analysis(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean', Do3Dplot=True,ch_types=['mag'])
 
     # Regression of complexity on original data - group analysis
 
@@ -101,9 +107,9 @@ filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
     print("--------------------1---------------------")
     # Regression of complexity on data remapped on magnetometers - group analysis
-    regressors_names = ['Intercept', 'Complexity']
-    regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
+    # regressors_names = ['Intercept', 'Complexity']
+    # regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
+    # regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
 
     # Regression of complexity on original data - group analysis
 
@@ -112,20 +118,32 @@ for filter_name in filter_names:
                                                       'RepeatAlternp1']
 
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
+    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
 
     print("--------------------3---------------------")
     regressors_names = ['Complexity']
     regression_funcs.merge_individual_regression_results(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean')
-    regression_funcs.regression_group_analysis(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean', Do3Dplot=False,ch_types=['mag'])
+    regression_funcs.regression_group_analysis(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean', Do3Dplot=True,ch_types=['mag'])
 
     # regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_mtgclean')
     # regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_mtgclean', Do3Dplot=False)
 
 
+# Pour vérifier que c'est normal d'avoir très peu de variance expliquée par les résidus parce que la constante capte genre 90% et la surprise de proba 10%, on regarde les scores des régressions
 
 
+def load_and_plot_scores_regressions(sub_path = "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1",filter_name='Stand',scores_name = 'scores--remapped_gtmbaselined_clean.npy'):
 
+    results_path = op.join(config.result_path, 'linear_models', filter_name,sub_path)
+
+    scores_all = []
+    for subject in config.subjects_list:
+        subject_path = op.join(results_path,subject)
+        score = np.load(op.join(subject_path,scores_name))
+        scores_all.append(score)
+
+    pretty_decod(np.mean(scores_all,1))
+    plt.show()
 
 
 
