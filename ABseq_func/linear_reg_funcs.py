@@ -401,7 +401,7 @@ def run_linear_reg_surprise_repeat_alt_latest(subject, cross_validate=True):
     # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
-def plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=False):
+def plot_average_betas_with_sources(betas, analysis_name, fig_path):
     savepath = op.join(fig_path, 'Sources')
     utils.create_folder(savepath)
 
@@ -413,7 +413,7 @@ def plot_average_betas_with_sources(betas, analysis_name, fig_path, remap_grads=
         for nsub, subject in enumerate(config.subjects_list):
             print(regressor_name + ' regressor: sources for subject ' + str(nsub))
             data = betas[regressor_name][nsub].average()  # 'fake' average since evoked was stored as 1 epoch
-            stc = source_estimation_funcs.normalized_sources_from_evoked(subject, data, remap_grads=remap_grads)
+            stc = source_estimation_funcs.normalized_sources_from_evoked(subject, data)
             all_stcs[regressor_name].append(stc)
             all_betasevoked[regressor_name].append(data)
 

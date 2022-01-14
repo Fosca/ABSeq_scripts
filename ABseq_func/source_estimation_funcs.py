@@ -317,13 +317,16 @@ def source_morph(subject, source_evoked_name):
     return stc_fsaverage
 
 
-def normalized_sources_from_evoked(subject, evoked, remap_grads=False):
+def normalized_sources_from_evoked(subject, evoked):
     ####
     warnings.filterwarnings("ignore")
     ####
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     snr = 3.0
     lambda2 = 1.0 / snr ** 2
+
+    if '_v' in evoked.ch_names[0]:
+        remap_grads = True
     if remap_grads:
         print("-- we are reading the inverse operator for remapped solution ----")
         inverse_operator = mne.minimum_norm.read_inverse_operator(op.join(config.meg_dir, subject, subject + '_oct6-inv-remapped.fif'))
