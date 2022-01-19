@@ -180,3 +180,86 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.svg'), bbox_inches='tight')
     plt.gcf().savefig(op.join(config.fig_path, save_fig_path, fig_name + suffix + '.png'), dpi=300, bbox_inches='tight')
     plt.close('all')
+
+# ----------------------------------------------------------------------------------------------------------------------
+def load_epochs_explained_signal_and_residuals_and_plot(
+        regressors_names=['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter', 'RepeatAlternp1'],
+        filter_name='Hab', suffix='--remapped_gtmbaselined_clean-epo.fif', compute=True):
+    """
+    The goal of this function is to see how much signal coming from the epochs is modeled by the intercept, the explained signals coming from the regressors and from the residuals
+    """
+
+    import matplotlib
+    matplotlib.rcParams.update({'font.size': 18})
+    matplotlib.rc('xtick', labelsize=18)
+    matplotlib.rc('ytick', labelsize=18)
+
+    results_path = op.join(config.result_path, 'linear_models')
+    epochs_all = []
+    explained_signal_all = []
+    residuals_all = []
+    intercept_all = []
+
+    to_append_to_results_path = ''
+    for name in regressors_names:
+        to_append_to_results_path += '_' + name
+    results_path = op.join(results_path, filter_name, to_append_to_results_path[1:])
+
+    if compute:
+        for subject in config.subjects_list:
+            print(subject)
+            subj_path = op.join(results_path, subject)
+            epochs = mne.read_epochs(op.join(subj_path, 'epochs' + suffix))
+            intercept = mne.read_epochs(op.join(subj_path, 'intercept' + suffix))
+            explained_signal = mne.read_epochs(op.join(subj_path, 'explained_signal' + suffix))
+            residuals = mne.read_epochs(op.join(subj_path, 'residuals' + suffix))
+            epochs_all.append(epochs.average()._data)
+            explained_signal_all.append(explained_signal.average()._data)
+            residuals_all.append(residuals.average()._data)
+            intercept_all.append(intercept.average()._data)
+
+        epo = mne.EpochsArray(np.asarray(epochs_all), tmin=epochs.tmin, info=epochs.info)
+        expl = mne.EpochsArray(np.asarray(explained_signal_all), tmin=epochs.tmin, info=epochs.info)
+        resid = mne.EpochsArray(np.asarray(residuals_all), tmin=epochs.tmin, info=epochs.info)
+        interc = mne.EpochsArray(np.asarray(intercept_all), tmin=epochs.tmin, info=epochs.info)
+        epo.save(op.join(results_path, 'epochs_allsubjects-epo.fif'), overwrite=True)
+        expl.save(op.join(results_path, 'explained_signal_allsubjects-epo.fif'), overwrite=True)
+        resid.save(op.join(results_path, 'residuals_allsubjects-epo.fif'), overwrite=True)
+        interc.save(op.join(results_path, 'intercept_allsubjects-epo.fif'), overwrite=True)
+    else:
+        epo = mne.read_epochs(op.join(results_path, 'epochs_allsubjects-epo.fif'))
+        expl = mne.read_epochs(op.join(results_path, 'explained_signal_allsubjects-epo.fif'))
+        resid = mne.read_epochs(op.join(results_path, 'residuals_allsubjects-epo.fif'))
+        interc = mne.read_epochs(op.join(results_path, 'intercept_allsubjects-epo.fif'))
+
+    figure_path = op.join(config.result_path, 'linear_models', 'plot_joint_regressions/') + filter_name + '_'
+
+    print("==== NOW PLOTTING ===")
+
+    fig = epo.crop(tmax=0.35).average().plot(ylim=dict(mag=[-100, 100]), time_unit='ms')
+    ax = fig.gca()
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    # Only show ticks on the left and bottom spines
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
+    ax.set_title("")
+    fig.savefig((figure_path + 'epochs_allsubjects.svg'))
+    plt.close(fig)
+
+    fig = interc.crop(tmax=0.35).average().plot(ylim=dict(mag=[-100, 100]), time_unit='ms')
+    fig.savefig((figure_path + 'intercept_allsubjects.svg'))
+
+    plt.close(fig)
+
+    if filter_name != 'Viol':
+        fig = expl.crop(tmax=0.35).average().plot(time_unit='ms', ylim=dict(mag=[-2, 2]))
+    else:
+        fig = expl.crop(tmax=0.35).average().plot(time_unit='ms', ylim=dict(mag=[-10, 10]))
+
+    fig.savefig((figure_path + 'explained_signal_allsubjects.svg'))
+    plt.close(fig)
+
+    fig = resid.crop(tmax=0.35).average().plot(time_unit='ms', ylim=dict(mag=[-0.15, 0.15]))
+    fig.savefig((figure_path + 'residuals_allsubjects.svg'))
+    plt.close(fig)

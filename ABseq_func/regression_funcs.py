@@ -211,7 +211,7 @@ def run_regression_CV(epochs, regressors_names):
 
         for tt in range(epochs.get_data().shape[2]):
             # for each time-point, we run a regression for each channel
-            reg = linear_model.LinearRegression(fit_intercept=False)
+                reg = linear_model.LinearRegression(fit_intercept=False)
             data_train = epochs[train_index].get_data()
             data_test = epochs[test_index].get_data()
 

@@ -16,12 +16,10 @@ For habituation epochs, deviant_minus_standard epochs
 # ---- import the packages -------
 import sys
 sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scripts/")
-import os.path as op
 from ABseq_func import *
 import config
 import mne
 import numpy as np
-import matplotlib.pyplot as plt
 import os.path as op
 import pickle
 from ABseq_func import article_plotting_funcs

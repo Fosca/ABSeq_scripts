@@ -15,29 +15,24 @@ sys.path.append("/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/scripts/ABSeq_scr
 import initialization_paths
 
 from ABseq_func import article_plotting_funcs
+
+import matplotlib.pyplot as plt
+import config
+import os.path as op
+import numpy as np
 import matplotlib
 matplotlib.rc('xtick', labelsize=12)
 matplotlib.rc('ytick', labelsize=12)
 
-import matplotlib.pyplot as plt
-import config
-import numpy as np
-from scipy.signal import savgol_filter
-import os.path as op
-from scipy import stats
-from jr.plot import pretty_decod
-import numpy as np
+#  ============== ============== ============== ============== ============== ============== ============== ============
+#                         1 -  SET the params and the subjects
+#  ============== ============== ============== ============== ============== ============== ============== ============
 
-filter = False
-NUM_COLORS = 7
-cm = plt.get_cmap('viridis')
-colorslist = ([cm(1. * i / (NUM_COLORS - 1)) for i in range(NUM_COLORS)])
-plt.close('all')
 subjects_list = config.subjects_list
 sensors = ['mag','grad']
 n_subjects = len(config.subjects_list)
-
 name = "SW_train_different_blocks_cleanedGAT_results"
+
 
 for suffix in ["_hab","_stand","_viol",""]:
     filename = name+suffix
@@ -64,7 +59,13 @@ for suffix in ["_hab","_stand","_viol",""]:
 
     reshaped_data = {sens : np.zeros((7,n_subj,len(times))) for sens in sensors}
     plt.close('all')
+
+    #  ============== ============== ============== ============== ============== ============== ============== ============
+    #                         3 -  Plot and compute the pearson correlation
+    #  ============== ============== ============== ============== ============== ============== ============== ============
+
     for sens in sensors:
+        print(sens)
         perform_seq = results[sens]
         for ii,SeqID in enumerate(range(1, 8)):
             perform_seqID = np.asarray(perform_seq['SeqID_' + str(SeqID)])
