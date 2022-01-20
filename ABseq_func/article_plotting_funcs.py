@@ -45,7 +45,7 @@ def heatmap_avg_subj(data_subjs, times, xlims=None, ylims=[-.5, .5], filter=Fals
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b', chance=0.5, pos_sig=None, plot_shaded_vertical=False, xlims=None):
+def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b', chance=0.5, pos_sig=None, plot_shaded_vertical=False, xlims=None,logger=None):
     """
     param data_seq_subjs: n_subject X n_times array that you want to plot as mean + s.e.m in shaded bars
     param pos_sig: If you want to plot the significant time-points as a line under the graph, set this value to the y position of the line
@@ -84,7 +84,13 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
                 clu_times = stat_times[clusters[clu_idx]]
                 # plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black', alpha=.1)
                 plt.gca().fill_between([clu_times[0], clu_times[-1]], ylims[1], ylims[0], color='black', alpha=.08, linewidth=0.0)
-                print("The p-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(cluster_pv[clu_idx]))
+                sp = "The p-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(cluster_pv[clu_idx])
+                st = "The T-value of the cluster number %i" % (i_clu) + " is {:.5f}".format(t_obs [clu_idx])
+                print(sp)
+                print(st)
+                if logger is not None:
+                    logger.info(sp)
+                    logger.info(st)
         plt.gca().set_ylim(ylims)
         return True
 
@@ -131,7 +137,7 @@ def compute_corr_comp(data):
 
 # ----------------------------------------------------------------------------------------------------------------------
 def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_deviant/', fig_name='All_sequences_standard_VS_deviant_cleaned_', suffix='',
-                          pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=0, xlims=None, ymin=None, ylabel=None, filter=False):
+                          pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=0, xlims=None, ymin=None, ylabel=None, filter=False,logger = None):
     """
     param data_7seq: data in the shape of 7 X n_subjects X n_times
     param times: the times for the plot
@@ -152,12 +158,15 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
     for xx in range(3):
         plt.axvline(250 * xx, linestyle='--', color='black', linewidth=0.5)
 
+    if logger is not None:
+        logger.debug("----- Analysis %s ------"%fig_name)
+
     for ii, SeqID in enumerate(range(1, 8)):
-        plot_timecourses(data_7seq[ii, :, :], times, filter=filter, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii, chance=chance)  #
+        plot_timecourses(data_7seq[ii, :, :], times, filter=filter, color=colorslist[SeqID - 1], pos_sig=pos_horizontal_bar - 0.005 * ii, chance=chance,logger=logger)  #
 
     if plot_pearson_corrComplexity:
         pearsonr = compute_corr_comp(data_7seq)
-        plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True, xlims=xlims)
+        plot_timecourses(pearsonr, times, chance=0, plot_shaded_vertical=True, xlims=xlims,logger=logger)
 
     # Set limits
     ax.set_xlim(xlims)
@@ -165,8 +174,8 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
         ax.set_ylim(ymin=ymin)
 
     # # Remove some spines?
-    # for key in ('top', 'right'):
-    #     ax.spines[key].set(visible=False)
+    for key in ('top', 'right'):
+        ax.spines[key].set(visible=False)
 
     # Add ylabel and format x10^...
     if ylabel == 'GFP':

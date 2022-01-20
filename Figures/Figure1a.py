@@ -99,13 +99,13 @@ if recompute_GFP:
                 # Compute GFP
                 for ch_type in ch_types:
                     if ch_type == 'eeg':
-                        gfp = np.sum(ev.copy().pick_types(eeg=True, meg=False).data ** 2, axis=0)
+                        gfp = np.sqrt(np.sum(ev.copy().pick_types(eeg=True, meg=False).data ** 2, axis=0))
                         gfp_eeg_seq.append(gfp)
                     elif ch_type == 'mag':
-                        gfp = np.sum(ev.copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0)
+                        gfp = np.sqrt(np.sum(ev.copy().pick_types(eeg=False, meg='mag').data ** 2, axis=0))
                         gfp_mag_seq.append(gfp)
                     elif ch_type == 'grad':
-                        gfp = np.sum(ev.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0)
+                        gfp = np.sqrt(np.sum(ev.copy().pick_types(eeg=False, meg='grad').data ** 2, axis=0))
                         gfp_grad_seq.append(gfp)
                     # Store gfp each seq
                     gfp_data[ttype][ch_type][seqID].append(gfp)
@@ -131,6 +131,17 @@ else:
 #                2 - PLOTS
 #  ============== ============== ============== ============== ============== ============== ============== ============
 from importlib import reload
+import config
+import logging
+import os.path as op
+logging.basicConfig(filename=op.join(config.fig_path, 'GFP','statistics.log'),
+					format='%(asctime)s %(message)s',
+					filemode='w')
+
+logger=logging.getLogger()
+logger.setLevel(logging.DEBUG)
+logger.debug("--------------------------------------------------------------------------------------------------")
+
 
 reload(article_plotting_funcs)
 
