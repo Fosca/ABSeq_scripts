@@ -24,6 +24,7 @@ for filter_name in filter_names:
 
 
 filter_names = ['Hab', 'Stand', 'Viol']
+filter_names = ['Viol']
 for filter_name in filter_names:
 
     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter', 'RepeatAlternp1']
