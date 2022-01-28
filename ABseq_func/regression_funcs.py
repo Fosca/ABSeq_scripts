@@ -211,10 +211,9 @@ def run_regression_CV(epochs, regressors_names):
 
         for tt in range(epochs.get_data().shape[2]):
             # for each time-point, we run a regression for each channel
-                reg = linear_model.LinearRegression(fit_intercept=False)
+            reg = linear_model.LinearRegression(fit_intercept=False)
             data_train = epochs[train_index].get_data()
             data_test = epochs[test_index].get_data()
-
             reg.fit(y=data_train[:, :, tt], X=preds_matrix_train)
             betas_matrix[:, :, tt] = reg.coef_.T
             y_preds = reg.predict(preds_matrix_test)
@@ -403,6 +402,9 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     # ===================== LOAD GROUP REGRESSION RESULTS & SET PATHS ==================== #
 
     # Results (data) path
+
+
+
     results_path = op.join(config.result_path, 'linear_models', filter_name)
     if epochs_fname != '':
         results_path = op.abspath(op.join(results_path, 'from_' + epochs_fname + '--'))
@@ -466,6 +468,8 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     p_threshold = 0.05
     tmin = 0.000  # timewindow to test (crop data)
     tmax = 0.350  # timewindow to test (crop data)
+    if filter_name == 'Viol':
+        tmax = 0.600
     for ch_type in ch_types:
         for x, regressor_name in enumerate(betas.keys()):
             data_stat = copy.deepcopy(betas[regressor_name])
@@ -477,15 +481,23 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
             cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
             cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
 
+
             # Significant clusters
             T_obs, clusters, p_values, _ = cluster_stats
             good_cluster_inds = np.where(p_values < p_threshold)[0]
             print("Good clusters: %s" % good_cluster_inds)
 
+
+
             # PLOT CLUSTERS
             if len(good_cluster_inds) > 0:
-                figname_initial = op.join(savepath, analysis_name + '_' + regressor_name + '_stats_' + ch_type+suffix)
-                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False)
+                fname = analysis_name + '_' + regressor_name + '_stats_' + ch_type+suffix
+                figname_initial = op.join(savepath, fname)
+                f = open(op.join(savepath, 'statistics.txt'), 'w')
+                f.write('----- ' + fname + ' -----')
+                f.write('\n')
+                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False,outfile=f)
+
 
             if Do3Dplot:
                 # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
@@ -574,3 +586,6 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
             # =========================================================== #
             if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
                 linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath,suffix)
+
+            if len(good_cluster_inds) > 0:
+                f.close()

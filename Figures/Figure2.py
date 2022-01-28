@@ -18,11 +18,11 @@ from ABseq_func import regression_funcs, article_plotting_funcs
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
     print("--- runing the analysis for "+filter_name +" -----")
-    regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
-                        'RepeatAlternp1']
-    article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(regressors_names, filter_name=filter_name,
-                                                                               suffix='--remapped_gtmbaselined_clean-epo.fif', compute=True)
-
+    print("First on the regressors of surprise")
+    article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
+                        'RepeatAlternp1'], filter_name=filter_name,suffix='--remapped_gtmbaselined_clean-epo.fif', compute=False)
+    print("Then on the remaining effects of complexity (from the residuals)")
+    article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(['Complexity'], filter_name=filter_name,suffix='--clean-epo.fif', compute=False,to_append_to_results_path="_from_Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1--Complexity")
 
 
 filter_names = ['Hab', 'Stand', 'Viol']

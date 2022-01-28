@@ -78,10 +78,14 @@ def extract_info_cluster(cluster_stats, p_threshold, data, data_array_chtype, ch
             time_inds = np.unique(time_inds)
             signals = data_array_chtype[..., ch_inds].mean(axis=-1)  # is this correct ??
             # signals = data_array_chtype[..., ch_inds].mean(axis=1)  # is this correct ??
+            # Fosca TODO does this clust_val makes sense ?
+            a = T_obs[time_inds,:]
+            b = a[:,ch_inds]
+            clust_val = np.mean(b)
             sig_times = times[time_inds]
             p_value = p_values[clu_idx]
 
-            cluster_info[i_clu] = {'sig_times': sig_times, 'time_inds': time_inds, 'signal': signals,
+            cluster_info[i_clu] = {'sig_times': sig_times, 'time_inds': time_inds, 'signal': signals,'clust_val':clust_val,
                                    'channels_cluster': ch_inds, 'p_values': p_value}
 
         cluster_info['pos'] = pos
@@ -168,7 +172,7 @@ def plot_clusters_old(cluster_stats, p_threshold, data, data_array_chtype, ch_ty
     return True
 
 
-def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial='', filter_smooth=False):
+def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial='', filter_smooth=False,outfile=None):
     """
     This function plots the clusters
 
@@ -230,6 +234,15 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
         ax_signals.get_yaxis().set_major_formatter(fmt)
         ax_signals.get_yaxis().get_offset_text().set_position((-0.07, 0))  # move 'x10-x', does not work with y
         title = 'Cluster #{0} (p < {1:0.3f})'.format(i_clu + 1, cinfo['p_values'])
+        # title = 'Cluster #{0} (p = %0.03f)'.format(i_clu + 1, cinfo['p_values'])
+        if outfile is not None:
+            outfile.write("\n")
+            outfile.write('----- Cluster number %i ------ \n'%(i_clu + 1))
+            time_str = str(cinfo['sig_times'][0]) +' to '+ str(cinfo['sig_times'][-1])+' ms'
+            cluster_value_str = ', cluster-value= '+str(cinfo['clust_val'])
+            p_value_str = ', p = '+str(cinfo['p_values'])
+            outfile.write(time_str+cluster_value_str+p_value_str)
+
         ax_signals.set(ylim=[ymin, ymax], title=title)
 
         fig.tight_layout(pad=0.5, w_pad=0)

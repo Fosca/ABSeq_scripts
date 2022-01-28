@@ -132,17 +132,8 @@ else:
 #  ============== ============== ============== ============== ============== ============== ============== ============
 from importlib import reload
 import config
-import logging
 import os.path as op
-logging.basicConfig(filename=op.join(config.fig_path, 'GFP','statistics.log'),
-					format='%(asctime)s %(message)s',
-					filemode='w')
-
-logger=logging.getLogger()
-logger.setLevel(logging.DEBUG)
-logger.debug("--------------------------------------------------------------------------------------------------")
-
-
+f = open(op.join(config.fig_path, 'GFP','statistics.txt'), 'w')
 reload(article_plotting_funcs)
 
 #  ============== HABITUATION PLOTS ============== #
@@ -150,7 +141,7 @@ data_7seq = np.dstack(gfp_data['habituation']['mag'].values())
 data_7seq = np.transpose(data_7seq, (2, 0, 1))
 # Data line plot 7seq
 article_plotting_funcs.plot_7seq_timecourses(data_7seq, gfp_data['times'] * 1000, save_fig_path='GFP/', fig_name='GFPxComplexity_Habituation', suffix='',
-                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 350], ymin=0, ylabel='GFP')
+                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 350], ymin=0, ylabel='GFP',logger=f)
 # Correlation with complexity heatmap
 pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times'] * 1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name=op.join(config.fig_path, 'GFP', 'GFPxComplexity_Habituation_heatmap_complexity_pearsonr.png'), figsize=(10, 0.5))
@@ -161,7 +152,7 @@ data_7seq = np.dstack(gfp_data['standard']['mag'].values())
 data_7seq = np.transpose(data_7seq, (2, 0, 1))
 # Data line plot 7seq
 article_plotting_funcs.plot_7seq_timecourses(data_7seq, gfp_data['times'] * 1000, save_fig_path='GFP/', fig_name='GFPxComplexity_Standard', suffix='',
-                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 350], ymin=0, ylabel='GFP')
+                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 350], ymin=0, ylabel='GFP',logger=f)
 # Correlation with complexity heatmap
 pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times'] * 1000, xlims=[-50, 350], ylims=[-0.5, 0.5], fig_name=op.join(config.fig_path, 'GFP', 'GFPxComplexity_Standard_heatmap_complexity_pearsonr.png'), figsize=(10, 0.5))
@@ -172,10 +163,12 @@ data_7seq = np.dstack(gfp_data['viol_minus_stand']['mag'].values())
 data_7seq = np.transpose(data_7seq, (2, 0, 1))
 # Data line plot 7seq
 article_plotting_funcs.plot_7seq_timecourses(data_7seq, gfp_data['times'] * 1000, save_fig_path='GFP/', fig_name='GFPxComplexity_viol_minus_stand', suffix='',
-                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 600], ymin=0, ylabel='GFP')
+                                             pos_horizontal_bar=0.47, plot_pearson_corrComplexity=True, chance=None, xlims=[-50, 600], ymin=0, ylabel='GFP',logger=f)
 # Correlation with complexity heatmap
 pearsonr = article_plotting_funcs.compute_corr_comp(data_7seq)
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times'] * 1000, xlims=[-50, 600], ylims=[-0.5, 0.5], fig_name=op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.png'), figsize=(10, 1))
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times'] * 1000, xlims=[-50, 600], ylims=[-0.5, 0.5], fig_name=op.join(config.fig_path, 'GFP', 'GFPxComplexity_viol_minus_stand_heatmap_complexity_pearsonr.svg'), figsize=(10, 0.5))
 
 article_plotting_funcs.heatmap_avg_subj(pearsonr, gfp_data['times'] * 1000, xlims=[-50, 600], ylims=[-0.5, 0.5], fig_name=op.join(config.fig_path, 'GFP', 'justforcolorbar.png'), figsize=(10, 1))
+
+f.close()
