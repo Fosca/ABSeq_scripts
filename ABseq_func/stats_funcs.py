@@ -255,7 +255,7 @@ def plot_clusters(cluster_info, ch_type, T_obs_max=5., fname='', figname_initial
     return True
 
 
-def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', filter_smooth=False, legend=False, blackfig=False):
+def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', filter_smooth=False, legend=False, blackfig=False,tmin=None,tmax=None):
     units = dict(eeg='uV', grad='fT/cm', mag='fT')
 
     if legend:
@@ -314,7 +314,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
     # ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
-    ax.set_xlim([-50, 350])
+    ax.set_xlim([tmin*1000, tmax*1000])
     ax.set_ylabel(units[ch_type], color=textcolor, fontsize=14)
     ax.spines['bottom'].set_color(linecolor)
     ax.spines['left'].set_color(linecolor)
