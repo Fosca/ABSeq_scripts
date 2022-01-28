@@ -17,12 +17,10 @@ from ABseq_func import regression_funcs, article_plotting_funcs
 
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
-    print("--- runing the analysis for "+filter_name +" -----")
-    print("First on the regressors of surprise")
     article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter',
-                        'RepeatAlternp1'], filter_name=filter_name,suffix='--remapped_gtmbaselined_clean-epo.fif', compute=False)
-    print("Then on the remaining effects of complexity (from the residuals)")
-    article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(['Complexity'], filter_name=filter_name,suffix='--clean-epo.fif', compute=False,to_append_to_results_path="_from_Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1--Complexity")
+                        'RepeatAlternp1'], filter_name=filter_name,suffix='--remapped_gtmbaselined_clean-epo.fif', compute=False,format='.png')
+    article_plotting_funcs.load_epochs_explained_signal_and_residuals_and_plot(['Complexity'], filter_name=filter_name,suffix='--clean-epo.fif',
+                                                                               compute=False,to_append_to_results_path="_from_Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1--Complexity",format='.png')
 
 
 filter_names = ['Hab', 'Stand', 'Viol']
@@ -30,9 +28,9 @@ for filter_name in filter_names:
 
     regressors_names = ['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter', 'RepeatAlternp1']
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
-    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
+    regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=False)
 
     regressors_names = ['Complexity']
     regression_funcs.merge_individual_regression_results(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean')
-    regression_funcs.regression_group_analysis(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean', Do3Dplot=True,ch_types=['mag'])
+    regression_funcs.regression_group_analysis(regressors_names, "Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1", filter_name, suffix='--clean', Do3Dplot=False,ch_types=['mag'])
 

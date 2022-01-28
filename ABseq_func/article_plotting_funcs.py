@@ -198,7 +198,7 @@ def plot_7seq_timecourses(data_7seq, times, save_fig_path='SVM/standard_vs_devia
 # ----------------------------------------------------------------------------------------------------------------------
 def load_epochs_explained_signal_and_residuals_and_plot(
         regressors_names=['Intercept', 'surprise_100', 'Surprisenp1', 'RepeatAlter', 'RepeatAlternp1'],
-        filter_name='Hab', suffix='--remapped_gtmbaselined_clean-epo.fif', compute=True,to_append_to_results_path=''):
+        filter_name='Hab', suffix='--remapped_gtmbaselined_clean-epo.fif', compute=True,to_append_to_results_path='',format='.svg'):
     """
     The goal of this function is to see how much signal coming from the epochs is modeled by the intercept, the explained signals coming from the regressors and from the residuals
     """
@@ -268,13 +268,13 @@ def load_epochs_explained_signal_and_residuals_and_plot(
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
     ax.set_title("")
-    fig.savefig((figure_path + 'epochs_allsubjects.svg'))
+    fig.savefig((figure_path + 'epochs_allsubjects'+format))
     plt.close(fig)
 
     if intercept:
         fig = interc.crop(tmax=0.35).average().plot_joint()
         # fig = interc.crop(tmax=0.35).average().plot_joint(ylim=dict(mag=[-100, 100]), time_unit='ms')
-        fig.savefig((figure_path + 'intercept_allsubjects.svg'))
+        fig.savefig((figure_path + 'intercept_allsubjects'+format))
 
     plt.close(fig)
 
@@ -285,10 +285,10 @@ def load_epochs_explained_signal_and_residuals_and_plot(
         fig = expl.crop(tmax=0.35).average().plot_joint()
         # fig = expl.crop(tmax=0.35).average().plot_joint(time_unit='ms', ylim=dict(mag=[-10, 10]))
 
-    fig.savefig((figure_path + 'explained_signal_allsubjects.svg'))
+    fig.savefig((figure_path + 'explained_signal_allsubjects'+format))
     plt.close(fig)
 
     fig = resid.crop(tmax=0.35).average().plot_joint()
     # fig = resid.crop(tmax=0.35).average().plot_joint(time_unit='ms', ylim=dict(mag=[-0.15, 0.15]))
-    fig.savefig((figure_path + 'residuals_allsubjects.svg'))
+    fig.savefig((figure_path + 'residuals_allsubjects'+format))
     plt.close(fig)

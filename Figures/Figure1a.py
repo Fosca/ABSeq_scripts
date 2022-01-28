@@ -28,7 +28,7 @@ from ABseq_func import article_plotting_funcs
 #                1 - LOAD OR EXTRACT THE DATA: GFP FOR EACH SUBJECT AND TRIAL TYPE
 #  ============== ============== ============== ============== ============== ============== ============== ============
 
-recompute_GFP = False
+recompute_GFP = True
 results_path = op.join(config.result_path, 'Corr_GFPxComplexity', 'items')
 utils.create_folder(results_path)
 
@@ -60,7 +60,7 @@ if recompute_GFP:
         # ====== REMAP GRAD TO MAGS !! ====== #
         if remap_grads:
             print('Remapping grads to mags')
-            epochs = epochs.as_type('mag')
+            epochs = epochs.as_type('mag',mode="accurate")
             print(str(len(epochs.ch_names)) + ' remaining channels!')
 
         for ttype in ['habituation', 'standard', 'violation', 'viol_minus_stand']:
