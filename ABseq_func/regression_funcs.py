@@ -451,6 +451,8 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     if Do3Dplot:
         if filter_name == 'Viol':
             xlim = [0, 600]
+        else:
+            xlim = [0, 350]
         all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, xlim=xlim)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
