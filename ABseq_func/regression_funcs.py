@@ -402,9 +402,6 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     # ===================== LOAD GROUP REGRESSION RESULTS & SET PATHS ==================== #
 
     # Results (data) path
-
-
-
     results_path = op.join(config.result_path, 'linear_models', filter_name)
     if epochs_fname != '':
         results_path = op.abspath(op.join(results_path, 'from_' + epochs_fname + '--'))
@@ -447,12 +444,14 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
         analysis_name += '_' + name
     analysis_name = analysis_name[1:]
 
+    # xlimits, for figures only
+    if filter_name == 'Viol':
+        xlim = [-50, 600]
+    else:
+        xlim = [-50, 350]
+
     # ====================== PLOT THE GROUP-AVERAGED SOURCES OF THE BETAS  ===================== #
     if Do3Dplot:
-        if filter_name == 'Viol':
-            xlim = [0, 600]
-        else:
-            xlim = [0, 350]
         all_stcs, all_betasevoked = linear_reg_funcs.plot_average_betas_with_sources(betas, analysis_name, fig_path, xlim=xlim)
 
     # ================= PLOT THE HEATMAPS OF THE GROUP-AVERAGED BETAS / CHANNEL ================ #
@@ -464,133 +463,131 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
     # =========================================================== #
     # Group stats
     # =========================================================== #
-    import matplotlib.pyplot as plt
-    savepath = op.join(fig_path, 'Stats')
-    utils.create_folder(savepath)
-    nperm = 5000  # number of permutations
-    threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
-    p_threshold = 0.05
-    tmin = 0.000  # timewindow to test (crop data)
-    tmax = 0.350  # timewindow to test (crop data)
-    if filter_name == 'Viol':
-        tmax = 0.600
-    for ch_type in ch_types:
-        for x, regressor_name in enumerate(betas.keys()):
-            data_stat = copy.deepcopy(betas[regressor_name])
-            data_stat.crop(tmin=tmin, tmax=tmax)  # crop
+    DoStats = True
+    if DoStats:
+        import matplotlib.pyplot as plt
+        savepath = op.join(fig_path, 'Stats')
+        utils.create_folder(savepath)
+        nperm = 5000  # number of permutations
+        threshold = None  # If threshold is None, t-threshold equivalent to p < 0.05 (if t-statistic)
+        p_threshold = 0.05
+        tmin = 0.000  # timewindow to test (crop data)
+        tmax = 0.350  # timewindow to test (crop data)
+        if filter_name == 'Viol':
+            tmax = 0.600
+        for ch_type in ch_types:
+            for x, regressor_name in enumerate(betas.keys()):
+                data_stat = copy.deepcopy(betas[regressor_name])
+                data_stat.crop(tmin=tmin, tmax=tmax)  # crop
 
-            print('\n\n' + regressor_name + ', ch_type ' + ch_type)
-            cluster_stats = []
-            data_array_chtype = []
-            cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
-            cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
+                print('\n\n' + regressor_name + ', ch_type ' + ch_type)
+                cluster_stats = []
+                data_array_chtype = []
+                cluster_stats, data_array_chtype, _ = stats_funcs.run_cluster_permutation_test_1samp(data_stat, ch_type=ch_type, nperm=nperm, threshold=threshold, n_jobs=6, tail=0)
+                cluster_info = stats_funcs.extract_info_cluster(cluster_stats, p_threshold, data_stat, data_array_chtype, ch_type)
 
+                # Significant clusters
+                T_obs, clusters, p_values, _ = cluster_stats
+                good_cluster_inds = np.where(p_values < p_threshold)[0]
+                print("Good clusters: %s" % good_cluster_inds)
 
-            # Significant clusters
-            T_obs, clusters, p_values, _ = cluster_stats
-            good_cluster_inds = np.where(p_values < p_threshold)[0]
-            print("Good clusters: %s" % good_cluster_inds)
-
-
-
-            # PLOT CLUSTERS
-            if len(good_cluster_inds) > 0:
-                fname = analysis_name + '_' + regressor_name + '_stats_' + ch_type+suffix
-                figname_initial = op.join(savepath, fname)
-                f = open(op.join(savepath, 'statistics.txt'), 'w')
-                f.write('----- ' + fname + ' -----')
-                f.write('\n')
-                stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False,outfile=f)
-
-
-            if Do3Dplot:
-                # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
+                # PLOT CLUSTERS
                 if len(good_cluster_inds) > 0:
-                    # Group mean stc (all_stcs loaded before)
-                    n_subjects = len(all_stcs[regressor_name])
-                    mean_stc = all_stcs[regressor_name][0].copy()  # get copy of first instance
-                    for sub in range(1, n_subjects):
-                        mean_stc._data += all_stcs[regressor_name][sub].data
-                    mean_stc._data /= n_subjects
+                    fname =  regressor_name + '_stats_' + ch_type+suffix
+                    figname_initial = op.join(savepath, fname)
+                    f = open(op.join(savepath, 'statistics.txt'), 'w')
+                    f.write('----- ' + fname + ' -----')
+                    f.write('\n')
+                    stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False,outfile=f)
 
-                    for i_clu in range(cluster_info['ncluster']):
+
+                if Do3Dplot:
+                    # SOURCES FIGURES FROM CLUSTERS TIME WINDOWS
+                    if len(good_cluster_inds) > 0:
+                        # Group mean stc (all_stcs loaded before)
+                        n_subjects = len(all_stcs[regressor_name])
+                        mean_stc = all_stcs[regressor_name][0].copy()  # get copy of first instance
+                        for sub in range(1, n_subjects):
+                            mean_stc._data += all_stcs[regressor_name][sub].data
+                        mean_stc._data /= n_subjects
+
+                        for i_clu in range(cluster_info['ncluster']):
+                            cinfo = cluster_info[i_clu]
+                            twin_min = cinfo['sig_times'][0] / 1000
+                            twin_max = cinfo['sig_times'][-1] / 1000
+                            stc_timewin = mean_stc.copy()
+                            stc_timewin.crop(tmin=twin_min, tmax=twin_max)
+                            stc_timewin = stc_timewin.mean()
+                            # max_t_val = mean_stc.get_peak()[1]
+                            brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
+                                                       subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
+                            screenshot = brain.screenshot()
+                            brain.close()
+                            nonwhite_pix = (screenshot != 255).any(-1)
+                            nonwhite_row = nonwhite_pix.any(1)
+                            nonwhite_col = nonwhite_pix.any(0)
+                            cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
+                            plt.close('all')
+                            fig = plt.imshow(cropped_screenshot)
+                            plt.axis('off')
+                            info = regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
+                            plt.title(info)
+                            plt.savefig(op.join(savepath, info + suffix + '_sources.svg'), bbox_inches='tight', dpi=600)
+                            plt.close('all')
+
+                # =========================================================== #
+                # ==========  cluster evoked data plot --> per regressor level
+                # =========================================================== #
+                filter_evo = suffix.replace('-', '')  # we load all files in the subjects folder, we need an additional filter after importing
+
+                if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
+                    # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
+                    path = op.abspath(op.join(results_path, os.pardir))
+                    subpath = regressor_name + '_evo'
+                    # evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
+                    evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                    warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
+                    evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
+
+                   # ----------------- PLOTS ----------------- #
+                    for i_clu, clu_idx in enumerate(good_cluster_inds):
                         cinfo = cluster_info[i_clu]
-                        twin_min = cinfo['sig_times'][0] / 1000
-                        twin_max = cinfo['sig_times'][-1] / 1000
-                        stc_timewin = mean_stc.copy()
-                        stc_timewin.crop(tmin=twin_min, tmax=twin_max)
-                        stc_timewin = stc_timewin.mean()
-                        # max_t_val = mean_stc.get_peak()[1]
-                        brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
-                                                   subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
-                        screenshot = brain.screenshot()
-                        brain.close()
-                        nonwhite_pix = (screenshot != 255).any(-1)
-                        nonwhite_row = nonwhite_pix.any(1)
-                        nonwhite_col = nonwhite_pix.any(0)
-                        cropped_screenshot = screenshot[nonwhite_row][:, nonwhite_col]
-                        plt.close('all')
-                        fig = plt.imshow(cropped_screenshot)
-                        plt.axis('off')
-                        info = analysis_name + '_' + regressor_name + ' [%d - %d ms]' % (twin_min*1000, twin_max*1000)
-                        # figname_initial = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type
-                        plt.title(info)
-                        plt.savefig(op.join(savepath, info + suffix + '_sources.svg'), bbox_inches='tight', dpi=600)
+                        print(evoked_reg)
+                        fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name= regressor_name, filter_smooth=False, legend=True, blackfig=False,tmin=xlim[0],tmax=xlim[1])
+                        fig_name = savepath + op.sep +  regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_evo.svg'
+                        print('Saving ' + fig_name)
+                        fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
                         plt.close('all')
 
-            # =========================================================== #
-            # ==========  cluster evoked data plot --> per regressor level
-            # =========================================================== #
-            filter_evo = suffix.replace('-', '')  # we load all files in the subjects folder, we need an additional filter after importing
+                # =========================================================== #
+                # ==========  cluster evoked data plot --> per sequence
+                # =========================================================== #
+                if len(good_cluster_inds) > 0:
+                    # ------------------ LOAD THE EVOKED FOR EACH SEQUENCE ------------ #
+                    path = op.abspath(op.join(results_path, os.pardir))
+                    subpath = 'SequenceID' + '_evo'
+                    evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
+                    warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
+                    evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
 
-            if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
-                # ------------------ LOAD THE EVOKED FOR THE CURRENT CONDITION ------------ #
-                path = op.abspath(op.join(results_path, os.pardir))
-                subpath = regressor_name + '_evo'
-                # evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath,filter=suffix_evoked)
-                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
-                warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
-                evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
+                    # ----------------- PLOTS ----------------- #
+                    for i_clu, clu_idx in enumerate(good_cluster_inds):
+                        cinfo = cluster_info[i_clu]
+                        fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False,tmin=xlim[0],tmax=xlim[1])
+                        fig_name = savepath + op.sep +  regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.svg'
+                        print('Saving ' + fig_name)
+                        fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+                        fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
+                        fig_name = savepath + op.sep +  regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.svg'
+                        print('Saving ' + fig_name)
+                        fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+                        plt.close('all')
 
-               # ----------------- PLOTS ----------------- #
-                for i_clu, clu_idx in enumerate(good_cluster_inds):
-                    cinfo = cluster_info[i_clu]
-                    print(evoked_reg)
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_' + regressor_name, filter_smooth=False, legend=True, blackfig=False,tmin=tmin,tmax=tmax)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_evo.svg'
-                    print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none')
-                    plt.close('all')
+                # =========================================================== #
+                # ==========  heatmap betas plot
+                # =========================================================== #
+                if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
+                    linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath,suffix)
 
-            # =========================================================== #
-            # ==========  cluster evoked data plot --> per sequence
-            # =========================================================== #
-            if len(good_cluster_inds) > 0:
-                # ------------------ LOAD THE EVOKED FOR EACH SEQUENCE ------------ #
-                path = op.abspath(op.join(results_path, os.pardir))
-                subpath = 'SequenceID' + '_evo'
-                evoked_reg = evoked_funcs.load_regression_evoked(subject='all', path=path, subpath=subpath)
-                warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
-                evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
-
-                # ----------------- PLOTS ----------------- #
-                for i_clu, clu_idx in enumerate(good_cluster_inds):
-                    cinfo = cluster_info[i_clu]
-                    fig = stats_funcs.plot_clusters_evo(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False,tmin=tmin,tmax=tmax)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo.svg'
-                    print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
-                    fig = stats_funcs.plot_clusters_evo_bars(evoked_reg, cinfo, ch_type, i_clu, analysis_name=analysis_name + '_eachSeq', filter_smooth=False, legend=False, blackfig=False)
-                    fig_name = savepath + op.sep + analysis_name + '_' + regressor_name + '_stats_' + ch_type + '_clust_' + str(i_clu + 1) + suffix + '_eachSeq_evo_bars.svg'
-                    print('Saving ' + fig_name)
-                    fig.savefig(fig_name, dpi=300, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
-                    plt.close('all')
-
-            # =========================================================== #
-            # ==========  heatmap betas plot
-            # =========================================================== #
-            if len(good_cluster_inds) > 0 and regressor_name != 'Intercept':
-                linear_reg_funcs.plot_betas_heatmaps_with_clusters(analysis_name, betas, ch_type, regressor_name, cluster_info, good_cluster_inds, savepath,suffix)
-
-            if len(good_cluster_inds) > 0:
-                f.close()
+                if len(good_cluster_inds) > 0:
+                    f.close()
