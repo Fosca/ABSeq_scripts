@@ -359,10 +359,13 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     # Turn interactive plotting off ?
     # plt.ioff()
 
+    evoked_bis = evoked.copy()
+    evoked_bis.crop(tmin=xlim[0]/1000, tmax = xlim[1]/1000)
+
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     if timepoint == 'max':
         # timeval = stc.get_peak()[1]
-        timeval = evoked.get_peak(ch_type=ch_type)[1]
+        timeval = evoked_bis.get_peak(ch_type=ch_type)[1]
     else:
         timeval = timepoint
     if colorlims == 'auto':
@@ -404,7 +407,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     brain_idx = 1
 
     # plot the evoked in the desired subplot, and add a line at peak activation
-    evoked.pick_types(ch_type).plot(spatial_colors=True, time_unit='ms', xlim=xlim, axes=axes[evoked_idx], sphere=None)
+    evoked_bis.pick_types(ch_type).plot(spatial_colors=True, time_unit='ms', xlim=xlim, axes=axes[evoked_idx], sphere=None)
     peak_line = axes[evoked_idx].axvline(timeval*1000, color='#808080', ls='--')
     # # custom legend
     # axes[evoked_idx].legend(
