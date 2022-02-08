@@ -401,7 +401,7 @@ def run_linear_reg_surprise_repeat_alt_latest(subject, cross_validate=True):
     # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
-def plot_average_betas_with_sources(betas, analysis_name, fig_path, xlim=[0, 350]):
+def plot_average_betas_with_sources(betas, analysis_name, fig_path, xlim=[-50, 350]):
     savepath = op.join(fig_path, 'Sources')
     utils.create_folder(savepath)
 
