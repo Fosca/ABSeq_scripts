@@ -21,13 +21,5 @@ for filter_name in filter_names:
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
     regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
 
-"""
 filter_names = ['Hab', 'Stand', 'Viol']
 analyses = ["Intercept_Complexity","Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1","from_Intercept_surprise_100_Surprisenp1_RepeatAlter_RepeatAlternp1--Complexity"]
-for filter_name in filter_names:
-    base_path = "scp -r fa268045@beluga.intra.cea.fr:/neurospin/meg/meg_tmp/ABSeq_Samuel_Fosca2019/results/linear_models/"
-    path = base_path + filter_name+ '/'
-    for anal in analyses:
-        path2 = path + anal +'/group/figures/ ' +"/Users/fosca/Desktop/lin_reg/"+filter_name+'/'+anal
-        print(path2)
-"""

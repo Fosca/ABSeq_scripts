@@ -60,7 +60,7 @@ for sens in sensors:
     win_tmax = epochs_16[sens]['test'][0][0].metadata.SVM_filter_tmax_window[0]*1000
 
     plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_16[sens], compute_reg_complexity = False,
-                                                                  window_CBPT_violation = 0.7,sensor_type=sens,
+                                                                  window_CBPT_violation = 0.6,sensor_type=sens,
                                                                   save_path=op.join(save_folder, 'AllSeq_%s_window_%i_%ims_tvals.svg' % ( sens, win_tmin, win_tmax)),
                                                                   vmin=-vminvmax[sens],vmax=vminvmax[sens],plot_betas=False)
 
@@ -131,7 +131,6 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
 
     color_viol = ['lightgreen','mediumseagreen','mediumslateblue','darkviolet']
 
-
     import matplotlib.colors as mcolors
 
     colors = [(0, 0, 0, c) for c in np.linspace(0, 1, 2)]
@@ -181,7 +180,7 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
     for seqID in range(1, 8):
         print("=== running for sequence %i ==="%seqID)
         #  this provides us with the position of the violations and the times
-        epochs_seq_subset = epochs_list['test'][0]['SequenceID == "' + str(seqID) + '"']
+        epochs_seq_subset = epochs_list['test'][0]['SequenceID == ' + str(seqID) ]
         times = epochs_seq_subset.times
         times = times + 0.3
         violpos_list = np.unique(epochs_seq_subset.metadata['ViolationInSequence'])
@@ -193,8 +192,9 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         data_nanmean = []
         where_sig = []
         for epochs in epochs_list['hab']:
-            epochs_subset = epochs['SequenceID == "' + str(seqID) + '"']
-            avg_epo = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+            epochs_subset = epochs['SequenceID == ' + str(seqID) ]
+            avg_epo = np.nanmean(np.squeeze(epochs_subset.get_data()), axis=0)
+            # avg_epo = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
             y_list_epochs_hab.append(avg_epo)
             epochs_data_hab_seq.append(avg_epo)
         epochs_data_hab_allseq.append(epochs_data_hab_seq)
@@ -211,16 +211,19 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
             contrast_viol_pos = []
             for epochs in epochs_list['test']:
                 epochs_subset = epochs[
-                    'SequenceID == "' + str(seqID) + '" and ViolationInSequence == "' + str(viol_pos) + '"']
-                avg_epo = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+                    'SequenceID == ' + str(seqID) + ' and ViolationInSequence == ' + str(viol_pos) ]
+                # avg_epo = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+                avg_epo = np.nanmean(np.squeeze(epochs_subset.get_data()), axis=0)
                 y_list.append(avg_epo)
                 if viol_pos==0:
-                    avg_epo_standard = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
+                    avg_epo_standard = np.nanmean(np.squeeze(epochs_subset.get_data()), axis=0)
+                    # avg_epo_standard = np.nanmean(np.squeeze(epochs_subset.savgol_filter(20).get_data()), axis=0)
                     epochs_data_test_seq.append(avg_epo_standard)
                 if viol_pos !=0 and window_CBPT_violation is not None:
                     epochs_standard = epochs[
-                        'SequenceID == "' + str(seqID) + '" and ViolationInSequence == 0']
-                    avg_epo_standard = np.nanmean(np.squeeze(epochs_standard.savgol_filter(20).get_data()), axis=0)
+                        'SequenceID == ' + str(seqID) + ' and ViolationInSequence == 0']
+                    avg_epo_standard = np.nanmean(np.squeeze(epochs_standard.get_data()), axis=0)
+                    # avg_epo_standard = np.nanmean(np.squeeze(epochs_standard.savgol_filter(20).get_data()), axis=0)
                     contrast_viol_pos.append(avg_epo - avg_epo_standard)
 
             # --------------- CBPT to test for significance ---------------
@@ -267,8 +270,8 @@ def plot_SVM_projection_for_seqID_window_allseq_heatmap(epochs_list, sensor_type
         #     im = ax[n].imshow(masked, extent=[min(times) * 1000, max(times) * 1000, 0, 6 * width], cmap=cmapsig,
         #                       vmin=vmin, vmax=vmax,alpha=0.7)
         ax[n].set_yticks(np.arange(width / 2, 6 * width, width))
-        ax[n].set_yticklabels(['Violation (pos. %d)' % violpos_list[4], 'Violation (pos. %d)' % violpos_list[3],
-                               'Violation (pos. %d)' % violpos_list[2], 'Violation (pos. %d)' % violpos_list[1],
+        ax[n].set_yticklabels(['Deviant - %d' % violpos_list[4], 'Deviant - %d' % violpos_list[3],
+                               'Deviant - %d' % violpos_list[2], 'Deviant - %d' % violpos_list[1],
                                'Standard', 'Habituation'])
         ax[n].axvline(0, linestyle='-', color='black', linewidth=2)
 
