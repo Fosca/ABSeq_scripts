@@ -495,7 +495,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                 if len(good_cluster_inds) > 0:
                     fname =  regressor_name + '_stats_' + ch_type+suffix
                     figname_initial = op.join(savepath, fname)
-                    f = open(op.join(savepath, 'statistics.txt'), 'w')
+                    f = open(op.join(savepath, regressor_name+ '_statistics.txt'), 'w')
                     f.write('----- ' + fname + ' -----')
                     f.write('\n')
                     stats_funcs.plot_clusters(cluster_info, ch_type, T_obs_max=5., fname=regressor_name, figname_initial=figname_initial, filter_smooth=False,outfile=f)
