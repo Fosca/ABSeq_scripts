@@ -89,7 +89,7 @@ def plot_timecourses(data_seq_subjs, times, filter=False, fig_name='', color='b'
                 print(sp)
                 print(st)
                 if logger is not None:
-                    logger.write("* * * * * Significance times " + str(clu_times[0])+ 'ms to '+str(clu_times[1]) + 'ms * * * * *')
+                    logger.write("* * * * * Significance times " + str(clu_times[0])+ 'ms to '+str(clu_times[-1]) + 'ms * * * * *')
                     logger.write('\n')
                     logger.write(sp)
                     logger.write('\n')
