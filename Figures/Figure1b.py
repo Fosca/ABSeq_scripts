@@ -17,7 +17,11 @@ import os.path as op
 # If you want to plot the projection of the betas on the source space, Samuel should run this code on his computer with Do3Dplot=True.
 filter_names = ['Hab', 'Stand', 'Viol']
 for filter_name in filter_names:
-    regressors_names = ['Intercept', 'Complexity']
+    # regressors_names = ['Intercept', 'Complexity']
+    # regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
+    # regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
+
+    regressors_names = ['Intercept','Complexity', 'surprise_100', 'Surprisenp1', 'RepeatAlter','RepeatAlternp1']
     regression_funcs.merge_individual_regression_results(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined')
     regression_funcs.regression_group_analysis(regressors_names, "", filter_name, suffix='--remapped_gtmbaselined', Do3Dplot=True)
 

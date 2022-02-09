@@ -401,7 +401,7 @@ def run_linear_reg_surprise_repeat_alt_latest(subject, cross_validate=True):
     # evoked_funcs.create_evoked_resid(subject, resid_epochs_type='reg_repeataltern_surpriseOmegainfinity')
 
 
-def plot_average_betas_with_sources(betas, analysis_name, fig_path):
+def plot_average_betas_with_sources(betas, analysis_name, fig_path, xlim=[-50, 350]):
     savepath = op.join(fig_path, 'Sources')
     utils.create_folder(savepath)
 
@@ -428,7 +428,7 @@ def plot_average_betas_with_sources(betas, analysis_name, fig_path):
         # Create figures
         output_file = op.join(savepath, 'Sources_' + regressor_name + '.svg')
         figure_title = analysis_name + ' regression: ' + regressor_name
-        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims=None)
+        source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims=None, xlim=xlim)
         output_file = op.join(savepath, 'Sources_' + regressor_name + '_at70ms.svg')
         source_estimation_funcs.sources_evoked_figure(mean_stc, mean_betas, output_file, figure_title, timepoint=0.070, ch_type='mag', colormap='viridis', colorlims='auto', signallims=None)
         output_file = op.join(savepath, 'Sources_' + regressor_name + '_at140ms.svg')

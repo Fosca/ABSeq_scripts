@@ -339,7 +339,7 @@ def normalized_sources_from_evoked(subject, evoked):
     return stc_fsaverage
 
 
-def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims='fixed'):
+def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max', ch_type='mag', colormap='hot', colorlims='auto', signallims='fixed', xlim=[-50, 350]):
     """
     Generates a figure showing butterfly of evoked signal (one ch_type) and corresponding sources at a given timepoint
     Uses fsaverage
@@ -359,10 +359,13 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     # Turn interactive plotting off ?
     # plt.ioff()
 
+    evoked_bis = evoked.copy()
+    evoked_bis.crop(tmin=xlim[0]/1000, tmax = xlim[1]/1000)
+
     fsMRI_dir = op.join(config.root_path, 'data', 'MRI', 'fs_converted')
     if timepoint == 'max':
         # timeval = stc.get_peak()[1]
-        timeval = evoked.get_peak(ch_type=ch_type)[1]
+        timeval = evoked_bis.get_peak(ch_type=ch_type)[1]
     else:
         timeval = timepoint
     if colorlims == 'auto':
@@ -404,7 +407,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
     brain_idx = 1
 
     # plot the evoked in the desired subplot, and add a line at peak activation
-    evoked.pick_types(ch_type).plot(spatial_colors=True, time_unit='ms', xlim=[-50, 350], axes=axes[evoked_idx], sphere=None)
+    evoked_bis.pick_types(ch_type).plot(spatial_colors=True, time_unit='ms', xlim=xlim, axes=axes[evoked_idx], sphere=None)
     peak_line = axes[evoked_idx].axvline(timeval*1000, color='#808080', ls='--')
     # # custom legend
     # axes[evoked_idx].legend(
@@ -437,7 +440,7 @@ def sources_evoked_figure(stc, evoked, output_file, figure_title, timepoint='max
             axes[evoked_idx].set(yticks=np.arange(-50, 51, 25), xticks=np.arange(-0.1, 0.751, 0.1))
             axes[evoked_idx].set(ylim=[-50, 50])
     else:
-        axes[evoked_idx].set(xticks=np.arange(-100, 600, 100), xlim=[-50, 350])
+        axes[evoked_idx].set(xticks=np.arange(-100, 600, 100), xlim=xlim)
     axes[evoked_idx].axvline(0, linestyle='-', color='black', linewidth=1)
     axes[evoked_idx].set_ylabel('Beta')
 

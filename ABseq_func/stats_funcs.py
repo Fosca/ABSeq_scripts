@@ -314,7 +314,7 @@ def plot_clusters_evo(evoked_dict, cinfo, ch_type, i_clu=0, analysis_name='', fi
     fmt.set_powerlimits((0, 0))
     ax.get_yaxis().set_major_formatter(fmt)
     # ax.get_yaxis().get_offset_text().set_position((-0.08, 0))  # move 'x10-x', does not work with y
-    ax.set_xlim([tmin*1000, tmax*1000])
+    ax.set_xlim([tmin, tmax])
     ax.set_ylabel(units[ch_type], color=textcolor, fontsize=14)
     ax.spines['bottom'].set_color(linecolor)
     ax.spines['left'].set_color(linecolor)
