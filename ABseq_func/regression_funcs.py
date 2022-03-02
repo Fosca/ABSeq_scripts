@@ -254,7 +254,7 @@ def save_regression_outputs(subject,epochs,suffix, results_path, regressors_name
             [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
         if name_reg == 'Intercept':
             intercept = np.asarray(
-            [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
+                [epochs.metadata[name_reg].values[i] * beta._data for i in range(len(epochs))])
         else:
             explained.append(explained_signal)
 
@@ -520,7 +520,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                             stc_timewin = stc_timewin.mean()
                             # max_t_val = mean_stc.get_peak()[1]
                             brain = stc_timewin.plot(views=['lat'], surface='inflated', hemi='split', size=(1200, 600), subject='fsaverage', clim='auto',
-                                                       subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
+                                                     subjects_dir=op.join(config.root_path, 'data', 'MRI', 'fs_converted'), smoothing_steps=5, time_viewer=False)
                             screenshot = brain.screenshot()
                             brain.close()
                             nonwhite_pix = (screenshot != 255).any(-1)
@@ -549,7 +549,7 @@ def regression_group_analysis(regressors_names, epochs_fname, filter_name, suffi
                     warnings.warn("Keeping only evoked containing \"" + filter_evo + "\" ")
                     evoked_reg = {k: v for (k, v) in evoked_reg.items() if filter_evo in k}
 
-                   # ----------------- PLOTS ----------------- #
+                    # ----------------- PLOTS ----------------- #
                     for i_clu, clu_idx in enumerate(good_cluster_inds):
                         cinfo = cluster_info[i_clu]
                         print(evoked_reg)
